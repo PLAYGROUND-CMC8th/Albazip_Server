@@ -36,7 +36,7 @@ module.exports = {
             await requestPromise(options, async (err, res, body) => {
 
                     if (res.statusCode === 200) {
-                        console.log("CheckLicense API : status 200");
+                        console.log("Successfully request CheckLicense API: status 200");
 
                         const $ = cheerio.load(body);
                         const bizlist = $(".bizlist");
@@ -64,7 +64,10 @@ module.exports = {
                     }
                 });
         } catch (err) {
-            console.error(err);
+            console.error("Error requesting CheckLicense API: ",err);
+            return response.status(200).json({
+                message:"사업자등록번호확인 API요청을 실패했습니다."
+            });
         }
     }
 };
