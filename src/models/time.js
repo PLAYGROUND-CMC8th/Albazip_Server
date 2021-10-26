@@ -1,26 +1,34 @@
 module.exports = (sequelize, DataTypes) => (
-    sequelize.define('manager', {
+    sequelize.define('time', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
-        user_id:{
+        status: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false
+        },
+        target_id: {
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        shop_id:{
-            type: DataTypes.INTEGER,
+        day: {
+            type: DataTypes.STRING(1),
             allowNull: false
         },
-        shop_name: {
-            type: DataTypes.STRING(20),
+        start_time: {
+            type: DataTypes.STRING(5),
+            allowNull: false
+        },
+        end_time: {
+            type: DataTypes.STRING(5),
             allowNull: false
         }
     }, {
         timestamps: false,
         paranoid: false,
-        tableName: 'manager',
+        tableName: 'time',
         charset: 'utf8'
     })
 );

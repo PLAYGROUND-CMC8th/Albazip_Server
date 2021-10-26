@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => (
-    sequelize.define('task', {
+    sequelize.define('board', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -18,21 +18,13 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false
         },
         content: {
-            type: DataTypes.STRING(100),
+            type: DataTypes.STRING(200),
             allowNull: false
-        },
-        target_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        completer_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true
         }
     }, {
         timestamps: true,
         paranoid: false,
-        tableName: 'task',
+        tableName: 'board',
         charset: 'utf8',
         createdAt: 'register_date',
         updatedAt: 'update_date'

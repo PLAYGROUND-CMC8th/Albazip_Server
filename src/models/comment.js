@@ -1,46 +1,34 @@
 module.exports = (sequelize, DataTypes) => (
-    sequelize.define('schedule', {
+    sequelize.define('comment', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
-        position_id:{
+        board_id:{
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        year: {
-            type: DataTypes.STRING(4),
-            allowNull: false
-        },
-        month: {
-            type: DataTypes.STRING(2),
-            allowNull: false
-        },
-        day: {
-            type: DataTypes.STRING(2),
-            allowNull: false
-        },
-        time: {
-            type: DataTypes.STRING(11),
+        writer_id:{
+            type: DataTypes.INTEGER,
             allowNull: false
         },
         status: {
             type: DataTypes.BOOLEAN,
             allowNull: false
         },
-        start_time: {
-            type: DataTypes.STRING(5),
+        comment_id: {
+            type: DataTypes.INTEGER,
             allowNull: true
         },
-        end_time: {
-            type: DataTypes.STRING(5),
-            allowNull: true
+        content: {
+            type: DataTypes.STRING(100),
+            allowNull: false
         }
     }, {
         timestamps: true,
         paranoid: false,
-        tableName: 'schedule',
+        tableName: 'comment',
         charset: 'utf8',
         createdAt: 'register_date',
         updatedAt: 'update_date'

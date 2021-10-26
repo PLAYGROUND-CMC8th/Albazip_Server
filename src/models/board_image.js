@@ -1,26 +1,24 @@
 module.exports = (sequelize, DataTypes) => (
-    sequelize.define('manager', {
+    sequelize.define('board_image', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
-        user_id:{
+        board_id:{
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        shop_id:{
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        shop_name: {
-            type: DataTypes.STRING(20),
+        image_path: {
+            type: DataTypes.STRING(50),
             allowNull: false
         }
     }, {
-        timestamps: false,
+        timestamps: true,
         paranoid: false,
-        tableName: 'manager',
-        charset: 'utf8'
+        tableName: 'board_image',
+        charset: 'utf8',
+        createdAt: 'register_date',
+        updatedAt: 'update_date'
     })
 );

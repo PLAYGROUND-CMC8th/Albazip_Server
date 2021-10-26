@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => (
-    sequelize.define('task', {
+    sequelize.define('position', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -9,32 +9,27 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        writer_id:{
-            type: DataTypes.INTEGER,
+        code: {
+            type: DataTypes.STRING(10),
+            allowNull: false,
+            primaryKey: true,
+            unique: true
+        },
+        title: {
+            type: DataTypes.STRING(10),
             allowNull: false
         },
-        status: {
-            type: DataTypes.BOOLEAN,
+        rank: {
+            type: DataTypes.STRING(10),
             allowNull: false
-        },
-        content: {
-            type: DataTypes.STRING(100),
-            allowNull: false
-        },
-        target_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        completer_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true
         }
     }, {
         timestamps: true,
         paranoid: false,
-        tableName: 'task',
+        tableName: 'position',
         charset: 'utf8',
         createdAt: 'register_date',
         updatedAt: 'update_date'
+
     })
 );
