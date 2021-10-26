@@ -3,16 +3,20 @@ let serAccount = require('../config/albazip-5978d-firebase-adminsdk-dpw0u-4e1751
 
 module.exports = {
     checkPhone : async (req, res, next) => {
-        let target_token =req.headers.registerToken;
+        let target_token = req.headers.registerToken;
+        let title = req.body.title;
+        let context = req.body.content;
+
         if (!target_token) {
-            res.status(200).json({
+            console.log("no target token: ", target_token);
+            res.status(202).json({
                 message: "등록된 기기의 토큰이 유효하지 않습니다. "
             })
         } else {
             let message = {
                 data: {
-                    title: '테스트 데이터 발송',
-                    body: '데이터 바디'
+                    title: title,
+                    body: context
                 },
                 token: target_token
             };
@@ -25,12 +29,12 @@ module.exports = {
                 .messaging()
                 .send(message)
                 .then(function (response) {
-                    console.log("Successfully sent message: ", response)
+                    console.log("push alarm success: ", response)
                 })
                 .catch(function (err) {
-                    console.log("Error Sending message: ", err)
-                    return response.status(200).json({
-                        message:"휴대폰인증번호 푸시알림 발송을 실패했습니다."
+                    console.log("error push alarm server: ", err)
+                    return response.status(400).json({
+                        message:"푸시알림 발송에 오류가 발생했습니다."
                     });
                 });
             next();

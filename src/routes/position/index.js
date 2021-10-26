@@ -1,12 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
-router.use('/', require('./signup'));
-router.use('/store', require('./store'));
+router.use('/', require('./position'));
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-    res.render('index', { title: 'signup' });
+    res.render('index', { title: 'position' });
 });
 
 
