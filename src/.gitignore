@@ -5,6 +5,8 @@
 # Custom
 .idea
 config
+../config/
+
 
 ### Node ###
 # Logs
