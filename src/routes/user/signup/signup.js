@@ -7,6 +7,7 @@ var userUtil = require('../../../module/userUtil');
 var encryption = require('../../../module/encryption');
 
 const models = require('../../../models');
+const { user } = require('../../../models');
 
 
 router.post('/',async (req,res)=>{
@@ -26,6 +27,14 @@ router.post('/',async (req,res)=>{
     //2. 휴대폰정보 중복체크
     try {
         phone = voca.replaceAll(phone, '-', '');
+
+        if(phone.length != 11){
+            console.log("not enough phone number: ", phone);
+            return res.status(202).json({
+                message:"휴대폰번호 11자리를 입력해주세요."
+            });
+        }
+
         let checkPhone = await userUtil.checkPhoneExistance(phone);
         if (checkPhone) {
             console.log(phone + "is already exist");
@@ -35,10 +44,10 @@ router.post('/',async (req,res)=>{
         }
     }catch (err) {
         if(err){
-            res.status(400).json({
-                message:"phone number server error"
+            console.log(phone + "is already exist");
+            return res.status(400).json({
+                message:"휴대폰 중복체크에 오류가 발생했습니다."
             })
-            return;
         }
     }
 
@@ -82,7 +91,7 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
 
     const userId  = req.header('token');
     let {name, ownerName, registerNumber} = req.body;
-    const {type, address, startTime, endTime, holiday, payday } = req.body;
+    const {type, address, startTime, endTime, breakTime, holiday, payday } = req.body;
 
     name = voca.replaceAll(name, " ", "");
     ownerName = voca.replaceAll(ownerName, " ", "");
@@ -95,6 +104,7 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
         owner_name: ownerName,
         register_number: registerNumber,
         business_time: startTime + "-"+ endTime,
+        break_time: breakTime,
         holiday: holiday,
         payday: payday
     };

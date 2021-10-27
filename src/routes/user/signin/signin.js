@@ -57,9 +57,9 @@ router.post('/',async (req,res)=>{
 
             console.log("signin success");
             res.status(200).json({
-                message:"로그인 완료",
+                message:"로그인을 완료했습니다.",
                 data:{
-                    userId: userData.id,
+                    token: userData.id,
                     positionInfo: positionInfo
                 }
             })
@@ -80,6 +80,6 @@ router.post('/',async (req,res)=>{
         })
         return;
     }
-})
+});
 
 module.exports = router;

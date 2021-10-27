@@ -2,7 +2,7 @@ const { user } = require('../models');
 
 module.exports = {
     checkPhoneExistance: async (phone) => {
-        return await user.count({
+        await user.count({
             where: {
                 phone: phone
             }
@@ -12,6 +12,5 @@ module.exports = {
                 return count !== 0;
 
             });
-
     }
 };

@@ -25,7 +25,7 @@ module.exports = {
 
         //1. 파라미터체크
         if(!name || !type || !address || !ownerName || !registerNumber || !startTime || !endTime || !holiday || !payday){
-            console.log("not enough parameter: ",name, type, address, ownerName, registerNumber, startTime, endTime, holiday, payday);
+            console.log("not enough parameter ");
             res.status(202).json({
                 message: "매장등록에 필수 정보가 부족합니다."
             });
