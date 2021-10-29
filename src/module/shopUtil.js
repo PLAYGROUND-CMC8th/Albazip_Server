@@ -21,7 +21,12 @@ let options = {
 
 module.exports = {
     beforeRegister: async (req, res, next) => {
-        const {name, type, address, ownerName, registerNumber, startTime, endTime, holiday, payday } = req.body;
+        let {name, ownerName, registerNumber, holiday} = req.body;
+        const {type, address, startTime, endTime, payday } = req.body;
+
+        name = voca.replaceAll(name, " ", "");
+        ownerName = voca.replaceAll(ownerName, " ", "");
+        registerNumber = voca.replaceAll(registerNumber, "-", "");
 
         //1. 파라미터체크
         if(!name || !type || !address || !ownerName || !registerNumber || !startTime || !endTime || !holiday || !payday){
@@ -29,33 +34,37 @@ module.exports = {
             res.status(202).json({
                 message: "매장등록에 필수 정보가 부족합니다."
             });
-            return;
         }
 
-        //2. 매장 중복체크
+        //2. 매장 중복체크 (매장명, 매장사업자등록번호)
         try {
             await shop.count({where: { name: name }})
                 .then(count => {
                     console.log("shop name count:" + count);
                    if(count > 0 ){
                        console.log(name + "is already exist");
-                       return res.status(202).json({
-                           message: "이미 존재하는 매장명 입니다."
-                       });
-                   } else {
-                       next();
+                        throw err;
                    }
                 });
+
+            await shop.count({where: { register_number : registerNumber }})
+                .then(count => {
+                    console.log("shop register number count:" + count);
+                    if(count > 0 ) {
+                        console.log("register number is already exist");
+                        throw err;
+                    }
+                });
+            next();
+
         }catch (err) {
             if(err){
                 console.error("error shop server : ",err);
-                return res.status(202).json({
-                    message:"매장등록에 오류가 발생했습니다."
+                res.status(202).json({
+                    message:"이미 존재하는 매장입니다."
                 })
-
             }
         }
-
     },
     checkRegisterNumber: async (request, response, next) => {
         const registerNum = request.params.registerNumber;
@@ -85,7 +94,6 @@ module.exports = {
                             message:"등록되지 않은 번호입니다."
                         });
                     }
-
                     else
                         next();
                 }
