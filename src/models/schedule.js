@@ -21,19 +21,23 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.STRING(2),
             allowNull: false
         },
-        time: {
-            type: DataTypes.STRING(11),
+        start_time: {
+            type: DataTypes.STRING(5),
+            allowNull: false
+        },
+        end_time: {
+            type: DataTypes.STRING(5),
             allowNull: false
         },
         status: {
             type: DataTypes.BOOLEAN,
             allowNull: false
         },
-        start_time: {
+        real_start_time: {
             type: DataTypes.STRING(5),
             allowNull: true
         },
-        end_time: {
+        real_end_time: {
             type: DataTypes.STRING(5),
             allowNull: true
         }

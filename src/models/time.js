@@ -5,9 +5,9 @@ module.exports = (sequelize, DataTypes) => (
             primaryKey: true,
             autoIncrement: true
         },
-        status: {
+        status: { //0: 매장 요일별 영업 //1: 포지션 요일별 근무
             type: DataTypes.BOOLEAN,
-            allowNull: false
+            allowNull: false,
         },
         target_id: {
             type: DataTypes.INTEGER,
