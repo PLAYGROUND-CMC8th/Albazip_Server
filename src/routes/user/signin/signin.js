@@ -47,12 +47,17 @@ router.post('/',async (req,res)=>{
             const managerData =  await manager.findAll({ where: {user_id: userData.id} });
             const workerData = await worker.findAll({ where: {user_id: userData.id} });
 
-            let positionInfo = null;
+            let positionInfo = [];
+
             if(managerData){
-                position_info = managerData[0];
+                managerData.forEach((data) => {
+                    positionInfo.push(data);
+                });
             }
-            else if(workerData){
-                position_info = managerData[0];
+            if(workerData){
+                workerData.forEach((data) => {
+                    positionInfo.push(data);
+                });
             }
 
             console.log("signin success");
