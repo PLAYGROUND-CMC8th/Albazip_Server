@@ -3,7 +3,7 @@ var router = express.Router();
 
 var encryption = require('../../../module/encryption');
 
-const { user, manager, worker } = require('../../../models');
+const { user, manager, worker, shop, position, task, board, schedule } = require('../../../models');
 
 router.post('/',async (req,res)=>{
 
@@ -38,34 +38,48 @@ router.post('/',async (req,res)=>{
 
     //3.비밀번호 체크
     try{
-        const userData = await user.findOne({ where: { phone: phone } });
+        let userData = await user.findOne({ where: { phone: phone } });
         const encryptPwd = (encryption.makeCrypto(pwd, userData.salt)).toString('base64');
         if(encryptPwd == userData.pwd){
             //const result = jwt.sign(user);
             //const data = await user.findOneAndUpdate({email:email}, {$set:{refreshToken:result.refreshToken}},{new:true}) //리프레시 토큰 db저장
 
-            const managerData =  await manager.findAll({ where: {user_id: userData.id} });
-            const workerData = await worker.findAll({ where: {user_id: userData.id} });
+            let shopData, positionData, taskData, boardData, scheduleData;
 
-            let positionInfo = [];
+            if(!userData.last_position) {
+                shopData = null;
+                positionData = null;
+                taskData = null;
+                boardData = null;
+                scheduleData = null;
 
-            if(managerData){
-                managerData.forEach((data) => {
-                    positionInfo.push(data);
-                });
+            } else {
+                if (userData.last_position[0] == 'M') {
+                    positionData = await manager.findOne({where: {id: userData.last_position.substring(1)}});
+
+                } else if (userData.last_position[0] == 'W') {
+                    positionData = await worker.findOne({where: {id: userData.last_position.substring(1)}});
+                    positionData = await position.findOne({where: {id: positionData.position_id}})
+
+                }
+                shopData = await shop.findOne({ where: {id: positionData.shop_id} });
+                taskData = null;
+                boardData = null;
+                scheduleData = null;
             }
-            if(workerData){
-                workerData.forEach((data) => {
-                    positionInfo.push(data);
-                });
-            }
+
 
             console.log("signin success");
             res.status(200).json({
                 message:"로그인을 완료했습니다.",
                 data:{
                     token: userData.id,
-                    positionInfo: positionInfo
+                    userInfo: userData,
+                    shopInfo: shopData,
+                    positionInfo: positionData,
+                    taskInfo: taskData,
+                    boardInfo: boardData,
+                    scheduleInfo: scheduleData
                 }
             })
             return;

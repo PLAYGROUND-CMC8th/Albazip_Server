@@ -7,7 +7,7 @@ var userUtil = require('../../../module/userUtil');
 var encryption = require('../../../module/encryption');
 
 const models = require('../../../models');
-const { user } = require('../../../models');
+const { user, position, shop, worker } = require('../../../models');
 
 // 기본가입 휴대폰 중복체크
 router.get('/:phone',async (req,res)=> {
@@ -152,6 +152,7 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
     models.sequelize.transaction(t=> {
         return models.shop.create(shopData, {transaction: t})
             .then(async(newShop) => {
+                console.log("success create shop");
 
                let workday = weekday.filter((day) => !holiday.includes(day));
                for (const day of workday){
@@ -172,18 +173,34 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
                                return;
                        });
                }
+                console.log("success create times");
+
                let managerData = {
                    user_id: userId,
                    shop_id: newShop.id,
                    shop_name: shopData.name
                };
 
-               await models.manager.create(managerData, {transaction: t})
-                   .then((newManager) => {
-                       console.log("manager signup success " + newManager);
-                       return res.status(200).json({
-                           message: "성공적으로 관리자 가입이 완료되었습니다."
-                       });
+               return await models.manager.create(managerData, {transaction: t})
+                   .then(async (newManager) => {
+                       console.log("success create manager: ", newManager.id);
+
+                       return await models.user.update({last_position: "M"+newManager.id}, {where: {id: userId}, transaction: t})
+                           .then(async (updateUser) => {
+                               console.log("success update last position: ", updateUser);
+
+                               console.log("success manager signup: ", newManager);
+                               return res.status(200).json({
+                                   message: "성공적으로 관리자 가입이 완료되었습니다."
+                               });
+                           })
+                           .catch((err) => {
+                               console.log("user last position update error: ", err);
+                               res.status(400).json({
+                                   message:"사용자 마지막 포지션 정보 업데이트에 오류가 발생했습니다."
+                               });
+                               return;
+                           });
                    })
                    .catch((err) => {
                    console.log("manager server error: ", err);
@@ -209,22 +226,36 @@ router.post('/worker',async (req,res)=> {
 
     const userId  = req.header('token');
 
-    const code = req.body;
-    const position = await position.find({ attributes: ['id', 'shop_id', 'title'], where: {code: code} });
-    const shopName = await shop.find({ attributes: 'name', where: {id: position.shop_id} });
+    const code = req.body.code;
+    const positionData = await position.findOne({ attributes: ['id', 'shop_id', 'title'], where: {code: code} });
+    const shopData = await shop.findOne({ attributes: ['name'] , where: {id: positionData.shop_id} });
 
     try {
         worker.create({
             user_id: userId,
-            position_id: position.id,
-            shop_name: shopName,
-            position_title: position.title
+            position_id: positionData.id,
+            shop_name: shopData.name,
+            position_title: positionData.title
 
-        }).then((newWorker) => {
-            console.log("worker signup success " + newWorker);
-            return res.status(200).json({
-                message: "성공적으로 근무자 가입이 완료되었습니다."
-            });
+        }).then(async (newWorker) => {
+            console.log("success create worker");
+
+            await models.user.update({last_position: "W"+newWorker.id}, {where: {id: userId}})
+                .then(async (updateUser) => {
+                    console.log("success update last position");
+
+                    console.log("success worker signup");
+                    return res.status(200).json({
+                        message: "성공적으로 근무자 가입이 완료되었습니다."
+                    });
+                })
+                .catch((err) => {
+                    console.log("user last position update error: ", err);
+                    res.status(400).json({
+                        message:"사용자 마지막 포지션 정보 업데이트에 오류가 발생했습니다."
+                    });
+                    return;
+                });
         })
     }catch(err){
         console.log("user server error: ", err);

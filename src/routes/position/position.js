@@ -14,6 +14,8 @@ router.post('/',async (req,res)=> {
 
     let token =  req.header('token');
     var [ userId, shopId ] = token.split(',');
+    //let userId =  req.header('token');
+
 
     let salary_type = {"시급": 0, "주급": 1, "월급": 2};
     salary  = voca.replaceAll(salary, ',', '');
