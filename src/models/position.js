@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false
         },
         code: {
-            type: DataTypes.STRING(10),
+            type: DataTypes.STRING(20),
             allowNull: false,
             primaryKey: true,
             unique: true
@@ -31,12 +31,24 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.BOOLEAN,
             allowNull: false
         },
+        work_day: {
+            type: DataTypes.STRING(20),
+            allowNull: false
+        },
+        start_time: {
+            type: DataTypes.STRING(5),
+            allowNull: false
+        },
+        end_time: {
+            type: DataTypes.STRING(5),
+            allowNull: false
+        },
         work_time: {
             type: DataTypes.STRING(5),
             allowNull: false
         },
         break_time: {
-            type: DataTypes.STRING(3),
+            type: DataTypes.STRING(5),
             allowNull: false
         }
     }, {
