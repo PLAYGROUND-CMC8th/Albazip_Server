@@ -7,7 +7,7 @@ var userUtil = require('../../../module/userUtil');
 var encryption = require('../../../module/encryption');
 
 const models = require('../../../models');
-const { user, time } = require('../../../models');
+const { user } = require('../../../models');
 
 // 기본가입 휴대폰 중복체크
 router.get('/:phone',async (req,res)=> {
@@ -151,10 +151,10 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
 
     models.sequelize.transaction(t=> {
         return models.shop.create(shopData, {transaction: t})
-            .then(newShop => {
+            .then(async(newShop) => {
 
-               let workday = weekday.filter((wd) => !holiday.includes(wd));
-               workday.forEach(async (day) => {
+               let workday = weekday.filter((day) => !holiday.includes(day));
+               for (const day of workday){
                    let timeData = {
                        status: 0,
                        target_id: newShop.id,
@@ -162,35 +162,36 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
                        start_time: startTime,
                        end_time: endTime
                    };
-                   time.create(timeData)
+
+                   await models.time.create(timeData, {transaction: t})
                        .catch((err) => {
                            console.log("time server error: ", err);
                                res.status(400).json({
-                                   message:"매장 영업시간 등록에 오류가 발생했습니다."
+                                   message:"매장 요일별 영업시간 등록에 오류가 발생했습니다."
                                });
                                return;
                        });
-               });
-                   let managerData = {
-                       user_id: userId,
-                       shop_id: newShop.id,
-                       shop_name: shopData.name
-                   };
+               }
+               let managerData = {
+                   user_id: userId,
+                   shop_id: newShop.id,
+                   shop_name: shopData.name
+               };
 
-                   models.manager.create(managerData)
-                       .then((newManager) => {
-                           console.log("manager signup success " + newManager);
-                           return res.status(200).json({
-                               message: "성공적으로 관리자 가입이 완료되었습니다."
-                           });
-                       })
-                       .catch((err) => {
-                       console.log("manager server error: ", err);
-                       res.status(400).json({
-                           message:"관리자 가입에 오류가 발생했습니다."
+               await models.manager.create(managerData, {transaction: t})
+                   .then((newManager) => {
+                       console.log("manager signup success " + newManager);
+                       return res.status(200).json({
+                           message: "성공적으로 관리자 가입이 완료되었습니다."
                        });
-                       return;
+                   })
+                   .catch((err) => {
+                   console.log("manager server error: ", err);
+                   res.status(400).json({
+                       message:"관리자 가입에 오류가 발생했습니다."
                    });
+                   return;
+               });
             })
             .catch((err) => {
                     console.log("shop server error: ", err);
@@ -234,6 +235,5 @@ router.post('/worker',async (req,res)=> {
     }
 
 });
-
 
 module.exports = router;
