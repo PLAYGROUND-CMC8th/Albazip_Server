@@ -1,6 +1,6 @@
 const randToken = require('rand-token');
 const jwt = require('jsonwebtoken');
-const {key} = require('../config/jstSecretKey');
+const {key} = require('../config/jwtSecretKey');
 
 const options = {
     algorithm:"HS256",
