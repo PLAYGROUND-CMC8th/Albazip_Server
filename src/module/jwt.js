@@ -1,4 +1,4 @@
-const randToken = require('rand-token');
+//const randToken = require('rand-token');
 const jwt = require('jsonwebtoken');
 const {key} = require('../config/jwtSecretKey');
 
