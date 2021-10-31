@@ -12,7 +12,8 @@ router.post('/',async (req,res)=>{
     //1. 파라미터체크
     if(!phone || !pwd){
         console.log("not enough parameter");
-        res.status(202).json({
+        res.json({
+            code: "202",
             message: "휴대폰번호와 비밀번호를 입력해주세요."
         });
         return;
@@ -23,14 +24,16 @@ router.post('/',async (req,res)=>{
         var userData = await user.findOne({ where: { phone: phone } });
         if(!userData){
             console.log("no such user");
-            res.status(202).json({
+            res.json({
+                code: "202",
                 message:"존재하지 않는 계정입니다."
             })
             return;
         }
     } catch(err){
         console.log("user server error");
-        res.status(400).json({
+        res.json({
+            code: "400",
             message:"휴대폰번호 확인시 오류가 발생했습니다."
         })
         return;
@@ -70,7 +73,8 @@ router.post('/',async (req,res)=>{
 
 
             console.log("signin success");
-            res.status(200).json({
+            res.json({
+                code: "200",
                 message:"로그인을 완료했습니다.",
                 data:{
                     token: userData.id,
@@ -87,14 +91,16 @@ router.post('/',async (req,res)=>{
         }
         else {
             console.log("wrong password");
-            res.status(202).json({
+            res.json({
+                code: "202",
                 message:"비밀번호가 다릅니다."
             })
             return;
         }
     }catch(err){
         console.log(err);
-        res.status(400).json({
+        res.json({
+            code: "400",
             message:"로그인에 오류가 발생했습니다."
         })
         return;

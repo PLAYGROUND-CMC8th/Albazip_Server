@@ -18,7 +18,8 @@ router.get('/:phone',async (req,res)=> {
     try {
         if(phone.length != 11){
             console.log("not enough phone number: ", phone);
-            return res.status(202).json({
+            return res.json({
+                code: "202",
                 message:"휴대폰번호 11자리를 입력해주세요."
             });
         }
@@ -26,21 +27,24 @@ router.get('/:phone',async (req,res)=> {
         let checkPhone = await userUtil.checkPhoneExistance(phone);
         if (checkPhone) {
             console.log(phone + "is already exist");
-            return res.status(202).json({
+            return res.json({
+                code: "202",
                 message: "이미 존재하는 연락처 입니다."
             });
         }
     }catch (err) {
         if(err){
             console.log(phone + "is already exist");
-            return res.status(400).json({
+            return res.json({
+                code: "400",
                 message:"휴대폰 중복체크에 오류가 발생했습니다."
             })
         }
     }
 
     console.log("phone check success");
-    return res.status(200).json({
+    return res.json({
+        code: "200",
         message: "새로운 휴대폰번호입니다."
     });
 
@@ -57,7 +61,8 @@ router.post('/',async (req,res)=>{
     //1. 파라미터체크
     if(!phone || !pwd || !lastName || !firstName || !birthyear || !gender){
         console.log("not enough parameter: ", phone, pwd, lastName, firstName, birthyear, gender);
-        res.status(202).json({
+        res.json({
+            code: "202",
             message: "필수 정보가 부족합니다."
         });
         return;
@@ -106,7 +111,8 @@ router.post('/',async (req,res)=>{
             gender: gender == 'M'? 0 : 2
         }).then((newUser) => {
             console.log("signup success " + newUser);
-            return res.status(200).json({
+            return res.json({
+                code: "200",
                 message: "성공적으로 기본가입이 완료되었습니다.",
                 data: {
                     token:newUser.id
@@ -117,7 +123,8 @@ router.post('/',async (req,res)=>{
         })
     }catch(err){
         console.log("user server error: ", err);
-        res.status(400).json({
+        res.json({
+            code: "400",
             message:"기본가입에 오류가 발생했습니다."
         })
         return;
@@ -167,7 +174,8 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
                    await models.time.create(timeData, {transaction: t})
                        .catch((err) => {
                            console.log("time server error: ", err);
-                               res.status(400).json({
+                               res.json({
+                                   code: "400",
                                    message:"매장 요일별 영업시간 등록에 오류가 발생했습니다."
                                });
                                return;
@@ -190,13 +198,15 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
                                console.log("success update last position: ", updateUser);
 
                                console.log("success manager signup: ", newManager);
-                               return res.status(200).json({
+                               return res.json({
+                                   code: "200",
                                    message: "성공적으로 관리자 가입이 완료되었습니다."
                                });
                            })
                            .catch((err) => {
                                console.log("user last position update error: ", err);
-                               res.status(400).json({
+                               res.json({
+                                   code: "400",
                                    message:"사용자 마지막 포지션 정보 업데이트에 오류가 발생했습니다."
                                });
                                return;
@@ -204,7 +214,8 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
                    })
                    .catch((err) => {
                    console.log("manager server error: ", err);
-                   res.status(400).json({
+                   res.json({
+                       code: "400",
                        message:"관리자 가입에 오류가 발생했습니다."
                    });
                    return;
@@ -212,7 +223,8 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
             })
             .catch((err) => {
                     console.log("shop server error: ", err);
-                    res.status(400).json({
+                    res.json({
+                        code: "400",
                         message:"매장 등록에 오류가 발생했습니다."
                     });
                     return;
@@ -245,13 +257,15 @@ router.post('/worker',async (req,res)=> {
                     console.log("success update last position");
 
                     console.log("success worker signup");
-                    return res.status(200).json({
+                    return res.json({
+                        code: "200",
                         message: "성공적으로 근무자 가입이 완료되었습니다."
                     });
                 })
                 .catch((err) => {
                     console.log("user last position update error: ", err);
-                    res.status(400).json({
+                    res.json({
+                        code: "400",
                         message:"사용자 마지막 포지션 정보 업데이트에 오류가 발생했습니다."
                     });
                     return;
@@ -259,7 +273,8 @@ router.post('/worker',async (req,res)=> {
         })
     }catch(err){
         console.log("user server error: ", err);
-        res.status(400).json({
+        res.json({
+            code: "400",
             message:"근무자 가입에 오류가 발생했습니다."
         })
         return;

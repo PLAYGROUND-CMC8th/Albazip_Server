@@ -9,7 +9,8 @@ module.exports = {
 
         if (!target_token) {
             console.log("no target token: ", target_token);
-            res.status(202).json({
+            res.json({
+                code: "202",
                 message: "등록된 기기의 토큰이 유효하지 않습니다. "
             })
         } else {

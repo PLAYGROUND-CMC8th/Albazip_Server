@@ -31,7 +31,8 @@ module.exports = {
         //1. 파라미터체크
         if(!name || !type || !address || !ownerName || !registerNumber || !startTime || !endTime || !holiday || !payday){
             console.log("not enough parameter ");
-            res.status(202).json({
+            res.json({
+                code: "202",
                 message: "매장등록에 필수 정보가 부족합니다."
             });
         }
@@ -60,7 +61,8 @@ module.exports = {
         }catch (err) {
             if(err){
                 console.error("error shop server : ",err);
-                res.status(202).json({
+                res.json({
+                    code: "202",
                     message:"이미 존재하는 매장입니다."
                 })
             }
@@ -72,7 +74,8 @@ module.exports = {
 
         if(registerNumber.length != 10){
             console.log("not enough register number: ", registerNumber);
-            return response.status(202).json({
+            return response.json({
+                code: "202",
                 message:"올바른 사업자등록번호를 입력해주세요."
             });
         }
@@ -90,7 +93,8 @@ module.exports = {
 
                     if (!bizinfo){
                         console.log("no such register number: ", registerNumber);
-                        return response.status(200).json({
+                        return response.json({
+                            code: "202",
                             message:"등록되지 않은 번호입니다."
                         });
                     }
@@ -100,7 +104,8 @@ module.exports = {
             });
         } catch (err) {
             console.error("error shop register number server : ",err);
-            return response.status(400).json({
+            return response.json({
+                code: "400",
                 message:"사업자등록번호확인 API요청을 실패했습니다."
             });
         }
@@ -114,7 +119,8 @@ module.exports = {
 
         if(registerNumber.length != 10){
             console.log("not enough register number: ", registerNumber);
-            return response.status(202).json({
+            return response.json({
+                code: "202",
                 message:"올바른 사업자등록번호를 입력해주세요."
             });
         }
@@ -142,7 +148,8 @@ module.exports = {
 
                         if (bizname != ownerName){
                             console.log("owner name doesn't matched with it: ", bizname, ownerName);
-                            return response.status(200).json({
+                            return response.json({
+                                code: "202",
                                 message:"대표자와 사업자등록번호가 일치하지 않습니다."
                             });
                         }
@@ -153,7 +160,8 @@ module.exports = {
                 });
         } catch (err) {
             console.error("error shop register number server : ",err);
-            return response.status(400).json({
+            return response.json({
+                code: "400",
                 message:"사업자등록번호확인 API요청을 실패했습니다."
             });
         }

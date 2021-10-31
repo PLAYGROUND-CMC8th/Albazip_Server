@@ -24,7 +24,8 @@ router.post('/',async (req,res)=> {
     //1. 파라미터체크
     if(!userId || !shopId|| !rank || !title || !startTime || !endTime || !workTime || !breakTime || !workDays || !salary || !salaryType ){
         console.log("not enough parameter: ", userId, shopId, rank, title, startTime, endTime, workTime, breakTime, workDays, salary, salary_type);
-        res.status(202).json({
+        res.json({
+            code: "202",
             message: "필수 정보가 부족합니다."
         });
         return;
@@ -69,7 +70,8 @@ router.post('/',async (req,res)=> {
                     await models.time.create(timeData, {transaction: t})
                         .catch((err) => {
                             console.log("time server error: ", err);
-                            res.status(400).json({
+                            res.json({
+                                code: "400",
                                 message:"포지션 요일별 영업시간 등록에 오류가 발생했습니다."
                             });
                             return;
@@ -81,7 +83,8 @@ router.post('/',async (req,res)=> {
 
                     if(!task.title || !task.content ){
                         console.log("not enough parameter: ");
-                        res.status(202).json({
+                        res.json({
+                            code: "202",
                             message: "필수 정보가 부족합니다."
                         });
                         return;
@@ -99,7 +102,8 @@ router.post('/',async (req,res)=> {
                     await models.task.create(taskData, {transaction: t})
                         .catch((err) => {
                             console.log("task server error: ", err);
-                            res.status(400).json({
+                            res.json({
+                                code: "400",
                                 message:"포지션 업무등록에 오류가 발생했습니다."
                             });
                             return;
@@ -109,7 +113,8 @@ router.post('/',async (req,res)=> {
             })
             .then(() => {
                 console.log("success create position");
-                res.status(200).json({
+                res.json({
+                    code: "200",
                     message:"성공적으로 포지션 등록을 완료했습니다."
                 });
                 return;
