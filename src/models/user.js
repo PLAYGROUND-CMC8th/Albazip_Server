@@ -44,10 +44,6 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.STRING(10),
             allowNull: true
         },
-        refresh_token: {
-            type: DataTypes.STRING(200),
-            allowNull: true
-        },
         latest_access_date: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,

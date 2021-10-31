@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
+var jwt = require('../../../module/jwt');
 var encryption = require('../../../module/encryption');
 
 const { user, manager, worker, shop, position, task, board, schedule } = require('../../../models');
@@ -44,8 +45,7 @@ router.post('/',async (req,res)=>{
         let userData = await user.findOne({ where: { phone: phone } });
         const encryptPwd = (encryption.makeCrypto(pwd, userData.salt)).toString('base64');
         if(encryptPwd == userData.pwd){
-            //const result = jwt.sign(user);
-            //const data = await user.findOneAndUpdate({email:email}, {$set:{refreshToken:result.refreshToken}},{new:true}) //리프레시 토큰 db저장
+            const token = jwt.sign(userData);
 
             let shopData, positionData, taskData, boardData, scheduleData;
 
@@ -77,7 +77,7 @@ router.post('/',async (req,res)=>{
                 code: "200",
                 message:"로그인을 완료했습니다.",
                 data:{
-                    token: userData.id,
+                    token: token,
                     userInfo: userData,
                     shopInfo: shopData,
                     positionInfo: positionData,

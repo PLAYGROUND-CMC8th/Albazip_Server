@@ -3,18 +3,16 @@ var router = express.Router();
 
 var voca = require('voca');
 var positionUtil = require('../../module/positionUtil');
+var userUtil = require('../../module/userUtil');
 
 const models = require('../../models');
 
-//포지션 추가하
-router.post('/',async (req,res)=> {
+//포지션 추가하기
+router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
-    const{ rank, title, startTime, endTime, workTime, breakTime } = req.body;
+    const userId =  req.id;
+    const{ shopId, rank, title, startTime, endTime, workTime, breakTime } = req.body;
     let { salary, salaryType, workDays, taskLists } = req.body;
-
-    let token =  req.header('token');
-    var [ userId, shopId ] = token.split(',');
-    //let userId =  req.header('token');
 
 
     let salary_type = {"시급": 0, "주급": 1, "월급": 2};
@@ -79,36 +77,39 @@ router.post('/',async (req,res)=> {
                 };
 
                 //4. 포지션 업무리스트 생성
-                for(const task of taskLists){
+                if( taskLists ) {
+                    for (const task of taskLists) {
 
-                    if(!task.title || !task.content ){
-                        console.log("not enough parameter: ");
-                        res.json({
-                            code: "202",
-                            message: "필수 정보가 부족합니다."
-                        });
-                        return;
-                    }
-
-                    let taskData = {
-                        shop_id: shopId,
-                        writer_id: userId,
-                        status: 1,
-                        title: task.title,
-                        content: task.content,
-                        target_id: newPosition.id
-                    };
-
-                    await models.task.create(taskData, {transaction: t})
-                        .catch((err) => {
-                            console.log("task server error: ", err);
+                        if (!task.title || !task.content) {
+                            console.log("not enough parameter: ");
                             res.json({
-                                code: "400",
-                                message:"포지션 업무등록에 오류가 발생했습니다."
+                                code: "202",
+                                message: "필수 정보가 부족합니다."
                             });
                             return;
-                        });
-                };
+                        }
+
+                        let taskData = {
+                            shop_id: shopId,
+                            writer_id: userId,
+                            status: 1,
+                            title: task.title,
+                            content: task.content,
+                            target_id: newPosition.id
+                        };
+
+                        await models.task.create(taskData, {transaction: t})
+                            .catch((err) => {
+                                console.log("task server error: ", err);
+                                res.json({
+                                    code: "400",
+                                    message: "포지션 업무등록에 오류가 발생했습니다."
+                                });
+                                return;
+                            });
+                    }
+                    ;
+                }
 
             })
             .then(() => {
