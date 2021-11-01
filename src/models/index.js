@@ -143,17 +143,17 @@ db.user.belongsToMany(db.shop, {
     paranoid: false
 });
 
-// worker, 과 user
+// worker, position과 user
 db.position.belongsToMany(db.user, {
     through: 'worker',
-    foreignKey: 'position',
+    foreignKey: 'position_id',
     timestamps: false,
     paranoid: false,
 
 });
 db.user.belongsToMany(db.position, {
     through: 'worker',
-    foreignKey: 'position',
+    foreignKey: 'user_id',
     timestamps: false,
     paranoid: false
 });
