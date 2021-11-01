@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false
         },
         status: {
-            type: DataTypes.BOOLEAN,
+            type: DataTypes.INTEGER,
             allowNull: false
         },
         title: {
@@ -31,6 +31,10 @@ module.exports = (sequelize, DataTypes) => (
         },
         completer_id: {
             type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        target_date: {
+            type: DataTypes.DATE,
             allowNull: true
         }
     }, {

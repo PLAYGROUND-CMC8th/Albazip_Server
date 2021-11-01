@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false
         },
         salary_type: { //0: 시급, 1: 주급, 2: 월급
-            type: DataTypes.BOOLEAN,
+            type: DataTypes.INTEGER,
             allowNull: false
         },
         work_day: {

@@ -108,7 +108,7 @@ router.post('/',async (req,res)=>{
             last_name: lastName,
             first_name: firstName,
             birthyear:birthyear,
-            gender: gender == 'M'? 0 : 2
+            gender: gender == 'M'? 0 : 1
         }).then((newUser) => {
             console.log("signup success " + newUser);
             return res.json({

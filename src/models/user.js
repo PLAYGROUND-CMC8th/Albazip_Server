@@ -33,12 +33,17 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false
         },
         gender: {
-            type: DataTypes.BOOLEAN,
+            type: DataTypes.INTEGER,
             allowNull: false
         },
         image_path: {
             type: DataTypes.STRING(50),
             allowNull: true
+        },
+        status: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue : 1
         },
         last_position: {
             type: DataTypes.STRING(10),

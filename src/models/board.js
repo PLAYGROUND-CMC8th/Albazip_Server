@@ -13,8 +13,17 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.INTEGER,
             allowNull: false
         },
+        pin: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
         status: {
-            type: DataTypes.BOOLEAN,
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        title: {
+            type: DataTypes.STRING(100),
             allowNull: false
         },
         content: {
