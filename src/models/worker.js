@@ -20,11 +20,17 @@ module.exports = (sequelize, DataTypes) => (
         position_title: {
             type: DataTypes.STRING(10),
             allowNull: false
+        },
+        user_first_name: {
+            type: DataTypes.STRING(20),
+            allowNull: false
         }
     }, {
-        timestamps: false,
+        timestamps: true,
         paranoid: false,
         tableName: 'worker',
-        charset: 'utf8'
+        charset: 'utf8',
+        createdAt: 'register_date',
+        updatedAt: 'update_date'
     })
 );

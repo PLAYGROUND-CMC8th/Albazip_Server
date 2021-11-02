@@ -5,7 +5,8 @@ module.exports = {
     checkPhoneExistance: async (phone) => {
         return await user.count({
             where: {
-                phone: phone
+                phone: phone,
+                status: [1,2]
             }
         })
             .then(count => {

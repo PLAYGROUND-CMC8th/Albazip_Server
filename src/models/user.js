@@ -45,7 +45,7 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false,
             defaultValue : 1
         },
-        last_position: {
+        last_job: {
             type: DataTypes.STRING(10),
             allowNull: true
         },

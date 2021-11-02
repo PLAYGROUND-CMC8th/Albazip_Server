@@ -5,6 +5,7 @@ var voca = require('voca');
 var shopUtil = require('../../../module/shopUtil');
 var userUtil = require('../../../module/userUtil');
 var encryption = require('../../../module/encryption');
+var jwt = require('../../../module/jwt');
 
 const models = require('../../../models');
 const { user, position, shop, worker } = require('../../../models');
@@ -101,7 +102,16 @@ router.post('/',async (req,res)=>{
     lastName = voca.replaceAll(lastName, " ", "");
     firstName = voca.replaceAll(firstName, " ", "");
     try {
-        user.create({
+
+        let resignedUser = await user.findAll({ where: { phone: phone, status: 0}});
+        if(resignedUser){
+            await user.destroy({ where: { phone: phone, status: 0}})
+                .then(() => {
+                    console.log("delete resigned user success");
+                });
+        }
+
+        let userData = {
             phone: phone,
             pwd: key,
             salt: salt,
@@ -109,18 +119,22 @@ router.post('/',async (req,res)=>{
             first_name: firstName,
             birthyear:birthyear,
             gender: gender == 'M'? 0 : 1
-        }).then((newUser) => {
-            console.log("signup success " + newUser);
+        };
+
+        user.create(userData).then((newUser) => {
+            console.log("signup success");
+            const token = jwt.sign(newUser);
             return res.json({
                 code: "200",
                 message: "성공적으로 기본가입이 완료되었습니다.",
                 data: {
-                    token:newUser.id
+                    token:token
                 }
             });
         }).catch(err => {
             console.log(err);
         })
+
     }catch(err){
         console.log("user server error: ", err);
         res.json({
@@ -132,9 +146,11 @@ router.post('/',async (req,res)=>{
 });
 
 //매장 등록, 관리자 가입
-router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
+router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,res, next)=> {
 
-    const userId  = req.header('token');
+    const userId  = req.id;
+    const userData = await user.findOne({attributes: first_name, where: {id: userId}});
+
     let { name, ownerName, registerNumber, holiday } = req.body;
     const { type, address, startTime, endTime, payday } = req.body;
     let weekday = ['월', '화', '수', '목', '금', '토', '일'];
@@ -186,14 +202,15 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
                let managerData = {
                    user_id: userId,
                    shop_id: newShop.id,
-                   shop_name: shopData.name
+                   shop_name: shopData.name,
+                   user_first_name: userData.first_name
                };
 
                return await models.manager.create(managerData, {transaction: t})
                    .then(async (newManager) => {
                        console.log("success create manager: ", newManager.id);
 
-                       return await models.user.update({last_position: "M"+newManager.id}, {where: {id: userId}, transaction: t})
+                       return await models.user.update({last_job: "S"+newManager.shop_id}, {where: {id: userId}, transaction: t})
                            .then(async (updateUser) => {
                                console.log("success update last position: ", updateUser);
 
@@ -234,9 +251,10 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
 });
 
 //근무자 가입
-router.post('/worker',async (req,res)=> {
+router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
 
-    const userId  = req.header('token');
+    const userId  = req.id;
+    const userData = await user.findOne({ where: {id: userId}});
 
     const code = req.body.code;
     const positionData = await position.findOne({ attributes: ['id', 'shop_id', 'title'], where: {code: code} });
@@ -247,12 +265,13 @@ router.post('/worker',async (req,res)=> {
             user_id: userId,
             position_id: positionData.id,
             shop_name: shopData.name,
-            position_title: positionData.title
+            position_title: positionData.title,
+            user_first_name: userData.first_name
 
         }).then(async (newWorker) => {
             console.log("success create worker");
 
-            await models.user.update({last_position: "W"+newWorker.id}, {where: {id: userId}})
+            await models.user.update({last_job: "P"+newWorker.position_id}, {where: {id: userId}})
                 .then(async (updateUser) => {
                     console.log("success update last position");
 
