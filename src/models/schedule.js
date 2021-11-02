@@ -31,7 +31,8 @@ module.exports = (sequelize, DataTypes) => (
         },
         status: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: false,
+            defaultValue: 0
         },
         real_start_time: {
             type: DataTypes.STRING(5),

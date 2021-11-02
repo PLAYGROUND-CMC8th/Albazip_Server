@@ -30,37 +30,37 @@ db.time = require('./time')(sequelize, Sequelize);
  */
 
 // user 와 task
-db.user.hasMany(db.task, {
-    foreignKey: 'writer_id',
-    sourceKey: 'id',
-    onDelete: 'cascade'
-});
-db.task.belongsTo(db.user, {
-    foreignKey: 'writer_id',
-    targetKey: 'id'
-});
+// db.user.hasMany(db.task, {
+//     foreignKey: 'writer_id',
+//     sourceKey: 'id',
+//     onDelete: 'cascade'
+// });
+// db.task.belongsTo(db.user, {
+//     foreignKey: 'writer_id',
+//     targetKey: 'id'
+// });
 
 // user와 board
-db.user.hasMany(db.board, {
-    foreignKey: 'writer_id',
-    sourceKey: 'id',
-    onDelete: 'cascade'
-});
-db.board.belongsTo(db.user, {
-    foreignKey: 'writer_id',
-    targetKey: 'id'
-});
+// db.user.hasMany(db.board, {
+//     foreignKey: 'writer_id',
+//     sourceKey: 'id',
+//     onDelete: 'cascade'
+// });
+// db.board.belongsTo(db.user, {
+//     foreignKey: 'writer_id',
+//     targetKey: 'id'
+// });
 
 // user와 comment
-db.user.hasMany(db.comment, {
-    foreignKey: 'writer_id',
-    sourceKey: 'id',
-    onDelete: 'cascade'
-});
-db.comment.belongsTo(db.user, {
-    foreignKey: 'writer_id',
-    targetKey: 'id'
-});
+// db.user.hasMany(db.comment, {
+//     foreignKey: 'writer_id',
+//     sourceKey: 'id',
+//     onDelete: 'cascade'
+// });
+// db.comment.belongsTo(db.user, {
+//     foreignKey: 'writer_id',
+//     targetKey: 'id'
+// });
 
 // shop과 board
 db.shop.hasMany(db.board, {

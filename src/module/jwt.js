@@ -11,7 +11,8 @@ const options = {
 module.exports ={
     sign:(user) =>{
         const payload = {
-            id:user.id
+            id:user.id,
+            job:user.last_job
         };
 
         const newToken = {

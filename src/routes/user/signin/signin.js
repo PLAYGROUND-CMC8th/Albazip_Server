@@ -49,7 +49,7 @@ router.post('/',async (req,res)=>{
 
             let shopData, positionData, taskData, boardData, scheduleData;
 
-            if(!userData.last_position) {
+            if(!userData.last_job) {
                 shopData = null;
                 positionData = null;
                 taskData = null;
@@ -57,15 +57,14 @@ router.post('/',async (req,res)=>{
                 scheduleData = null;
 
             } else {
-                if (userData.last_position[0] == 'M') {
-                    positionData = await manager.findOne({where: {id: userData.last_position.substring(1)}});
+                if (userData.last_job[0] == 'S') {
+                    shopData = await shop.findOne({where: {id: userData.last_job.substring(1)}});
+                    positionData = null;
 
-                } else if (userData.last_position[0] == 'W') {
-                    positionData = await worker.findOne({where: {id: userData.last_position.substring(1)}});
-                    positionData = await position.findOne({where: {id: positionData.position_id}})
-
+                } else if (userData.last_job[0] == 'P') {
+                    positionData = await position.findOne({where: {id: userData.last_job.substring(1)}});
+                    shopData = await shop.findOne({where: {id: positionData.shop_id}});
                 }
-                shopData = await shop.findOne({ where: {id: positionData.shop_id} });
                 taskData = null;
                 boardData = null;
                 scheduleData = null;
