@@ -2,13 +2,16 @@ var express = require('express');
 var router = express.Router();
 
 var voca = require('voca');
-var shopUtil = require('../../../module/shopUtil');
-var userUtil = require('../../../module/userUtil');
 var encryption = require('../../../module/encryption');
 var jwt = require('../../../module/jwt');
 
+var shopUtil = require('../../../module/shopUtil');
+var userUtil = require('../../../module/userUtil');
+var scheduleUtil = require('../../../module/scheduleUtil');
+
 const models = require('../../../models');
 const { user, position, shop, worker } = require('../../../models');
+
 
 // 기본가입 휴대폰 중복체크
 router.get('/:phone',async (req,res)=> {
@@ -172,6 +175,7 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
         payday: payday
     };
 
+    // 매장생성
     models.sequelize.transaction(t=> {
         return models.shop.create(shopData, {transaction: t})
             .then(async(newShop) => {
@@ -187,6 +191,7 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                        end_time: endTime
                    };
 
+                   // 매장 엽업일 생성
                    await models.time.create(timeData, {transaction: t})
                        .catch((err) => {
                            console.log("time server error: ", err);
@@ -206,10 +211,12 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                    user_first_name: userData.first_name
                };
 
+               // 매장 관리자 생성
                return await models.manager.create(managerData, {transaction: t})
                    .then(async (newManager) => {
                        console.log("success create manager: ", newManager.id);
 
+                       // 유저의 마지막 업무 저장
                        return await models.user.update({last_job: "S"+newManager.shop_id}, {where: {id: userId}, transaction: t})
                            .then(async (updateUser) => {
                                console.log("success update last position: ", updateUser);
@@ -261,6 +268,7 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
     const shopData = await shop.findOne({ attributes: ['name'] , where: {id: positionData.shop_id} });
 
     try {
+        // 근무자 생성
         worker.create({
             user_id: userId,
             position_id: positionData.id,
@@ -271,11 +279,15 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
         }).then(async (newWorker) => {
             console.log("success create worker");
 
+            // 유저의 마지막 업무 저장
             await models.user.update({last_job: "P"+newWorker.position_id}, {where: {id: userId}})
                 .then(async (updateUser) => {
                     console.log("success update last position");
 
                     console.log("success worker signup");
+                    // 100일치 스케줄 생성
+                    scheduleUtil.makeASchedule(newWorker.position_id);
+
                     return res.json({
                         code: "200",
                         message: "성공적으로 근무자 가입이 완료되었습니다."
