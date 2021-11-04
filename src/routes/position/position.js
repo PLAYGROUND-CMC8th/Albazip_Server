@@ -11,7 +11,8 @@ const models = require('../../models');
 router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
     const userId =  req.id;
-    const{ shopId, rank, title, startTime, endTime, workTime, breakTime } = req.body;
+    const shopId = req.job.substring(1);
+    const{ rank, title, startTime, endTime, workTime, breakTime } = req.body;
     let { salary, salaryType, workDays, taskLists } = req.body;
 
 
@@ -91,7 +92,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
                         let taskData = {
                             shop_id: shopId,
-                            writer_id: userId,
+                            writer_job: "P"+newPosition.id,
                             status: 1,
                             title: task.title,
                             content: task.content,

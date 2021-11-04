@@ -55,6 +55,7 @@ module.exports = {
             } else {
                 console.log("success check logged in");
                 req.id = result.id;
+                req.job = result.job;
                 next()
             }
         }
