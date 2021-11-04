@@ -47,6 +47,16 @@ router.post('/',async (req,res)=>{
         if(encryptPwd == userData.pwd){
             const token = jwt.sign(userData);
 
+            // last_access_data 업데이트
+            await user.update({ latest_access_date: new Date()}, {where: {id: userData.id}})
+                .then(() => {
+                    console.log("user latest access date success");
+                })
+                .catch((err) => {
+                    console.log("user latest access date error", err);
+                });
+
+            // 유저의 모든 정보 가져오기
             let shopData, positionData, taskData, boardData, scheduleData;
 
             if(!userData.last_job) {
