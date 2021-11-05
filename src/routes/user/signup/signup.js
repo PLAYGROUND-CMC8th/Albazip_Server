@@ -268,6 +268,15 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
     const shopData = await shop.findOne({ attributes: ['name'] , where: {id: positionData.shop_id} });
 
     try {
+        // 근무자 중복 체크
+        const workerData = worker.findAll({id: positionData.id});
+        if(workerData){
+            return res.json({
+                code: "202",
+                message: "해당 포지션에 이미 근무자가 존재합니다."
+            });
+        }
+
         // 근무자 생성
         worker.create({
             user_id: userId,
