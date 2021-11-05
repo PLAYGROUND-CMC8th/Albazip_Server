@@ -50,10 +50,10 @@ router.post('/',async (req,res)=>{
             // last_access_data 업데이트
             await user.update({ latest_access_date: new Date()}, {where: {id: userData.id}})
                 .then(() => {
-                    console.log("user latest access date success");
+                    console.log("user latest access date update success");
                 })
                 .catch((err) => {
-                    console.log("user latest access date error", err);
+                    console.log("user latest access date update error", err);
                 });
 
             // 유저의 모든 정보 가져오기
@@ -86,7 +86,7 @@ router.post('/',async (req,res)=>{
                 code: "200",
                 message:"로그인을 완료했습니다.",
                 data:{
-                    token: token,
+                    token,
                     userInfo: userData,
                     shopInfo: shopData,
                     positionInfo: positionData,
