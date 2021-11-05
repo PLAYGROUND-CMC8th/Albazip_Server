@@ -73,7 +73,7 @@ router.post('/',async (req,res)=>{
     }
 
     //2. 휴대폰정보 중복체크
-   /* try {
+    try {
         if(phone.length != 11){
             console.log("not enough phone number: ", phone);
             return res.status(202).json({
@@ -95,7 +95,7 @@ router.post('/',async (req,res)=>{
                 message:"휴대폰 중복체크에 오류가 발생했습니다."
             })
         }
-    }*/
+    }
 
     //3. 비밀번호 암호화
     const salt = encryption.salt();
@@ -152,7 +152,7 @@ router.post('/',async (req,res)=>{
 router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,res, next)=> {
 
     const userId  = req.id;
-    const userData = await user.findOne({attributes: first_name, where: {id: userId}});
+    const userData = await user.findOne({attributes: ['first_name'], where: {id: userId}});
 
     let { name, ownerName, registerNumber, holiday } = req.body;
     const { type, address, startTime, endTime, payday } = req.body;
