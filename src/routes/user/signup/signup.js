@@ -220,9 +220,10 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                        // 유저의 마지막 업무 저장
                        return await models.user.update({last_job: "S"+newManager.shop_id}, {where: {id: userId}, transaction: t})
                            .then(async (updateUser) => {
-                               console.log("success update last position: ", updateUser);
+                               console.log("success update last position");
 
-                               const token = jwt.sign(updateUser);
+                               const udata = await user.findOne({where: {id: userId}});
+                               const token = jwt.sign(udata);
 
                                console.log("success manager signup");
                                return res.json({
@@ -301,7 +302,8 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
                     // 100일치 스케줄 생성
                     scheduleUtil.makeASchedule(newWorker.position_id);
 
-                    const token = jwt.sign(updateUser);
+                    const udata = await user.findOne({where: {id: userId}});
+                    const token = jwt.sign(udata);
 
                     return res.json({
                         code: "200",
