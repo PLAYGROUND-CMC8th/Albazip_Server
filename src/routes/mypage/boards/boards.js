@@ -209,7 +209,7 @@ router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
             writerJob = "사장님";
         } else {
             try {
-                const postionData = await position.findOne({attributes: ['title'], where: {id: req.job.substring(1)}});
+                const positionData = await position.findOne({attributes: ['title'], where: {id: req.job.substring(1)}});
                 console.log("success to get writer position data");
                 writerJob = positionData.title;
             } catch (err) {

@@ -13,7 +13,7 @@ module.exports = {
                 return count !== 0;
             });
     },
-    LoggedIn: async (req, res, next) => {
+    LoggedIn: (req, res, next) => {
         const token = req.headers.token;
 
         if (!token) {
@@ -48,6 +48,7 @@ module.exports = {
             }
             const userId = result.id;
             if (!userId) {
+                console.log(result.id, result.job);
                 return res.json({
                     code: "400",
                     message:"토큰 인증에 오류가 발생했습니다."
