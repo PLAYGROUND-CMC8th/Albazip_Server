@@ -152,7 +152,7 @@ router.post('/',async (req,res)=>{
 router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,res, next)=> {
 
     const userId  = req.id;
-    const userData = await user.findOne({attributes: ['first_name'], where: {id: userId}});
+    const userData = await user.findOne({attributes: ['first_name', 'last_name'], where: {id: userId}});
 
     let { name, ownerName, registerNumber, holiday } = req.body;
     const { type, address, startTime, endTime, payday } = req.body;
