@@ -91,7 +91,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
                     commentCount = count;
                 } catch (err) {
                     console.log("get comment count data error", err);
-                    commentCount = null;
+                    commentCount = 0;
                 }
 
                 let data = {
