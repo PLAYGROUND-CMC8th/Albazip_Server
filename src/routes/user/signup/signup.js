@@ -224,7 +224,7 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
 
                                const token = jwt.sign(updateUser);
 
-                               console.log("success manager signup: ", newManager);
+                               console.log("success manager signup");
                                return res.json({
                                    code: "200",
                                    message: "성공적으로 관리자 가입이 완료되었습니다.",

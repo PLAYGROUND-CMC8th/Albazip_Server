@@ -27,8 +27,9 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
         if(positionData) {
             for (const pdata of positionData) {
 
+                let workerData;
                 try {
-                    let workerData = await worker.findOne({where: {position_id: pdata.id}});
+                    workerData = await worker.findOne({where: {position_id: pdata.id}});
                 } catch {
                     workerData = null;
                 }

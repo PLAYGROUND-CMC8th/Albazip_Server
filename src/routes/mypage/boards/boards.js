@@ -3,7 +3,7 @@ var router = express.Router();
 
 var userUtil = require('../../../module/userUtil');
 
-const { user, position, board } = require('../../../models');
+const { user, position, board, comment } = require('../../../models');
 
 const pagesize = 20;
 
@@ -15,7 +15,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
 
         // 공지사항
         let noticeData;
-        if (req.job[1] == 'S') {
+        if (req.job[0] == 'S') {
 
             try {
                 noticeData = await board.findAll({
@@ -57,7 +57,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
         }
 
         let writerJob;
-        if (req.job[1] == 'S') {
+        if (req.job[0] == 'S') {
             writerJob = "사장님";
         } else {
             try {
@@ -132,7 +132,11 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 작성글 > 공지사항
 router.get('/notice/:page',userUtil.LoggedIn, async (req,res)=> {
 
-    const reqPage = req.params.page;
+    let reqPage;
+    if(req.params.page )
+        reqPage = req.params.page;
+    else
+        reqPage = 1;
     const offset = 0 + (reqPage - 1) * pagesize
     console.log("request notice page",reqPage);
 
@@ -167,8 +171,14 @@ router.get('/notice/:page',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 작성글 > 게시글
 router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
 
+
+
     try {
-        const reqPage = req.params.page;
+        let reqPage;
+        if(req.params.page )
+            reqPage = req.params.page;
+        else
+            reqPage = 1;
         const offset = 0 + (reqPage - 1) * pagesize
 
         console.log("request post page", reqPage);
@@ -229,7 +239,7 @@ router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
                     commentCount = count;
                 } catch (err) {
                     console.log("get comment count data error", err);
-                    commentCount = null;
+                    commentCount = 0;
                 }
 
                 let data = {
