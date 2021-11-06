@@ -36,12 +36,12 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
 
                 let data = {
                     positionId: pdata.id,
-                    workerId: workerData.id,
-                    status: workerData.status,
+                    workerId: workerData == null ? null :workerData.id,
+                    status: workerData == null ? null :workerData.status,
                     rank: pdata.rank,
                     image_path: pdata.image_path,
                     title: pdata.title,
-                    first_name: workerData.user_first_name
+                    first_name: workerData == null ? null :workerData.user_first_name
                 }
                 positionInfo.push(data);
             }
