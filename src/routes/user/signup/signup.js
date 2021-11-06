@@ -274,7 +274,7 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
 
     try {
         // 근무자 중복 체크
-        const workerCount = worker.count( {where: {id: positionData.id}} );
+        const workerCount = await worker.count( {where: {id: positionData.id}} );
         if(workerCount > 0){
             return res.json({
                 code: "202",
