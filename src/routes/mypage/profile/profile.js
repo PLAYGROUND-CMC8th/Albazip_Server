@@ -13,11 +13,8 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
         const userData = await user.findOne({where: {id: req.id}});
         if(req.job[0] == 'S'){
             jobData = await manager.findOne({where: {shop_id: req.job.substring(1)}});
-<<<<<<< HEAD
-            const shopData = await shop.findOne({attributes: [ 'image_path' ], where: {id: req.job.substring(1)}});
-=======
             shopData = await shop.findOne({attributes: [ 'image_path' ], where: {id: req.job.substring(1)}});
->>>>>>> 3512215829e6b5a73eb2dcebbc627d1c42ee5cb8
+
         } else {
             jobData = await worker.findOne({where: {position_id: req.job.substring(1)}});
             positionData = await position.findOne({attributes: [ 'image_path' ], where: {id: req.job.substring(1)}});
