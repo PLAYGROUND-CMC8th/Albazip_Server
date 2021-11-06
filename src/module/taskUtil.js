@@ -19,12 +19,12 @@ module.exports ={
             .then((scheduleData) => {
 
                 for(const sdata of scheduleData) {
-                    let taskData = task.findAll({where: {status: 1, target_id: sdata.position_id}});
+                    let taskData = task.findAll({where: {status: 0, target_id: sdata.position_id}});
 
                     for (let tdata of taskData) {
                         tdata.status = 2;
-                        task.create(tdata);
-                        console.log(tdata);
+                        tdata.target_date = new Date();
+                        task.create(tdata);ß
                     }
                 }
             })

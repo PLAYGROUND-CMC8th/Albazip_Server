@@ -34,12 +34,13 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
                 }
 
                 let data = {
-                    id: pdata.id,
-                    status: worker.status,
+                    positionId: pdata.id,
+                    workerId: workerData.id,
+                    status: workerData.status,
                     rank: pdata.rank,
                     image_path: pdata.image_path,
                     title: pdata.title,
-                    first_name: worker.user_first_name
+                    first_name: workerData.user_first_name
                 }
                 positionInfo.push(data);
             }

@@ -20,6 +20,10 @@ module.exports = (sequelize, DataTypes) => (
         user_first_name: {
             type: DataTypes.STRING(20),
             allowNull: false
+        },
+        user_last_name: {
+            type: DataTypes.STRING(10),
+            allowNull: false
         }
     }, {
         timestamps: true,

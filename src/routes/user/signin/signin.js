@@ -86,7 +86,7 @@ router.post('/',async (req,res)=>{
                 code: "200",
                 message:"로그인을 완료했습니다.",
                 data:{
-                    token,
+                    token: token,
                     userInfo: userData,
                     shopInfo: shopData,
                     positionInfo: positionData,

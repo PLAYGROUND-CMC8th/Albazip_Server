@@ -208,7 +208,8 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                    user_id: userId,
                    shop_id: newShop.id,
                    shop_name: shopData.name,
-                   user_first_name: userData.first_name
+                   user_first_name: userData.first_name,
+                   user_last_name: userData.last_name
                };
 
                // 매장 관리자 생성
@@ -221,10 +222,13 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                            .then(async (updateUser) => {
                                console.log("success update last position: ", updateUser);
 
+                               const token = jwt.sign(updateUser);
+
                                console.log("success manager signup: ", newManager);
                                return res.json({
                                    code: "200",
-                                   message: "성공적으로 관리자 가입이 완료되었습니다."
+                                   message: "성공적으로 관리자 가입이 완료되었습니다.",
+                                   data: token
                                });
                            })
                            .catch((err) => {
@@ -269,8 +273,8 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
 
     try {
         // 근무자 중복 체크
-        const workerData = worker.findAll({id: positionData.id});
-        if(workerData){
+        const workerCount = worker.count( {where: {id: positionData.id}} );
+        if(workerCount > 0){
             return res.json({
                 code: "202",
                 message: "해당 포지션에 이미 근무자가 존재합니다."
@@ -297,9 +301,12 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
                     // 100일치 스케줄 생성
                     scheduleUtil.makeASchedule(newWorker.position_id);
 
+                    const token = jwt.sign(updateUser);
+
                     return res.json({
                         code: "200",
-                        message: "성공적으로 근무자 가입이 완료되었습니다."
+                        message: "성공적으로 근무자 가입이 완료되었습니다.",
+                        data: token
                     });
                 })
                 .catch((err) => {

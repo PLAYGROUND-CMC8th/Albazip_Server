@@ -95,10 +95,13 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
                 }
 
                 let data = {
-                    postData,
+                    id: pdata.id,
                     writer_job: writerJob,
                     writer_name: writerName,
-                    commentCount: commentCount
+                    title: pdata.title,
+                    content: pdata.content,
+                    commentCount: commentCount,
+                    register_date: pdata.register_date
                 }
                 postInfo.push(data);
             }
@@ -230,10 +233,13 @@ router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
                 }
 
                 let data = {
-                    postData,
+                    id: pdata.id,
                     writer_job: writerJob,
                     writer_name: writerName,
-                    commentCount: commentCount
+                    title: pdata.title,
+                    content: pdata.content,
+                    commentCount: commentCount,
+                    register_date: pdata.register_date
                 }
                 postInfo.push(data);
             }

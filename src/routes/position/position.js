@@ -11,6 +11,14 @@ const models = require('../../models');
 router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
     const userId =  req.id;
+    if(req.job[0] != 'S'){
+        console.log("user is not manager");
+        res.json({
+            code: "202",
+            message: "근무자는 포지션을 추가할 수 없습니다."
+        });
+        return;
+    }
     const shopId = req.job.substring(1);
     const{ rank, title, startTime, endTime, workTime, breakTime } = req.body;
     let { salary, salaryType, workDays, taskLists } = req.body;
