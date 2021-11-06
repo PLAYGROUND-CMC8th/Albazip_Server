@@ -12,7 +12,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
         let jobData, positionData;
         const userData = await user.findOne({where: {id: req.id}});
         if(req.job[0] == 'S'){
-            jobData = await manager.findOnd({where: {shop_id: req.job.substring(1)}});
+            jobData = await manager.findOne({where: {shop_id: req.job.substring(1)}});
             const shopData = await shop.findOne({attributes: [ 'image_path' ], where: {id: req.job.substring(1)}});
         } else {
             jobData = await worker.findOne({where: {position_id: req.job.substring(1)}});
