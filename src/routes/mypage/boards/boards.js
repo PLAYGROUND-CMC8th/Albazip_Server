@@ -20,7 +20,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
             try {
                 noticeData = await board.findAll({
                     limit: pagesize,
-                    attributes: ['id', 'pin', 'title', 'register_date'],
+                    attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
                     where: {writer_job: req.job, status: 0},
                     order: [['register_date', 'DESC']]
                 });
@@ -41,7 +41,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
         try {
             postData = await board.findAll({
                 limit: pagesize,
-                attributes: ['id', 'title', 'content', 'register_date'],
+                attributes: ['id', 'title', 'content', ['register_date', 'registerDate']],
                 where: {writer_job: req.job, status: 1},
                 order: [['register_date', 'DESC']]
             });
@@ -72,7 +72,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
 
         let writerName;
         try {
-            const userData = await user.findOne({attributes: ['last_name', 'first_name'], where: {id: req.id}});
+            const userData = await user.findOne({attributes: [['last_name', 'lastName'], ['first_name', 'firstName']], where: {id: req.id}});
             console.log("success to get writer name data");
             writerName = userData.last_name + userData.first_name;
         } catch {
@@ -96,12 +96,12 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
 
                 let data = {
                     id: pdata.id,
-                    writer_job: writerJob,
-                    writer_name: writerName,
+                    writerJob: writerJob,
+                    writerName: writerName,
                     title: pdata.title,
                     content: pdata.content,
                     commentCount: commentCount,
-                    register_date: pdata.register_date
+                    registerDate: pdata.register_date
                 }
                 postInfo.push(data);
             }
@@ -112,8 +112,8 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
             code: "200",
             message: "마이페이지 작성글 조회에 성공했습니다. ",
             data: {
-                notice_info: noticeData,
-                post_info: postInfo
+                noticeInfo: noticeData,
+                postInfo: postInfo
             }
         });
         return;
@@ -142,7 +142,7 @@ router.get('/notice/:page',userUtil.LoggedIn, async (req,res)=> {
 
     await board.findAll({
         limit: pagesize,
-        attributes: ['id', 'pin', 'title', 'register_date'],
+        attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
         where: { writer_job: req.job, status: 0 },
         order: [ [ 'register_date', 'DESC' ]]
     })
@@ -189,7 +189,7 @@ router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
             postData = await board.findAll({
                 offset: offset,
                 limit: pagesize,
-                attributes: ['id', 'title', 'content', 'register_date'],
+                attributes: ['id', 'title', 'content', ['register_date', 'registerDate']],
                 where: {writer_job: req.job, status: 1},
                 order: [['register_date', 'DESC']]
             });
@@ -220,7 +220,7 @@ router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
 
         let writerName;
         try {
-            const userData = await user.findOne({attributes: ['last_name', 'first_name'], where: {id: req.id}});
+            const userData = await user.findOne({attributes: [['last_name', 'lastName'], ['first_name', 'firstName']], where: {id: req.id}});
             console.log("success to get writer name data");
             writerName = userData.last_name + userData.first_name;
         } catch {
@@ -244,12 +244,12 @@ router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
 
                 let data = {
                     id: pdata.id,
-                    writer_job: writerJob,
-                    writer_name: writerName,
+                    writerJob: writerJob,
+                    writerName: writerName,
                     title: pdata.title,
                     content: pdata.content,
                     commentCount: commentCount,
-                    register_date: pdata.register_date
+                    registerDate: pdata.register_date
                 }
                 postInfo.push(data);
             }

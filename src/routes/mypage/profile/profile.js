@@ -25,7 +25,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
             jobTitle: req.job[0] == 'S'? "사장님": jobData.position_title,
             lastName: userData.last_name,
             firstName: userData.first_name,
-            image_path: req.job[0] == 'S'? shopData.image_path: positionData.image_path
+            imagePath: req.job[0] == 'S'? shopData.image_path: positionData.image_path
         }
 
         console.log("success get mypage profile");

@@ -5,8 +5,14 @@ var userUtil = require('../../module/userUtil');
 
 const { user, manager, worker, shop, position, time, board, task, schedule } = require('../../models');
 
-// 마이페이지
-router.get('/',userUtil.LoggedIn, async (req,res)=> {
+// 관리자 마이페이지
+router.get('/manager',userUtil.LoggedIn, async (req,res)=> {
+
+
+});
+
+// 근무자 마이페이지
+router.get('/worker',userUtil.LoggedIn, async (req,res)=> {
 
 
 });
