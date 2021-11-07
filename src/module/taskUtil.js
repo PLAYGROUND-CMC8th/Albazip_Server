@@ -9,7 +9,7 @@ module.exports ={
         const dateNow = now.getDate();
 
         await schedule.findAll({
-            attributes: [postion_id],
+            attributes: ['postion_id'],
             where: {
                 year: yearNow,
                 month: monthNow,
@@ -24,7 +24,7 @@ module.exports ={
                     for (let tdata of taskData) {
                         tdata.status = 2;
                         tdata.target_date = new Date();
-                        task.create(tdata);ß
+                        task.create(tdata);
                     }
                 }
             })
