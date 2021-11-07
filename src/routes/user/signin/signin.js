@@ -1,10 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
+var voca = require('voca');
 var jwt = require('../../../module/jwt');
 var encryption = require('../../../module/encryption');
 
-const { user, manager, worker, shop, position, task, board, schedule } = require('../../../models');
+const { user } = require('../../../models');
 
 router.post('/',async (req,res)=>{
 
@@ -51,51 +52,30 @@ router.post('/',async (req,res)=>{
             await user.update({ latest_access_date: new Date()}, {where: {id: userData.id}})
                 .then(() => {
                     console.log("user latest access date update success");
+
+                    let job;
+                    if(!userData.last_job)
+                        job = 0;
+                    else if (userData.last_job[0] == 'S')
+                        job = 1;
+                    else if (userData.last_job[0] == 'P')
+                        job = 2;
+
+                    console.log("signin success");
+                    res.json({
+                        code: "200",
+                        message:"로그인을 완료했습니다.",
+                        data: {
+                            token: token,
+                            job: job  // 0: 없음, 1: 관리자, 2: 근무자
+                        }
+                    })
+                    return;
+
                 })
                 .catch((err) => {
                     console.log("user latest access date update error", err);
                 });
-
-            // 유저의 모든 정보 가져오기
-            let shopData, positionData, taskData, boardData, scheduleData;
-
-            if(!userData.last_job) {
-                shopData = null;
-                positionData = null;
-                taskData = null;
-                boardData = null;
-                scheduleData = null;
-
-            } else {
-                if (userData.last_job[0] == 'S') {
-                    shopData = await shop.findOne({where: {id: userData.last_job.substring(1)}});
-                    positionData = null;
-
-                } else if (userData.last_job[0] == 'P') {
-                    positionData = await position.findOne({where: {id: userData.last_job.substring(1)}});
-                    shopData = await shop.findOne({where: {id: positionData.shop_id}});
-                }
-                taskData = null;
-                boardData = null;
-                scheduleData = null;
-            }
-
-
-            console.log("signin success");
-            res.json({
-                code: "200",
-                message:"로그인을 완료했습니다.",
-                data:{
-                    token: token,
-                    userInfo: userData,
-                    shopInfo: shopData,
-                    positionInfo: positionData,
-                    taskInfo: taskData,
-                    boardInfo: boardData,
-                    scheduleInfo: scheduleData
-                }
-            })
-            return;
 
         }
         else {
@@ -115,5 +95,39 @@ router.post('/',async (req,res)=>{
         return;
     }
 });
+
+
+router.post('/password', async (req,res)=> {
+
+    const pwd = req.body.pwd;
+    let phone = req.body.phone;
+    phone = voca.replaceAll(phone, '-', '');
+
+    const userData = await user.findOne({ where: { phone: phone } });
+
+    // 비밀번호 암호
+    const salt = userData.salt;
+    const key = encryption.makeCrypto(pwd,salt);
+
+    user.update({pwd: key}, {where: {id: userData.id}})
+        .then(updateUser => {
+            console.log("success update password ");
+            res.status(200).json({
+                code: "200",
+                message:"성공적으로 비밀번호를 변경했습니다."
+            });
+            return;
+        })
+        .catch(err => {
+            console.log("user server error:", err );
+            res.json({
+                code: "400",
+                message: "비밀번호 변경에 오류가 발생했습니다."
+            });
+            return;
+        });
+
+});
+
 
 module.exports = router;
