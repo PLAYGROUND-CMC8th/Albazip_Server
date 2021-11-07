@@ -29,8 +29,8 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.INTEGER,
             allowNull: true
         },
-        completer_id: {
-            type: DataTypes.INTEGER,
+        completer_job: {
+            type: DataTypes.STRING(10),
             allowNull: true
         },
         target_date: {
