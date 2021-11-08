@@ -70,7 +70,7 @@ router.get('/manager',userUtil.LoggedIn, async (req,res)=> {
 
         let writerName;
         try {
-            const userData = await user.findOne({attributes: [['last_name', 'lastName'], ['first_name', 'firstName']], where: {id: req.id}});
+            const userData = await user.findOne({attributes: ['last_name', 'first_name'], where: {id: req.id}});
             console.log("success to get writer name data");
             writerName = userData.last_name + userData.first_name;
         } catch {
@@ -312,7 +312,7 @@ router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
 
         let writerName;
         try {
-            const userData = await user.findOne({attributes: [['last_name', 'lastName'], ['first_name', 'firstName']], where: {id: req.id}});
+            const userData = await user.findOne({attributes: ['last_name', 'first_name'], where: {id: req.id}});
             console.log("success to get writer name data");
             writerName = userData.last_name + userData.first_name;
         } catch {
