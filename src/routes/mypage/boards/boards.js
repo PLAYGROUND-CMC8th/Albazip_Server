@@ -7,37 +7,35 @@ const { user, position, board, comment } = require('../../../models');
 
 const pagesize = 20;
 
-// 마이페이지 > 하단 > 작성글
-router.get('/',userUtil.LoggedIn, async (req,res)=> {
+
+// 마이페이지 > 하단 > 작성글 > 관리자
+router.get('/manager',userUtil.LoggedIn, async (req,res)=> {
 
     try {
         let boardData = {};
 
         // 공지사항
         let noticeData;
-        if (req.job[0] == 'S') {
-
-            try {
-                noticeData = await board.findAll({
-                    limit: pagesize,
-                    attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
-                    where: {writer_job: req.job, status: 0},
-                    order: [['register_date', 'DESC']]
-                });
-                console.log("success to get recent notice");
-            } catch (err) {
-                console.log("get recent notice error", err);
-                res.json({
-                    code: "400",
-                    message: "공지사항 조회에 오류가 발생했습니다.",
-                })
-                return;
-            }
+        try {
+            noticeData = await board.findAll({
+                limit: pagesize,
+                attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
+                //where: {writer_job: req.job, status: 0},
+                where: {writer_job: req.job, status: 0},
+                order: [['register_date', 'DESC']]
+            });
+            console.log("success to get recent notice");
+        } catch (err) {
+            console.log("get recent notice error", err);
+            res.json({
+                code: "400",
+                message: "공지사항 조회에 오류가 발생했습니다.",
+            })
+            return;
         }
 
         // 게시글
         let postData;
-
         try {
             postData = await board.findAll({
                 limit: pagesize,
@@ -129,6 +127,101 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
+// 마이페이지 > 하단 > 작성글 > 근무자
+router.get('/worker',userUtil.LoggedIn, async (req,res)=> {
+
+    try {
+        let boardData = {};
+
+        // 게시글
+        let postData;
+        try {
+            postData = await board.findAll({
+                limit: pagesize,
+                attributes: ['id', 'title', 'content', ['register_date', 'registerDate']],
+                where: {writer_job: req.job, status: 1},
+                order: [['register_date', 'DESC']]
+            });
+            console.log("success to get recent post");
+            ;
+        } catch (err) {
+            console.log("get recent post error", err);
+            res.json({
+                code: "400",
+                message: "게시글 조회에 오류가 발생했습니다.",
+            })
+            return;
+        }
+
+        let writerJob;
+        try {
+            const positionData = await position.findOne({attributes: ['title'], where: {id: req.job.substring(1)}});
+            console.log("success to get writer position data");
+            writerJob = positionData.title;
+        } catch (err) {
+            console.log("get writer position data error", err);
+            writerJob = null;
+        }
+
+        let writerName;
+        try {
+            const userData = await user.findOne({attributes: [['last_name', 'lastName'], ['first_name', 'firstName']], where: {id: req.id}});
+            console.log("success to get writer name data");
+            writerName = userData.last_name + userData.first_name;
+        } catch {
+            console.log("get writer name data error", err);
+            writerName = null;
+        }
+
+        let postInfo = [];
+        if (postData) {
+            for (const pdata of postData) {
+
+                let commentCount;
+                try {
+                    const count = await comment.count({where: {status: [1, 2], board_id: pdata.id}});
+                    console.log("success to get comment count data");
+                    commentCount = count;
+                } catch (err) {
+                    console.log("get comment count data error", err);
+                    commentCount = 0;
+                }
+
+                let data = {
+                    id: pdata.id,
+                    writerJob: writerJob,
+                    writerName: writerName,
+                    title: pdata.title,
+                    content: pdata.content,
+                    commentCount: commentCount,
+                    registerDate: pdata.register_date
+                }
+                postInfo.push(data);
+            }
+        }
+
+        console.log("success to get mypage boards");
+        res.json({
+            code: "200",
+            message: "마이페이지 작성글 조회에 성공했습니다. ",
+            data: {
+                postInfo: postInfo
+            }
+        });
+        return;
+    }
+    catch (err) {
+        console.log("get mypage boards error");
+        res.json({
+            code: "400",
+            message: "마이페이지 작성글 조회에 실패했습니다. ",
+        });
+        return;
+    }
+
+});
+
+
 // 마이페이지 > 하단 > 작성글 > 공지사항
 router.get('/notice/:page',userUtil.LoggedIn, async (req,res)=> {
 
@@ -170,7 +263,6 @@ router.get('/notice/:page',userUtil.LoggedIn, async (req,res)=> {
 
 // 마이페이지 > 하단 > 작성글 > 게시글
 router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
-
 
 
     try {
