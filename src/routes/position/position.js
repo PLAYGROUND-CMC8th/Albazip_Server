@@ -103,8 +103,8 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
                             let taskData = {
                                 shop_id: shopId,
-                                writer_job: "P" + newPosition.id,
-                                status: 1,
+                                writer_job: req.job,
+                                status: 0,
                                 title: task.title,
                                 content: task.content,
                                 target_id: newPosition.id
