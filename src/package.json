@@ -13,6 +13,7 @@
     "crypto": "^1.0.1",
     "debug": "~2.6.9",
     "express": "~4.16.1",
+    "express-asyncify": "^1.0.1",
     "firebase-admin": "^10.0.0",
     "holidays-kr": "^1.0.3",
     "http-errors": "~1.6.3",
