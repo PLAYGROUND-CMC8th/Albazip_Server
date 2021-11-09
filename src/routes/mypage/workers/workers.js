@@ -1,68 +1,59 @@
 var express = require('express');
-var router = express.Router();
+//var router = express.Router();
+
+var asyncify = require('express-asyncify');
+var router = asyncify(express.Router());
 
 var userUtil = require('../../../module/userUtil');
-
-const { user, manager, worker, shop, position, time, board, task, schedule} = require('../../../models');
+var positionUtil = require('../../../module/positionUtil');
+var taskUtil = require('../../../module/taskUtil');
 
 // 마이페이지 > 하단 > 근무자
 router.get('/',userUtil.LoggedIn, async (req,res)=> {
 
-    let positionData;
-    try {
-        positionData = await position.findAll({where: {shop_id: req.job.substring(1)}});
-        console.log("success to get shop positions");
-    }
-    catch {
-        console.log("get shop positions error", err);
-        res.json({
-            code: "400",
-            message: "포지션 정보 조회에 오류가 발생했습니다.",
-        })
-        return;
-    }
+    const workersListResult = await positionUtil.getWorkersList(req.job.substring(1));
+    return res.json(workersListResult);
 
-    let positionInfo = [];
-    try {
-        if(positionData) {
-            for (const pdata of positionData) {
+});
 
-                let workerData;
-                try {
-                    workerData = await worker.findOne({where: {position_id: pdata.id}});
-                } catch {
-                    workerData = null;
-                }
+// 마이페이지 > 하단 > 근무자 > 근무자 선택
+router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
-                let data = {
-                    positionId: pdata.id,
-                    workerId: workerData == null ? null :workerData.id,
-                    status: workerData == null ? null :workerData.status,
-                    rank: pdata.rank,
-                    image_path: pdata.image_path,
-                    title: pdata.title,
-                    first_name: workerData == null ? null :workerData.user_first_name
-                }
-                positionInfo.push(data);
-            }
-        }
-    }
-    catch(err) {
-        console.log("get mypage workers error", err);
-        res.json({
-            code: "400",
-            message: "근무자 정보 조회에 오류가 발생했습니다.",
-        })
-        return;
-    }
 
-    console.log("success get mypage worker info");
-    res.json({
-        code: "200",
-        message: "근무자 정보 조회에 성공했습니다.",
-        data: positionInfo
-    });
-    return;
+});
+
+// 마이페이지 > 하단 > 근무자 > 근무자 선택 > 상단 > 근무자 프로필
+router.get('/:positionId/profile',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionProfiletResult = await positionUtil.getPositionProfile(req.params.positionId);
+    return res.json(positionProfiletResult);
+
+});
+
+
+// 마이페이지 > 하단 > 근무자 > 근무자 선택 > 하단 > 근무자 정보
+router.get('/:positionId/workerInfo',userUtil.LoggedIn, async (req,res)=> {
+
+    const workerInfoResult = await positionUtil.getWorkerInfo(req.params.positionId);
+    return res.json(workerInfoResult);
+
+});
+
+
+// 마이페이지 > 하단 > 근무자 > 근무자 선택 > 하단 > 근무자 포지션 정보
+router.get('/:positionId/positionInfo',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionInfoResult = await positionUtil.getPositionInfo(req.params.positionId);
+    return res.json(positionInfoResult);
+
+});
+
+
+// 마이페이지 > 하단 > 근무자 > 근무자 선택 > 하단 > 근무자 업무리스트
+router.get('/:positionId/taskList',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionTaskListResult = await taskUtil.getPositionTaskList(req.params.positionId);
+    return res.json(positionTaskListResult);
 
 });
 
