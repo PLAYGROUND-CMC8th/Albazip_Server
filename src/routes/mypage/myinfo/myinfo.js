@@ -12,7 +12,18 @@ var positionUtil = require('../../../module/positionUtil');
 router.get('/',userUtil.LoggedIn, async (req,res)=> {
 
     const myinfoResult = await positionUtil.getWorkerInfo(req.job.substring(1));
-    return res.json(myinfoResult);
+    if (myinfoResult.code == "400"){
+        return res.json(myinfoResult);
+        return;
+    }
+
+    res.json({
+        code: "200",
+        message: "마이페이지 내정보 조회에 성공했습니다. ",
+        data: myinfoResult.data
+    });
+    return;
+
 
 });
 
