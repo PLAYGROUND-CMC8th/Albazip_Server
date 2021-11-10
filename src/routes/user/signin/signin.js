@@ -67,7 +67,8 @@ router.post('/',async (req,res)=>{
                         message:"로그인을 완료했습니다.",
                         data: {
                             token: token,
-                            job: job  // 0: 없음, 1: 관리자, 2: 근무자
+                            job: job,  // 0: 없음, 1: 관리자, 2: 근무자
+                            userFirstName: userData.first_name
                         }
                     })
                     return;
