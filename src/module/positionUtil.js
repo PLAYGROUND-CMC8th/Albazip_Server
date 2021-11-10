@@ -58,7 +58,7 @@ module.exports = {
                             rank: pdata.rank,
                             image_path: pdata.image_path,
                             title: pdata.title,
-                            first_name: workerData == null ? "근무자 없음" : workerData.user_first_name
+                            first_name: workerData == null ? "" : workerData.user_first_name
                         }
                         positionInfo.push(data);
                     }
@@ -114,7 +114,7 @@ module.exports = {
         }
         catch(err) {
             console.log("get worker data error or no worker exist", err);
-            positionProfileData.dataValues.firstName = "근무자 없음";
+            positionProfileData.dataValues.firstName = "";
         }
 
         return {
@@ -141,7 +141,6 @@ module.exports = {
 
             let workerInfo = {};
             if (!workerData) {
-                workerInfo.workerExist = 0;
 
                 try {
                     // 포지션 코드
@@ -154,7 +153,6 @@ module.exports = {
                 }
 
             } else {
-                workerInfo.workerExist = 1;
 
                 try {
                     // 근무자 유저 정보
