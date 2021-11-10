@@ -2,7 +2,7 @@ var express = require('express');
 //var router = express.Router();
 
 var asyncify = require('express-asyncify');
-var router = asyncify(express.Router());ㅊㅊ
+var router = asyncify(express.Router());
 
 var userUtil = require('../../module/userUtil');
 var positionUtil = require('../../module/positionUtil');
