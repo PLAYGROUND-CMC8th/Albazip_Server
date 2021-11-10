@@ -7,6 +7,7 @@ router.use('/workers', require('./workers'));
 router.use('/position', require('./position'));
 router.use('/myinfo', require('./myinfo'));
 router.use('/profile', require('./profile'));
+router.use('/setting', require('./setting'));
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
