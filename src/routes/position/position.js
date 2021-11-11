@@ -11,6 +11,8 @@ const models = require('../../models');
 //포지션 추가하기
 router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
+    // 한 매장 당 3명까지 포시션 추가하도록
+
     try {
         const userId = req.id;
         if (req.job[0] != 'S') {
@@ -92,11 +94,11 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
                     if (taskLists) {
                         for (const task of taskLists) {
 
-                            if (!task.title || !task.content) {
+                            if (!task.title) {
                                 console.log("not enough parameter: ");
                                 res.json({
                                     code: "202",
-                                    message: "필수 정보가 부족합니다."
+                                    message: "업무명을 입력해주세요."
                                 });
                                 return;
                             }

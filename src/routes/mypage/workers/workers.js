@@ -16,7 +16,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 마이페이지 > 하단 > 근무자 > 근무자 선택
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택
 router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
     // 근무자 프로필
@@ -61,7 +61,7 @@ router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 마이페이지 > 하단 > 근무자 > 근무자 선택
+// 마이페이지 > 하단 > 근무자 > 근무자 부재 > 근무자 선택
 router.get('/ne/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
     // 근무자 프로필
