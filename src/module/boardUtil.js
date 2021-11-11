@@ -16,7 +16,7 @@ module.exports = {
                 postData = await board.findAll({
                     offset: offset,
                     limit: pagesize,
-                    attributes: ['id', 'title', 'content', ['register_date', 'registerDate']],
+                    attributes: ['id', 'title', 'content', 'register_date'],
                     where: {writer_job: reqJob, status: 1},
                     order: [['register_date', 'DESC']]
                 });
