@@ -1,5 +1,6 @@
 var sequelize = require('sequelize');
 var op = sequelize.Op;
+var voca = require('voca');
 
 
 const { position, task, user, manager, worker, schedule } = require('../models');
@@ -257,9 +258,12 @@ module.exports = {
             const positionData = await position.findOne({
                 attributes:[['start_time', 'startTime'], ['end_time', 'endTime'],
                             ['work_time', 'workTime'], ['break_time', 'breakTime'],
+                            ['work_day', 'workDay'],
                             ['salary_type', 'salaryType'], 'salary'],
                 where: {id: positionId}});
+
             console.log("success to get position data");
+            positionData.dataValues.workDay = voca.replaceAll(positionData.dataValues.workDay, ',', ' ');
 
             return {
                 code: "200",
