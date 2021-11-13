@@ -2,6 +2,7 @@ var sequelize = require('sequelize');
 var op = sequelize.Op;
 var voca = require('voca');
 
+var workerUtil = require('../module/workerUtil');
 
 const { position, task, user, manager, worker, schedule } = require('../models');
 
@@ -168,69 +169,21 @@ module.exports = {
                     console.log("get user userData error", err);
                 }
 
-                const now = new Date();
-                const yearNow = now.getFullYear();
-                const monthNow = now.getMonth();
-                const dateNow = now.getDate();
-
                 workerInfo.workInfo = {};
-                try {
-                    // 지각횟수
-                    const lateCount = await schedule.count({
-                        where: {
-                            register_date: {[op.gte]: workerData.register_date},
-                            year: {[op.lte]: yearNow}, month: {[op.lte]: monthNow}, day: {[op.lt]: dateNow},
-                            real_start_time: {[op.ne]: null}, real_start_time: {[op.gt]: 'start_time'}
-                        }
-                    });
-                    workerInfo.workInfo.lateCount = lateCount;
-                    console.log("success to get worker late count");
-
-                } catch (err) {
-                    workerInfo.workInfo.lateCount = null;
-                    console.log("get worker late count error", err);
-                }
-
-                try {
-                    // 공동업무 참여횟수
-                    const coTaskCount = await task.count({
-                        where: {
-                            target_date: {[op.gte]: workerData.register_date},
-                            status: 1, completer_job: "P" + positionId
-                        }
-                    });
-                    workerInfo.workInfo.coTaskCount = coTaskCount;
-                    console.log("success to get worker cooperate task count");
-                } catch (err) {
-                    workerInfo.workInfo.coTaskCount = null;
-                    console.log("get worker cooperate task count", err);
-                }
+                // 지각횟수
+                const lateCountResult = await workerUtil.getLateCount(positionId, workerData.register_date);
+                workerInfo.workInfo.lateCount = lateCountResult.data;
 
 
-                try {
-                    // 업무완수율
-                    const completeTaskCount = await task.count({
-                        where: {
-                            target_date: {[op.gte]: workerData.register_date},
-                            status: 2, completer_job: "P" + positionId
-                        }
-                    });
+                //공동업무 참여횟수
+                const coTaskCountResult  = await workerUtil.getCoTaskCount(positionId, workerData.register_date);
+                workerInfo.workInfo.coTaskCount = coTaskCountResult.data;
 
-                    const totalTaskCount = await task.count({
-                        where: {
-                            target_date: {[op.gte]: workerData.register_date},
-                            status: 2, target_id: positionId
-                        }
-                    });
+                // 업무완수율
+                const completeTaskInfo = await workerUtil.getCompleteTaskInfo(positionId, workerData.register_date);
+                workerInfo.workInfo.completeTaskCount = completeTaskInfo.data.completeTaskCount;
+                workerInfo.workInfo.totalTaskCount = completeTaskInfo.data.totalTaskCount;
 
-                    workerInfo.workInfo.completeTaskCount = completeTaskCount;
-                    workerInfo.workInfo.totalTaskCount = totalTaskCount;
-                    console.log("success to get worker complete task rate");
-                } catch (err) {
-                    workerInfo.workInfo.completeTaskCount = null;
-                    workerInfo.workInfo.totalTaskCount = null;
-                    console.log("get worker complete task rate error", err);
-                }
                 workerInfo.joinDate = workerData.register_date;
             }
 

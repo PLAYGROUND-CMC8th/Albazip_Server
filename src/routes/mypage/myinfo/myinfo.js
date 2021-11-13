@@ -6,11 +6,12 @@ var router = asyncify(express.Router());
 
 var userUtil = require('../../../module/userUtil');
 var positionUtil = require('../../../module/positionUtil');
+var workerUtil = require('../../../module/workerUtil');
 
 const { worker } = require('../../../models');
 
 
-// 마이페이지 하단 내정보
+// 마이페이지보 > 하단 > 내정보
 router.get('/', userUtil.LoggedIn, async (req,res)=> {
 
     const myinfoResult = await positionUtil.getWorkerInfo(req.job.substring(1));
@@ -25,6 +26,56 @@ router.get('/', userUtil.LoggedIn, async (req,res)=> {
         data: myinfoResult.data
     });
     return;
+
+});
+
+// 마이페이지 > 하단 > 내정보 > 지각횟수
+router.get('/lateCount',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionId = req.job.substring(1);
+
+    let workerData;
+    try {
+        workerData = await worker.findOne({ attributes: ['register_date'], where : {position_id: positionId}})
+    }
+    catch(err) {
+        workerData = null;
+    }
+    const lateCountResult = await workerUtil.getLateCount(positionId, workerData.register_date);
+    return res.json(lateCountResult);
+});
+
+// 마이페이지 > 하단 > 내정보 > 공동업무 참여횟수
+router.get('/coTaskCount',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionId = req.job.substring(1);
+
+    let workerData;
+    try {
+        workerData = await worker.findOne({ attributes: ['register_date'], where : {position_id: positionId}})
+    }
+    catch(err) {
+        workerData = null;
+    }
+    const coTaskCountResult = await workerUtil.getCoTaskCount(positionId, workerData.register_date);
+    return res.json(coTaskCountResult);
+
+});
+
+// 마이페이지 > 하단 > 내정보 > 업무 완수율
+router.get('/taskInfo',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionId = req.job.substring(1);
+
+    let workerData;
+    try {
+        workerData = await worker.findOne({ attributes: ['register_date'], where : {position_id: positionId}})
+    }
+    catch(err) {
+        workerData = null;
+    }
+    const completeTaskInfo = await workerUtil.getCompleteTaskInfo(positionId, workerData.register_date);
+    return res.json(completeTaskInfo);
 
 });
 
