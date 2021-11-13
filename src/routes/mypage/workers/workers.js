@@ -162,7 +162,7 @@ router.get('/:positionId/workerInfo/coTaskCount',userUtil.LoggedIn, async (req,r
 });
 
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 업무 완수율
-router.get('/:positionId/workerInfo/taskInfo',userUtil.LoggedIn, async (req,res)=> {
+router.get('/:positionId/workerInfo/taskRate',userUtil.LoggedIn, async (req,res)=> {
 
     const positionId = req.params.positionId;
 

@@ -63,7 +63,7 @@ router.get('/coTaskCount',userUtil.LoggedIn, async (req,res)=> {
 });
 
 // 마이페이지 > 하단 > 내정보 > 업무 완수율
-router.get('/taskInfo',userUtil.LoggedIn, async (req,res)=> {
+router.get('/taskRate',userUtil.LoggedIn, async (req,res)=> {
 
     const positionId = req.job.substring(1);
 
