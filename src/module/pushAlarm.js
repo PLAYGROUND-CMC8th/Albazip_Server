@@ -26,10 +26,8 @@ module.exports = {
                 data: {
                     flag: "0",
                     status: "2",
-                    info: {
-                        name: "카이트",
-                        job: "Android Developer"
-                    }
+                    name: "카이트",
+                    job: "Android Developer"
                 }
             };
 
@@ -72,10 +70,8 @@ module.exports = {
                 data: {
                     flag: "0",
                     status: "2",
-                    info: {
-                        name: "초비",
-                        job: "iOS Developer"
-                    }
+                    name: "초비",
+                    job: "iOS Developer"
                 }
             };
 
