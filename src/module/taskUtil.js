@@ -1,4 +1,10 @@
-const { schedule, time, position, task, shop, manager } = require("../models");
+var sequelize = require('sequelize');
+var op = sequelize.Op;
+var fn = sequelize.fn;
+
+var workerUtil = require('../module/workerUtil');
+
+const { schedule, time, position, task, shop, manager, worker } = require("../models");
 
 
 module.exports ={
@@ -9,7 +15,7 @@ module.exports ={
         const dateNow = now.getDate();
 
         await schedule.findAll({
-            attributes: ['postion_id'],
+            attributes: ['position_id'],
             where: {
                 year: yearNow,
                 month: monthNow,
@@ -93,6 +99,175 @@ module.exports ={
                 message: "근무자의 업무리스트 조회에 오류가 발생했습니다."
             };
         }
+    },
+
+    // 근무자: 마이페이지 > 내정보 > 공동업무
+    // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 공동업무
+    getCotaskInfo: async(positionId) => {
+
+        let workerData;
+        try {
+            workerData = await worker.findOne({ where : {position_id: positionId} });
+        } catch(err) {
+            workerData = null;
+        }
+
+        const query = `select title, content, 
+                              substr(register_date, 1, 4) as year, substr(register_date, 6, 2) as month, substr(register_date, 9, 2) as date, 
+                              update_date as complete_date
+                       from task 
+                       where (1 = 1)
+                       and	status = 1
+                       and  completer_job = "P${positionId}"
+                       and	date(register_date) between "${workerData.register_date}" and now()
+                       order by year desc, month desc, date desc;`;
+
+        try {
+            const coTaskData = await task.sequelize.query( query, { type: sequelize.QueryTypes.SELECT });
+
+
+            console.log("success to get worker coTask");
+            return {
+                code: "200",
+                message: "근무자의 공동업무 조회에 성공했습니다.",
+                data: coTaskData
+            };
+        }
+        catch(err) {
+            console.log("get worker ccoTask error", err);
+            return {
+                code: "400",
+                message: "근무자의 공동업무 조회에 오류가 발생했습니다."
+            };
+        }
+
+    },
+
+    // 근무자: 마이페이지 > 내정보 > 완료한업무
+    // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 완료한업무
+    getCompleteTaskTotal: async(positionId) => {
+
+        let completeTaskResult = {};
+
+        let workerData;
+        try {
+            workerData = await worker.findOne({ where : {position_id: positionId} });
+        } catch(err) {
+            workerData = null;
+        }
+
+        completeTaskResult.taskRate = {};
+        const completeTaskInfo = await workerUtil.getTaskRate(positionId, workerData.register_date);
+        completeTaskResult.taskRate = completeTaskInfo.data;
+
+        const query = `select	tmp.year, tmp.month,
+                                count(*) as totalCount,
+                                count(completer_job) as completeCount
+                        from(	select completer_job, register_date, substr(register_date, 1, 4) as year, substr(register_date, 6, 2) as month
+                                from task
+                                where (1 = 1)
+                                and	status = 2
+                                and target_id = ${positionId}
+                                and date(register_date) between "${workerData.register_date}" and now()
+                        ) tmp
+                        group by tmp.year, tmp.month
+                        order by tmp.year desc, tmp.month desc`;
+
+        try {
+            const taskData = await task.sequelize.query( query, { type: sequelize.QueryTypes.SELECT });
+            completeTaskResult.taskData = taskData;
+
+            console.log("success to get worker complete task");
+            return {
+                code: "200",
+                message: "근무자의 완수업무율 전체 조회에 성공했습니다.",
+                data: completeTaskResult
+            };
+        }
+        catch(err) {
+            console.log("get worker complete task error", err);
+            return {
+                code: "400",
+                message: "근무자의 완수업무율 전체 조회에 오류가 발생했습니다."
+            };
+        }
+
+    },
+    getCompleteTaskMonth: async(positionId, year, month) => {
+
+        const query = `select	tmp.month, tmp.day,
+                                count(*) as totalCount,
+                                count(completer_job) as completeCount
+                        from(	select completer_job, register_date, substr(register_date, 6, 2) as month, substr(register_date, 9, 2) as day
+                                from task
+                                where (1 = 1)
+                                and	status = 2
+                                and target_id = ${positionId}
+                                and year(register_date)= "${year}" and month(register_date) = "${month}"
+                        ) tmp
+                        group by tmp.month, tmp.day
+                        order by tmp.month desc, tmp.day desc`;
+
+        try {
+            const taskData = await task.sequelize.query( query, { type: sequelize.QueryTypes.SELECT });
+
+            console.log("success to get worker month complete task");
+            return {
+                code: "200",
+                message: `근무자의 ${year}년 ${month}월 완료한업무 조회를 성공했습니다.`,
+                data: taskData
+            };
+        }
+        catch(err) {
+            console.log("get worker month complete task error", err);
+            return {
+                code: "400",
+                message: `근무자의 ${year}년 ${month}월 완료한업무 조회에 오류가 발생했습니다.`
+            };
+        }
+    },
+    getCompleteTaskDate: async(positionId, year, month, date) => {
+
+        const cQuery = `select	title, content, update_date as complete_date
+                        from    task
+                        where   status = 2
+                        and     target_id = ${positionId}
+                        and     completer_job is not null
+                        and     year(register_date) = "${year}"
+                        and     month(register_date) = "${month}"
+                        and     day(register_date) = "${date}"`;
+
+        const nQuery = `select	title, content
+                        from    task
+                        where   status = 2
+                        and     target_id = ${positionId}
+                        and     completer_job is null
+                        and     year(register_date) = "${year}"
+                        and     month(register_date) = "${month}"
+                        and     day(register_date) = "${date}"`;
+
+        try {
+            const completeTaskData = await task.sequelize.query( cQuery, { type: sequelize.QueryTypes.SELECT });
+            const nonCompleteTaskData = await task.sequelize.query( nQuery, { type: sequelize.QueryTypes.SELECT });
+
+            console.log("success to get worker date complete task");
+            return {
+                code: "200",
+                message: `근무자의 ${year}년 ${month}월 ${date}일 완료한업무 조회에 성공했습니다.`,
+                data: {
+                    nonCompleteTaskData,
+                    completeTaskData
+                }
+            };
+        }
+        catch(err) {
+            console.log("get worker date complete task error", err);
+            return {
+                code: "400",
+                message:  `근무자의 ${year}년 ${month}월 ${date}일 완료한업무 조회에 오류가 발생했습니다.`,
+            };
+        }
+
     }
 
 };

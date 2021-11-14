@@ -8,6 +8,7 @@ var userUtil = require('../../../module/userUtil');
 var positionUtil = require('../../../module/positionUtil');
 var taskUtil = require('../../../module/taskUtil');
 var workerUtil = require('../../../module/workerUtil');
+var scheduleUtil = require('../../../module/scheduleUtil');
 
 const { worker } = require('../../../models');
 
@@ -143,6 +144,31 @@ router.get('/:positionId/workerInfo/lateCount',userUtil.LoggedIn, async (req,res
     return res.json(lateCountResult);
 });
 
+router.get('/:positionId/workerInfo/commuteInfo',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionId = req.params.positionId;
+
+    const now = new Date();
+    const yearNow = now.getFullYear();
+    const monthNow = now.getMonth() + 1;
+
+    const commuteRecordResult = await scheduleUtil.getCommuteRecord(positionId, yearNow, monthNow);
+    return res.json(commuteRecordResult);
+
+
+});
+
+router.get('/:positionId/workerInfo/commuteInfo/:year/:month',userUtil.LoggedIn, async (req,res)=> {
+
+    const { positionId, year, month } = req.params;
+
+    const commuteRecordResult = await scheduleUtil.getCommuteRecord(positionId, year, month);
+    return res.json(commuteRecordResult);
+
+});
+
+
+
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 공동업무 참여횟수
 router.get('/:positionId/workerInfo/coTaskCount',userUtil.LoggedIn, async (req,res)=> {
 
@@ -161,6 +187,17 @@ router.get('/:positionId/workerInfo/coTaskCount',userUtil.LoggedIn, async (req,r
 
 });
 
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 공동업무
+router.get('/:positionId/workerInfo/coTaskInfo',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionId = req.params.positionId;
+    const coTaskInfoResult = await taskUtil.getCotaskInfo(positionId);
+    return res.json(coTaskInfoResult);
+
+});
+
+
+
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 업무 완수율
 router.get('/:positionId/workerInfo/taskRate',userUtil.LoggedIn, async (req,res)=> {
 
@@ -173,8 +210,36 @@ router.get('/:positionId/workerInfo/taskRate',userUtil.LoggedIn, async (req,res)
     catch(err) {
         workerData = null;
     }
-    const completeTaskInfo = await workerUtil.getCompleteTaskInfo(positionId, workerData.register_date);
+    const completeTaskInfo = await workerUtil.getTaskRate(positionId, workerData.register_date);
     return res.json(completeTaskInfo);
+
+});
+
+
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 업무 완수율 > 전체 조회
+router.get('/:positionId/workerInfo/taskInfo',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionId = req.params.positionId;
+    const completeTaskTotalResult = await taskUtil.getCompleteTaskTotal(positionId);
+    return res.json(completeTaskTotalResult);
+
+});
+
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 업무 완수율 > 월별 조회
+router.get('/:positionId/workerInfo/taskInfo/:year/:month',userUtil.LoggedIn, async (req,res)=> {
+
+    const { positionId, year, month } = req.params;
+    const completeTaskMonthResult = await taskUtil.getCompleteTaskMonth(req.job.substring(1), year, month);
+    return res.json(completeTaskMonthResult);
+
+});
+
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 업무 완수율 > 일별 조회
+router.get('/:positionId/workerInfo/taskInfo/:year/:month/:date',userUtil.LoggedIn, async (req,res)=> {
+
+    const { positionId, year, month, date } = req.params;
+    const completeTaskDateResult = await taskUtil.getCompleteTaskDate(req.job.substring(1), year, month, date);
+    return res.json(completeTaskDateResult);
 
 });
 

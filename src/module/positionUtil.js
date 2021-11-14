@@ -180,9 +180,9 @@ module.exports = {
                 workerInfo.workInfo.coTaskCount = coTaskCountResult.data;
 
                 // 업무완수율
-                const completeTaskInfo = await workerUtil.getCompleteTaskInfo(positionId, workerData.register_date);
-                workerInfo.workInfo.completeTaskCount = completeTaskInfo.data.completeTaskCount;
-                workerInfo.workInfo.totalTaskCount = completeTaskInfo.data.totalTaskCount;
+                const taskRateResult = await workerUtil.getTaskRate(positionId, workerData.register_date);
+                workerInfo.workInfo.completeTaskCount = taskRateResult.data.completeTaskCount;
+                workerInfo.workInfo.totalTaskCount = taskRateResult.data.totalTaskCount;
 
                 workerInfo.joinDate = workerData.register_date;
             }

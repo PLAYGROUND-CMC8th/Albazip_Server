@@ -1,7 +1,7 @@
 const publicHolidayApiKey = require('../config/publicHolidayApiKey');
 const holidays = require('holidays-kr');
 
-const { schedule, time, position, tasks, shop } = require("../models");
+const { schedule, time, position, tasks, shop, worker } = require("../models");
 
 const duration = 100;
 const weekdays = [ '일', '월', '화', '수', '목', '금', '토'];
@@ -137,5 +137,51 @@ module.exports ={
                 return;
             }
         });
+    },
+
+    // 근무자: 마이페이지 > 내정보 > 출퇴근기록
+    // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 출퇴근기록
+    getCommuteRecord: async (positionId, year, month) => {
+        console.log(positionId, year, month)
+
+        let workerData;
+        try {
+            workerData = await worker.findOne({ where : {position_id: positionId} });
+        } catch(err) {
+            workerData = null;
+        }
+
+        //  and date(register_date) >= date("${workerData.register_date}") 근무자 변경될 떄 고려할 것
+        const query = `select year, month, day, start_time, end_time, real_start_time, real_end_time
+                       from schedule
+                       where position_id = ${positionId}
+                       and year = "${year}"
+                       and month = "${month}"
+                       and day <= day(now())
+                     
+                       order by day+0 desc`;
+
+        try {
+            const commuteData = await schedule.sequelize.query( query, { type: sequelize.QueryTypes.SELECT });
+
+            console.log("success to get worker commute data");
+            return {
+                code: "200",
+                message: `근무자의 ${year}년 ${month}월 춭퇴근기록 조회에 성공했습니다.`,
+                data: {
+                    year: year,
+                    month: month,
+                    commuteData
+                }
+            };
+        }
+        catch(err) {
+            console.log("get worker commute data error", err);
+            return {
+                code: "400",
+                message:  `근무자의 ${year}년 ${month}월 춭퇴근기록 조회에 오류가 발생했습니다.`
+            };
+        }
+
     }
 };

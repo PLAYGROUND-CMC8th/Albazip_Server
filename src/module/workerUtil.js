@@ -70,19 +70,19 @@ module.exports = {
     },
 
     // 업무완수율
-    getCompleteTaskInfo: async (positionId, registerDate) => {
+    getTaskRate: async (positionId, registerDate) => {
 
         try {
             const completeTaskCount = await task.count({
                 where: {
-                    target_date: {[op.gte]: registerDate},
-                    status: 2, completer_job: "P" + positionId
+                    register_date: {[op.between]: [registerDate, new Date()]},
+                    status: 2, target_id: positionId, completer_job: {[op.ne]: null}
                 }
             });
 
             const totalTaskCount = await task.count({
                 where: {
-                    target_date: {[op.gte]: registerDate},
+                    register_date: {[op.between]: [registerDate, new Date()]},
                     status: 2, target_id: positionId
                 }
             });

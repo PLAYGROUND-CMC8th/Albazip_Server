@@ -45,6 +45,7 @@ router.get('/lateCount',userUtil.LoggedIn, async (req,res)=> {
     return res.json(lateCountResult);
 });
 
+
 // 마이페이지 > 하단 > 내정보 > 공동업무 참여횟수
 router.get('/coTaskCount',userUtil.LoggedIn, async (req,res)=> {
 
@@ -74,7 +75,7 @@ router.get('/taskRate',userUtil.LoggedIn, async (req,res)=> {
     catch(err) {
         workerData = null;
     }
-    const completeTaskInfo = await workerUtil.getCompleteTaskInfo(positionId, workerData.register_date);
+    const completeTaskInfo = await workerUtil.getTaskRate(positionId, workerData.register_date);
     return res.json(completeTaskInfo);
 
 });
