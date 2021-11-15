@@ -198,6 +198,13 @@ module.exports ={
     // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 완료한업무 > 월별조회
     getCompleteTaskMonth: async(positionId, year, month) => {
 
+        let workerData;
+        try {
+            workerData = await worker.findOne({ where : {position_id: positionId} });
+        } catch(err) {
+            workerData = null;
+        }
+
         const query = `select	tmp.month, tmp.day, 
                                 CASE dayofweek(tmp.register_date)
                                     WHEN '1' THEN '일요일'
@@ -216,6 +223,7 @@ module.exports ={
                                 and	status = 2
                                 and target_id = ${positionId}
                                 and year(register_date)= "${year}" and month(register_date) = "${month}"
+                                and date(register_date) between "${workerData.register_date}" and now()
                         ) tmp
                         group by tmp.month, tmp.day
                         order by tmp.month desc, tmp.day desc`;
@@ -243,6 +251,13 @@ module.exports ={
     // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 완료한업무 > 일별조회
     getCompleteTaskDate: async(positionId, year, month, date) => {
 
+        let workerData;
+        try {
+            workerData = await worker.findOne({ where : {position_id: positionId} });
+        } catch(err) {
+            workerData = null;
+        }
+
         const cQuery = `select	title, content, update_date as complete_date
                         from    task
                         where   status = 2
@@ -250,7 +265,8 @@ module.exports ={
                         and     completer_job is not null
                         and     year(register_date) = "${year}"
                         and     month(register_date) = "${month}"
-                        and     day(register_date) = "${date}"`;
+                        and     day(register_date) = "${date}"
+                        and     date(register_date) between "${workerData.register_date}" and now()`;
 
         const nQuery = `select tmp.title, tmp.content,
                                if(substr(tmp.writer_job, 1, 1) = 'S',
@@ -267,6 +283,7 @@ module.exports ={
                                and     year(register_date) = "${year}"
                                and     month(register_date) = "${month}"
                                and     day(register_date) = "${date}"
+                               and     date(register_date) between "${workerData.register_date}" and now()
                             )  tmp;`
 
         try {
