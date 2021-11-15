@@ -155,4 +155,9 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
     }
 });
 
+// 포지션 변경 전 조회하기
+router.get('/',userUtil.LoggedIn, async (req,res)=> {
+
+});
+
 module.exports = router;
