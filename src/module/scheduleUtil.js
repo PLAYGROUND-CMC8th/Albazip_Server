@@ -152,14 +152,17 @@ module.exports ={
         }
 
         //  and date(register_date) >= date("${workerData.register_date}") 근무자 변경될 떄 고려할 것
-        const query = `select year, month, day, start_time, end_time, real_start_time, real_end_time
-                       from schedule
-                       where position_id = ${positionId}
-                       and year = "${year}"
-                       and month = "${month}"
-                       and day <= day(now())
-                     
-                       order by day+0 desc`;
+        const query = `select	*,
+                                if(ifnull(real_start_time, start_time)+0 > start_time+0, 1, 0) as is_late
+                       from(	select year, month, day, start_time, end_time, real_start_time, real_end_time
+                                from schedule
+                                where position_id = ${positionId}
+                                and year = "${year}"
+                                and month = "${month}"
+                                and day <= day(now())
+                                
+                                order by day+0 desc
+                            )	tmp`;
 
         try {
             const commuteData = await schedule.sequelize.query( query, { type: sequelize.QueryTypes.SELECT });
