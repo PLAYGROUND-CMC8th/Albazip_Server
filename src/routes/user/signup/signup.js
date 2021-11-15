@@ -12,6 +12,7 @@ var scheduleUtil = require('../../../module/scheduleUtil');
 const models = require('../../../models');
 const { user, position, shop, worker } = require('../../../models');
 
+const default_path = 'https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/';
 
 // 기본가입 휴대폰 중복체크
 router.get('/:phone',async (req,res)=> {
@@ -172,7 +173,8 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
         register_number: registerNumber,
         business_time: shopBusinessTime,
         holiday: shopHoliday,
-        payday: payday
+        payday: payday,
+        image_path: default_path+"profile_manager_1.png"
     };
 
     // 매장생성

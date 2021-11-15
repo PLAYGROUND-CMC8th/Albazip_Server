@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false
         },
         image_path: {
-            type: DataTypes.STRING(50),
+            type: DataTypes.STRING(200),
             allowNull: true
         },
         salary: {
