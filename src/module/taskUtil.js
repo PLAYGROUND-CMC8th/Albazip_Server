@@ -195,7 +195,16 @@ module.exports ={
     },
     getCompleteTaskMonth: async(positionId, year, month) => {
 
-        const query = `select	tmp.month, tmp.day,
+        const query = `select	tmp.month, tmp.day, 
+                                CASE dayofweek(tmp.register_date)
+                                    WHEN '1' THEN '일요일'
+                                    WHEN '2' THEN '월요일'
+                                    WHEN '3' THEN '화요일'
+                                    WHEN '4' THEN '수요일'
+                                    WHEN '5' THEN '목요일'
+                                    WHEN '6' THEN '금요일'
+                                    WHEN '7' THEN '토요일'
+                                END AS week_day,
                                 count(*) as totalCount,
                                 count(completer_job) as completeCount
                         from(	select completer_job, register_date, substr(register_date, 6, 2) as month, substr(register_date, 9, 2) as day
