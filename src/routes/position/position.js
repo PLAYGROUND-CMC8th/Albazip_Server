@@ -5,6 +5,7 @@ var voca = require('voca');
 var positionUtil = require('../../module/positionUtil');
 var userUtil = require('../../module/userUtil');
 var timeUtil = require('../../module/timeUtil');
+var taskUtil = require('../../module/taskUtil');
 
 const models = require('../../models');
 
@@ -145,7 +146,8 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
     }
     catch(err) {
         console.log("position server error: ", err);
-        res.status(400).json({
+        res.json({
+            code: "200",
             message:"포지션 등록에 오류가 발생했습니다."
         });
         return;
@@ -153,7 +155,58 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
 });
 
 // 포지션 변경 전 조회하기
-router.get('/',userUtil.LoggedIn, async (req,res)=> {
+router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
+
+
+    const positionId = req.params.positionId;
+    const positionProfileResult = await positionUtil.getPositionProfile(positionId);
+    if (positionProfileResult.code == "400"){
+        return res.json(positionProfileResult);
+    }
+
+    const positionInfoResult = await positionUtil.getPositionInfo(positionId);
+    if (positionInfoResult.code == "400"){
+        return res.json(positionInfoResult);
+    }
+
+    const positionTaskListResult = await taskUtil.getPositionTaskList(req.params.positionId);
+    if (positionTaskListResult.code == "400"){
+        return res.json(positionTaskListResult);
+    }
+
+    let taskResult = [];
+    for(let tl of positionTaskListResult.data){
+        let task = {
+            id: tl.dataValues.id,
+            title: tl.dataValues.title,
+            content: tl.dataValues.content
+        }
+        taskResult.push(task);
+    }
+
+    let positionResult = {
+        rank: positionProfileResult.data.rank,
+        title: positionProfileResult.data.title,
+        workDay: positionInfoResult.data.dataValues.workDay.split(' '),
+        startTime: positionInfoResult.data.dataValues.startTime,
+        endTime: positionInfoResult.data.dataValues.endTime,
+        breakTime: positionInfoResult.data.dataValues.breakTime,
+        salaryType: positionInfoResult.data.dataValues.salaryType,
+        salary: positionInfoResult.data.dataValues.salary,
+        taskList: taskResult
+    };
+
+    res.json ({
+        code: "200",
+        message: "포지션 편집하기 전 포지션 정보조회를 성공했습니다.",
+        data: positionResult
+    });
+    return;
+});
+
+// 포지션 변경하기
+router.post('/:positionId/update',userUtil.LoggedIn, async (req,res)=> {
+
 
 });
 
