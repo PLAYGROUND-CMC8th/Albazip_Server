@@ -143,8 +143,8 @@ module.exports ={
 
     },
 
-    // 근무자: 마이페이지 > 내정보 > 완료한업무
-    // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 완료한업무
+    // 근무자: 마이페이지 > 내정보 > 완료한업무 > 전체조회
+    // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 완료한업무 > 전체조회
     getCompleteTaskTotal: async(positionId) => {
 
         let completeTaskResult = {};
@@ -193,6 +193,9 @@ module.exports ={
         }
 
     },
+
+    // 근무자: 마이페이지 > 내정보 > 완료한업무 > 월별조회
+    // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 완료한업무 > 월별조회
     getCompleteTaskMonth: async(positionId, year, month) => {
 
         const query = `select	tmp.month, tmp.day, 
@@ -235,6 +238,9 @@ module.exports ={
             };
         }
     },
+
+    // 근무자: 마이페이지 > 내정보 > 완료한업무 > 일별조회
+    // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 완료한업무 > 일별조회
     getCompleteTaskDate: async(positionId, year, month, date) => {
 
         const cQuery = `select	title, content, update_date as complete_date
@@ -246,14 +252,22 @@ module.exports ={
                         and     month(register_date) = "${month}"
                         and     day(register_date) = "${date}"`;
 
-        const nQuery = `select	title, content
-                        from    task
-                        where   status = 2
-                        and     target_id = ${positionId}
-                        and     completer_job is null
-                        and     year(register_date) = "${year}"
-                        and     month(register_date) = "${month}"
-                        and     day(register_date) = "${date}"`;
+        const nQuery = `select tmp.title, tmp.content,
+                               if(substr(tmp.writer_job, 1, 1) = 'S',
+                                 (select concat(user_last_name, user_first_name) from manager where id = substr(tmp.writer_job, 2)),
+                                 (select user_first_name from worker where id = substr(tmp.writer_job, 2))) as writer_name,
+                               if(substr(tmp.writer_job, 1, 1) = 'S',"사장님",
+                                 (select position_title from worker where id = substr(tmp.writer_job, 2))) as writer_position,        
+                               tmp.register_date
+                        from(  select title, content, register_date, writer_job
+                               from    task
+                               where   status = 2
+                               and     target_id = ${positionId}
+                               and     completer_job is null
+                               and     year(register_date) = "${year}"
+                               and     month(register_date) = "${month}"
+                               and     day(register_date) = "${date}"
+                            )  tmp;`
 
         try {
             const completeTaskData = await task.sequelize.query( cQuery, { type: sequelize.QueryTypes.SELECT });
