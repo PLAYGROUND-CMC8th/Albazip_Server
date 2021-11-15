@@ -225,7 +225,7 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                                console.log("success update last position");
 
                                const udata = await user.findOne({where: {id: userId}});
-                               const token = await jwt.sign(udata);
+                               const token = jwt.sign(udata);
 
                                console.log("success manager signup");
                                return res.json({
@@ -305,7 +305,7 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
                     scheduleUtil.makeASchedule(newWorker.position_id);
 
                     const udata = await user.findOne({where: {id: userId}});
-                    const token = await jwt.sign(udata);
+                    const token = jwt.sign(udata);
 
                     return res.json({
                         code: "200",

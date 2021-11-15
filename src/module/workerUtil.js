@@ -48,7 +48,7 @@ module.exports = {
         try {
             const coTaskCount = await task.count({
                 where: {
-                    target_date: {[op.gte]: registerDate},
+                    register_date: {[op.gte]: registerDate},
                     status: 1, completer_job: "P" + positionId
                 }
             });
