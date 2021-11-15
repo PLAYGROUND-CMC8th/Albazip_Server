@@ -304,14 +304,27 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
                     // 100일치 스케줄 생성
                     scheduleUtil.makeASchedule(newWorker.position_id);
 
-                    const udata = await user.findOne({where: {id: userId}});
-                    const token = jwt.sign(udata);
+                    // 근무자 가입시 포지션의 프로필 이미지 생성
+                    await models.position.update({image_path: default_path+"profile_manager_1.png"}, {where: {id: positionData.id}})
+                        .then(async () => {
+                            console.log("success update position image path");
+                            const udata = await user.findOne({where: {id: userId}});
+                            const token = jwt.sign(udata);
 
-                    return res.json({
-                        code: "200",
-                        message: "성공적으로 근무자 가입이 완료되었습니다.",
-                        data: token
-                    });
+                            return res.json({
+                                code: "200",
+                                message: "성공적으로 근무자 가입이 완료되었습니다.",
+                                data: token
+                            });
+                        })
+                        .catch((err) =>{
+                            console.log("update position image path error", err);
+                            return res.json({
+                                code: "200",
+                                message: "포지션의 프로필 이미지 업데이트에 오류가 발생했습니다."
+                            });
+                        })
+
                 })
                 .catch((err) => {
                     console.log("user last position update error: ", err);

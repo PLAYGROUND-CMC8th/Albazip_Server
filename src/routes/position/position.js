@@ -8,8 +8,6 @@ var timeUtil = require('../../module/timeUtil');
 
 const models = require('../../models');
 
-const profile_path = 'https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/';
-
 //포지션 추가하기
 router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
@@ -53,7 +51,6 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
             code: code,
             title: title,
             rank: rank,
-            image_path: profile_path+"profile_worker_1.png",
             salary: salary,
             salary_type: salaryType,
             work_day: workDay,
