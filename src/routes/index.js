@@ -7,6 +7,7 @@ router.use('/position', require('./position'));
 router.use('/schedule', require('./schedule'));
 router.use('/mypage', require('./mypage'));
 router.use('/home', require('./home'));
+router.use('/board', require('./board'));
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
