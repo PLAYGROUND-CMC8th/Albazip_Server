@@ -30,7 +30,7 @@ router.post('/image', userUtil.LoggedIn, upload.single('uploadImage'), async (re
     if(req.file) {
         imagePath = req.file.location;
     } else if(defaultImage) {
-        imagePath = default_path+defaultImage;
+        imagePath = default_path+defaultImage+".png";
     } else {
         console.log("not enough parameter");
         return res.json({
