@@ -301,8 +301,8 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
                     console.log("success update last position");
 
                     console.log("success worker signup");
-                    // 100일치 스케줄 생성
-                    scheduleUtil.makeASchedule(newWorker.position_id);
+                    // 0일부터 100일치 스케줄 생성
+                    scheduleUtil.makeASchedule(newWorker.position_id, 0);
 
                     // 근무자 가입시 포지션의 프로필 이미지 생성
                     await models.position.update({image_path: default_path+"profile_manager_1.png"}, {where: {id: positionData.id}})

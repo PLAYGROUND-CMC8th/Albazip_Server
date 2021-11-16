@@ -7,7 +7,7 @@ const duration = 100;
 const weekdays = [ '일', '월', '화', '수', '목', '금', '토'];
 
 module.exports ={
-    makeASchedule : async (positionId) => {
+    makeASchedule : async (positionId, startDay) => {
 
         // 현 시점부터 5개월간의 공휴일 정보
         let publicHolidays = [];
@@ -26,7 +26,7 @@ module.exports ={
             // 국가공휴일
             for(const holiday of holidays)
                 publicHolidays.push(holiday.month + "/" +holiday.day)
-            console.log("public holidays: ", publicHolidays);
+            //console.log("public holidays: ", publicHolidays);
 
             // 포지션 근무요일
             const timeData = await time.findAll({ attributes: ['day', 'start_time', 'end_time'], where: {status: 1, target_id: positionId} });
@@ -41,7 +41,7 @@ module.exports ={
 
             try {
                 // 100일치 스캐줄 생성
-                for (var i = 0; i < duration; i++) {
+                for (var i = startDay; i < duration; i++) {
                     let date = new Date(new Date().setDate(now.getDate() + i));
 
                     if (dayAndTime.hasOwnProperty(weekdays[date.getDay()])){
@@ -89,7 +89,7 @@ module.exports ={
             // 국가공휴일
             for(const holiday of holidays)
                 publicHolidays.push(holiday.month + "/" +holiday.day)
-            console.log("public holidays: ", publicHolidays);
+            //console.log("public holidays: ", publicHolidays);
 
             const date = new Date(new Date().setDate(new Date().getDate() + (duration-1)));
             const day = weekdays[date.getDay()];

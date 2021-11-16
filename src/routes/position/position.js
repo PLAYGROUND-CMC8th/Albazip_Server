@@ -1,12 +1,17 @@
 var express = require('express');
 var router = express.Router();
 
+var sequelize = require('sequelize');
+var op = sequelize.Op;
 var voca = require('voca');
+
 var positionUtil = require('../../module/positionUtil');
+var scheduleUtil = require('../../module/scheduleUtil');
 var userUtil = require('../../module/userUtil');
 var timeUtil = require('../../module/timeUtil');
 var taskUtil = require('../../module/taskUtil');
 
+const { position, task, time, schedule, worker } = require('../../models');
 const models = require('../../models');
 
 //포지션 추가하기
@@ -46,6 +51,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
         let code = await positionUtil.makeRandomCode();
         salaryType = salary_type[salaryType];
         let workDay = workDays.join(',');
+        let breakTimes = breakTime == "없음" ? "0000" : (breakTime == "30분"? "0030" : "0100");
 
         let positionData = {
             shop_id: shopId,
@@ -57,7 +63,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
             work_day: workDay,
             start_time: startTime,
             end_time: endTime,
-            work_time: timeUtil.subtract(startTime, endTime),
+            work_time: timeUtil.subtract(breakTimes, timeUtil.subtract(startTime, endTime)),
             break_time: breakTime
         };
 
@@ -205,8 +211,269 @@ router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 });
 
 // 포지션 변경하기
-router.post('/:positionId/update',userUtil.LoggedIn, async (req,res)=> {
+router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
+    try {
+        // 1. 변경 전 데이터
+        const positionId = req.params.positionId;
+        const positionProfileResult = await positionUtil.getPositionProfile(positionId);
+        const positionInfoResult = await positionUtil.getPositionInfo(positionId);
+        const positionTaskListResult = await taskUtil.getPositionTaskList(req.params.positionId);
+
+        let taskResult = [];
+        for (let tl of positionTaskListResult.data) {
+            let task = {
+                id: tl.dataValues.id,
+                title: tl.dataValues.title,
+                content: tl.dataValues.content
+            }
+            taskResult.push(task);
+        }
+
+        const before = {
+            rank: positionProfileResult.data.rank,
+            title: positionProfileResult.data.title,
+            workDay: positionInfoResult.data.dataValues.workDay.split(' '),
+            startTime: positionInfoResult.data.dataValues.startTime,
+            endTime: positionInfoResult.data.dataValues.endTime,
+            breakTime: positionInfoResult.data.dataValues.breakTime,
+            salaryType: positionInfoResult.data.dataValues.salaryType,
+            salary: positionInfoResult.data.dataValues.salary,
+            taskList: taskResult
+        };
+
+        // 2. 변경 후 데이터
+        const {rank, title, workDay, startTime, endTime, breakTime, salaryType, salary, taskList} = req.body;
+
+        // 3. 파라미터 값 확인
+        if (!rank || !title || !workDay || !startTime || !endTime || !breakTime || !salaryType || !salary) {
+            res.json({
+                code: "202",
+                message: "필수 정보가 부족합니다."
+            });
+            return;
+        }
+
+        let tmpBeforeWorkDay = before.workDay;
+        let tmpWorkDay = workDay;
+
+        // 4. 근무요일, 근무시간 변경여부 확인하기
+        let timeChange = false;
+        if (before.workDay.length != workDay.length || tmpBeforeWorkDay.sort().toString() != tmpWorkDay.sort().toString())
+            timeChange = true;
+
+        // 5. 포지션 업데이트 시작
+        let breakTimes = breakTime == "없음" ? "0000" : (breakTime == "30분" ? "0030" : "0100");
+        let positionData = {
+            title: title,
+            rank: rank,
+            salary: salary,
+            salary_type: salaryType,
+            work_day: workDay.join(','),
+            start_time: startTime,
+            end_time: endTime,
+            work_time: timeUtil.subtract(breakTimes, timeUtil.subtract(startTime, endTime)),
+            break_time: breakTime
+        };
+
+        try {
+            await position.update(positionData, {where: {id: positionId}});
+            console.log("success to update position");
+        } catch (err) {
+            console.log("update position error", err);
+            res.json({
+                code: "400",
+                message: "포지션 편집에 오류가 발생했습니다."
+            });
+            return;
+        }
+
+        // 6.근무시간 변경에 따라 업데이트하기
+        if (timeChange) {
+            try {
+                await time.destroy({where: {status: 1, target_id: positionId}});
+                console.log("success to delete time");
+            } catch(err) {
+                console.log("delete time error", err);
+                res.json({
+                    code: "400",
+                    message: "기존 근무시간 삭제에 오류가 발생했습니다."
+                });
+                return;
+            }
+
+            for (const day of workDay) {
+                if (day.length > 1)
+                    continue;
+
+                let timeData = {
+                    status: 1,
+                    target_id: positionId,
+                    day: day,
+                    start_time: startTime,
+                    end_time: endTime
+                };
+
+                try {
+                    await time.create(timeData);
+                } catch (err) {
+                    console.log("create time error", err);
+                    res.json({
+                        code: "400",
+                        message: "새로운 근무시간 생성에 오류가 발생했습니다."
+                    });
+                    return;
+                }
+            }
+            console.log("success to create time");
+        }
+
+        // 9. 근무자 존재시, 스케줄 삭제, 재생성
+        const workerCount = await worker.count({where: {position_id: positionId}});
+        if (workerCount > 0) {
+
+            const now = new Date();
+            const yearNow = now.getFullYear();
+            const monthNow = now.getMonth();
+            const dateNow = now.getDate();
+
+            const query = ` delete 
+                        from schedule
+                        where position_id = ${positionId}
+                        and ((year > ${yearNow}) 
+                        or (year = ${yearNow} and month > ${monthNow})
+                        or (year = ${yearNow} and month = ${monthNow} and day > ${dateNow}))`;
+
+            try {
+                await schedule.sequelize.query(query);
+                console.log("success to delete schedule");
+            } catch (err) {
+                console.log("delete schedule error", err);
+                res.json({
+                    code: "400",
+                    message: "근무자의 기존 스케줄 삭제에 오류가 발생했습니다."
+                });
+                return;
+            }
+
+            try {
+                // 1일부터 100일치 스케줄 생성
+                await scheduleUtil.makeASchedule(positionId, 1);
+                console.log("success to create new schedule error");
+
+            } catch (err) {
+                console.log("create new schedule error", err);
+                res.json({
+                    code: "400",
+                    message: "근무자의 새로운 스케줄 삭제에 오류가 발생했습니다."
+                });
+                return;
+            }
+
+        }
+
+        // 7. 업무리스트 변경여부 확인하고 업데이트하기
+        if (before.taskList && taskList) {
+            for (const bt of before.taskList) {
+                let tmp = false;
+                for (const t of taskList) {
+                    if (t.id && bt.id == t.id) {
+                        tmp = true;
+
+                        if (!t.title) {
+                            console.log("no task title");
+                            res.json({
+                                code: "202",
+                                message: "기존업무의 업무명을 입력해주세요."
+                            });
+                            return;
+                        }
+
+                        if (bt.title != t.title || bt.content != t.content) {
+                            try {
+                                await task.update({
+                                    title: t.title,
+                                    content: t.content,
+                                    writer_job: req.job
+                                }, {where: {id: t.id}});
+                            } catch (err) {
+                                res.json({
+                                    code: "400",
+                                    message: "포지션 업무편집에 오류가 발생했습니다."
+                                });
+                                return;
+                            }
+                        }
+                    }
+                }
+                if (tmp == false) {
+                    try {
+                        await task.destroy({where: {id: bt.id}});
+                    } catch (err) {
+                        res.json({
+                            code: "400",
+                            message: "포지션 업무삭제에 오류가 발생했습니다."
+                        });
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 8. 새로운 업무리스트 추가하기
+        if (taskList) {
+            let positionData = await position.findOne({attributes: ['shop_id'], where: {id: positionId}});
+            let newTaskList = taskList.filter(t => !t.id);
+            for (const nt of newTaskList) {
+
+                if (!nt.title) {
+                    console.log("not enough parameter");
+                    res.json({
+                        code: "202",
+                        message: "새로운 업무의 업무명을 입력해주세요."
+                    });
+                    return;
+                }
+
+                let taskData = {
+                    shop_id: positionData.shop_id,
+                    writer_job: req.job,
+                    status: 0,
+                    title: nt.title,
+                    content: nt.content,
+                    target_id: positionId
+                };
+
+                try {
+                    await task.create(taskData);
+                } catch (err) {
+                    console.log("create task error", err);
+                    res.json({
+                        code: "400",
+                        message: "포지션 업무생성에 오류가 발생했습니다."
+                    });
+                    return;
+                }
+
+            }
+        }
+
+        console.log("success to update all position");
+        res.json({
+            code: "200",
+            message: "포지션 전체 편집을 성공했습니다."
+        });
+        return;
+
+    }
+    catch(err) {
+        console.log("update all position error", err);
+        res.json({
+            code: "400",
+            message: "포지션 전체 편집에 오류가 발생했습니다."
+        });
+        return;
+    }
 
 });
 
