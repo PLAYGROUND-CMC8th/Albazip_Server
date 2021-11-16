@@ -69,14 +69,12 @@ router.get('/worker',userUtil.LoggedIn, async (req,res)=> {
     const myinfoResult = await positionUtil.getWorkerInfo(req.job.substring(1));
     if (myinfoResult.code == "400"){
         return res.json(myinfoResult);
-        return;
     }
 
     // 근무자 포지션정보
     const positionInfoResult = await positionUtil.getPositionInfo(req.job.substring(1));
     if (positionInfoResult.code == "400"){
         return res.json(positionInfoResult);
-        return;
     }
 
 

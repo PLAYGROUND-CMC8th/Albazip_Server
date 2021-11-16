@@ -68,7 +68,6 @@ module.exports ={
                 try {
                     for (let tdata of taskData) {
 
-                        console.log(tdata)
                         if (tdata.dataValues.writerTitle[0] == 'S') {
                             let managerData = await manager.findOne({where: {shop_id: tdata.dataValues.writerTitle.substring(1)}});
                             tdata.dataValues.writerName = managerData.user_last_name + managerData.user_first_name;
