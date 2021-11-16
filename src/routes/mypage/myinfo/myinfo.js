@@ -81,7 +81,7 @@ router.get('/taskRate',userUtil.LoggedIn, async (req,res)=> {
 });
 
 // 마이페이지 하단 퇴사요청
-router.post('/resign/request', userUtil.LoggedIn, async (req,res)=> {
+router.put('/resign', userUtil.LoggedIn, async (req,res)=> {
 
     if(req.job[0] != 'P'){
         res.json({

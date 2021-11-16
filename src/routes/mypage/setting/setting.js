@@ -34,7 +34,7 @@ router.get('/myinfo',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-router.post('/myinfo/update',userUtil.LoggedIn, async (req,res)=> {
+router.post('/myinfo',userUtil.LoggedIn, async (req,res)=> {
 
     const { firstName, lastName, birthyear, gender } = req.body;
 
@@ -73,7 +73,7 @@ router.post('/myinfo/update',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-router.post('/myinfo/phone/update',userUtil.LoggedIn, async (req,res)=> {
+router.post('/myinfo/phone',userUtil.LoggedIn, async (req,res)=> {
 
     let phone = req.body.phone;
     phone = voca.replaceAll(phone, '-', '');
