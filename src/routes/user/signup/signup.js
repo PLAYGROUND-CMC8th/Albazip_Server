@@ -174,7 +174,7 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
         business_time: shopBusinessTime,
         holiday: shopHoliday,
         payday: payday,
-        image_path: default_path+"profile_manager_1.png"
+        image_path: default_path+"m1.png"
     };
 
     // 매장생성
@@ -305,7 +305,7 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
                     scheduleUtil.makeASchedule(newWorker.position_id, 0);
 
                     // 근무자 가입시 포지션의 프로필 이미지 생성
-                    await models.position.update({image_path: default_path+"profile_manager_1.png"}, {where: {id: positionData.id}})
+                    await models.position.update({image_path: default_path+"w1.png"}, {where: {id: positionData.id}})
                         .then(async () => {
                             console.log("success update position image path");
                             const udata = await user.findOne({where: {id: userId}});
