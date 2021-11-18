@@ -154,7 +154,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
     catch(err) {
         console.log("position server error: ", err);
         res.json({
-            code: "200",
+            code: "400",
             message:"포지션 등록에 오류가 발생했습니다."
         });
         return;

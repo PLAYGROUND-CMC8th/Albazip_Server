@@ -33,6 +33,7 @@ module.exports ={
                         tdata.dataValues.id = null;
                         tdata.dataValues.status = 2;
                         tdata.dataValues.target_id = workerData.id;
+                        tdata.dataValues.register_date = new Date();
                         task.create(tdata.dataValues);
                     }
                 }
