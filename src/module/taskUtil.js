@@ -312,6 +312,228 @@ module.exports ={
             };
         }
 
+    },
+
+    // 관리자: 홈 > 오늘의 할일 > 포지션 업무 리스트
+    getTodayPerTaskList: async (shopId) => {
+
+        const todayPerTaskListQuery = `select w.id as workerId, w.position_title as workerTitle,
+                             count(t.completer_job) as totalCount, count(t.id) as completeCount
+                             from task t
+                             inner join worker w
+                             on t.target_id = w.id
+                             where t.shop_id = ${shopId}
+                             and t.status = 2
+                             and date_format(t.register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')
+                             group by w.id`;
+
+        try {
+            const todayPerTaskList = await task.sequelize.query(todayPerTaskListQuery, {type: sequelize.QueryTypes.SELECT});
+            console.log("success to get today position task list");
+            return {
+                code: "200",
+                message: "오늘의 할일 포지션별 개인업무 조회를 성공했습니다.",
+                data: todayPerTaskList
+            }
+        }catch(err) {
+            console.log("get today position task list error", err);
+            return {
+                code: "400",
+                message: "오늘의 할일 포지션별 개인업무 조회가 발생했습니다."
+            }
+        }
+
+    },
+
+    // 근무자: 홈 > 오늘의 할일 > 개인업무
+    // 관리자: 홈 > 오늘의 할일 > 포지션 선택 > 개인업무
+    getTodayPerTask: async (workerId) => {
+        let workerData = await worker.findOne({where: {id: workerId}});
+
+        const todayPerTaskQuery = `select id, title, content, writer_job, completer_job, register_date, update_date
+                                   from task
+                                   where status = 2
+                                   and target_id = ${workerId}
+                                   and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+
+        try {
+            const todayPerTask = await task.sequelize.query(todayPerTaskQuery, {type: sequelize.QueryTypes.SELECT});
+
+            let completPerTask = [];
+            let nonCompletePerTask = [];
+
+            if(todayPerTask){
+                for(let tpt of todayPerTask){
+                    // 완료 업무
+                    if (tpt.completer_job){
+                        let ct = {
+                            taskId: tpt.id,
+                            takTitle: tpt.title,
+                            completeTime: tpt.update_date
+                        }
+                        completPerTask.push(ct);
+                    }
+                    // 미완료 업무
+                    else {
+                        let writerName, wirterTitle;
+                        try{
+                            if(tpt.writer_job[0]=='M'){
+                                let managerData = await manager.findOne({where: {id: tpt.writer_job.substring(1)}});
+                                writerName = managerData.user_last_name + managerData.user_first_name;
+                                writerTitle = "사장님";
+                            } else if (tpt.writer_job[0]=='W'){
+                                let workerData = await worker.findOne({where: {id: tpt.writer_job.substring(1)}});
+                                writerName = workerData.user_first_name;
+                                writerTitle = workerData.position_title;
+                            }
+                        }
+                        catch(err) {
+                            console.log("get writer data error", err);
+                            writerName = null;
+                            writerTitle = null;
+                        }
+
+                        let nct = {
+                            taskId: tpt.id,
+                            takTitle: tpt.title,
+                            taskContent: tpt.content,
+                            writerTitle: writerTitle,
+                            writerName: writerName,
+                            registerDate: tpt.register_date
+                        }
+                        nonCompletePerTask.push(nct);
+                    }
+                }
+            }
+            console.log("success to get today personal task");
+            return {
+                code: "200",
+                message: "오늘의할일 개인업무 조회를 성공했습니다.",
+                data: {
+                    positionTitle: workerData.position_title,
+                    nonComPerTask: nonCompletePerTask,
+                    compPerTask: completPerTask
+                }
+            }
+        }catch(err) {
+            console.log("get today personal task eror", err);
+            return {
+                code: "400",
+                message: "오늘의할일 개인업무 조회에 오류가 발생했습니다."
+            }
+        }
+
+    },
+
+    // 근무자: 홈 > 오늘의 할일 > 공동업무
+    // 관리자: 홈 > 오늘의 할일 > 포지션 선택 > 공동업무
+    getTodayCoTask: async (shopId) => {
+
+        const todayCoTaskQuery = `select id, title, content, writer_job, completer_job, register_date, update_date
+                                      from task
+                                      where status = 1
+                                      and shop_id = ${shopId}
+                                      and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+
+        try {
+            const todayCoTask = await task.sequelize.query(todayCoTaskQuery, {type: sequelize.QueryTypes.SELECT});
+
+            let completCoTask = [];
+            let completeCoTaskWorker = {};
+            let completerWorkerNum = 0;
+            let nonCompleteCoTask = [];
+
+            if(todayCoTask) {
+                for (let tct of todayCoTask) {
+                    // 완료 업무
+                    if (tct.completer_job){
+
+                        let ct = {
+                            taskId: tct.id,
+                            takTitle: tct.title,
+                            completeTime: tct.update_date
+                        }
+                        completCoTask.push(ct);
+
+                        let completerName, completerTitle;
+                        try{
+                            if(tct.completer_job[0]=='M'){
+                                let managerData = await manager.findOne({where: {id: tct.completer_job.substring(1)}});
+                                completerName = managerData.user_last_name + managerData.user_first_name;
+                                completerTitle = "사장님";
+                            } else if (tct.completer_job[0]=='W'){
+                                let workerData = await worker.findOne({where: {id: tct.completer_job.substring(1)}});
+                                completerName = workerData.user_first_name;
+                                completerTitle = workerData.position_title;
+                            }
+                        }
+                        catch(err) {
+                            console.log("get completer data error", err);
+                            completerName = null;
+                            completerTitle = null;
+                        }
+
+                        let completer = completerTitle+" "+completerName;
+                        if(completeCoTaskWorker[completer]) completeCoTaskWorker[completer] += 1;
+                        else completeCoTaskWorker[completer] = 1;
+                        completerWorkerNum += 1;
+
+                    }
+                    // 미완료 업무
+                    else {
+
+                        let writerName, wirterTitle;
+                        try{
+                            if(tct.writer_job[0]=='M'){
+                                let managerData = await manager.findOne({where: {id: tct.writer_job.substring(1)}});
+                                writerName = managerData.user_last_name + managerData.user_first_name;
+                                writerTitle = "사장님";
+                            } else if (tct.writer_job[0]=='W'){
+                                let workerData = await worker.findOne({where: {id: tct.writer_job.substring(1)}});
+                                writerName = workerData.user_first_name;
+                                writerTitle = workerData.position_title;
+                            }
+                        }
+                        catch(err) {
+                            console.log("get writer data error", err);
+                            writerName = null;
+                            writerTitle = null;
+                        }
+
+                        let nct = {
+                            taskId: tct.id,
+                            takTitle: tct.title,
+                            taskContent: tct.content,
+                            writerTitle: writerTitle,
+                            writerName: writerName,
+                            registerDate: tct.register_date
+                        }
+                        nonCompleteCoTask.push(nct);
+                    }
+                }
+            }
+            console.log("success to get today cooperate task data")
+            return {
+                code: "200",
+                message: "오늘의 할일 공동업무 조회를 성공했습니다.",
+                data: {
+                    nonComCoTask: nonCompleteCoTask,
+                    comWorker: {
+                        comWorkerNum: completerWorkerNum,
+                        comWorker: completeCoTaskWorker
+                    },
+                    comCoTask: completCoTask
+                }
+            }
+
+        }
+        catch(err) {
+            console.log("get today cooperate task data error", err);
+            return {
+                code: "400",
+                message: "오늘의 할일 공동업무 조회에 오류가 발생했습니다."
+            }
+        }
     }
 
 };

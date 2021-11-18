@@ -22,10 +22,8 @@ router.get('/', userUtil.LoggedIn, async (req,res)=> {
     }
 
     const myinfoResult = await positionUtil.getWorkerInfo(workerData.position_id);
-    if (myinfoResult.code == "400"){
+    if (myinfoResult.code == "400")
         return res.json(myinfoResult);
-        return;
-    }
 
     res.json({
         code: "200",
