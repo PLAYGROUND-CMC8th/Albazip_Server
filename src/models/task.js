@@ -32,10 +32,6 @@ module.exports = (sequelize, DataTypes) => (
         completer_job: {
             type: DataTypes.STRING(10),
             allowNull: true
-        },
-        target_date: {
-            type: DataTypes.DATE,
-            allowNull: true
         }
     }, {
         timestamps: true,

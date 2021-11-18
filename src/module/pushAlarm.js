@@ -6,6 +6,7 @@ admin.initializeApp({
 });
 
 module.exports = {
+    // 푸시알람 테스트 카이트
     testKite : async (req, res, next) => {
 
         let target_token_array = ["evJXnjz_R9qmrlzWK6ZG-g:APA91bE43OlFENm9BQJ3wISUYEHWUUZmSMjmUcP6H5dsJDYwVVBE6zGh2r6vZrPF2zHmYbsKBHtr-AvDUZuaMHMwzocvSQAUnSsflZTeNe485XsjKm5VLVfSOjqwzdmBg32aknkt3p8E"];
@@ -50,6 +51,7 @@ module.exports = {
         }
     },
 
+    // 푸시알람 테스트 초비
     testChobi : async (req, res, next) => {
 
         let target_token_array = ["dRxMLg1G2U0tijL38ZnZ2h:APA91bHB3t6hT2207-rf1RkerUOFArdJgvCKJN0pltLI-j1XMHCPpW2idr6KfLseipd8tli-BUAwrqPNuG8i43x4Ct06L_g45hwWde6aMqBpmB5P2Cs6hLd5yOTRI5CyfjgaqNSwIak5"];

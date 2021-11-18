@@ -8,7 +8,7 @@ var userUtil = require('../../../module/userUtil');
 var profileUtil = require('../../../module/profileUtil');
 var upload = require('../../../module/multer');
 
-const { position, shop } = require('../../../models');
+const { manager, worker } = require('../../../models');
 
 const default_path = "https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/";
 
@@ -16,7 +16,7 @@ const default_path = "https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/def
 // 마이페이지 > 상단 > 프로필
 router.get('/', userUtil.LoggedIn, async (req,res)=> {
 
-    const profileResult = await profileUtil.getProfile(req.id, req.job);
+    const profileResult = await profileUtil.getProfile(req.job);
     return res.json(profileResult);
 
 });
@@ -39,8 +39,8 @@ router.post('/image', userUtil.LoggedIn, upload.single('uploadImage'), async (re
         });
     }
 
-    if(req.job[0] == "S") {
-        shop.update({image_path: imagePath}, {where: {id: req.job.substring(1)}})
+    if(req.job[0] == "M") {
+        manager.update({image_path: imagePath}, {where: {id: req.job.substring(1)}})
             .then(() => {
                 console.log("success to update manager profile image");
                 return res.json({
@@ -56,8 +56,8 @@ router.post('/image', userUtil.LoggedIn, upload.single('uploadImage'), async (re
                 });
             });
     }
-    else if(req.job[0] == "P") {
-        position.update( {image_path: imagePath}, {where: {id: req.job.substring(1)}} )
+    else if(req.job[0] == "W") {
+        worker.update( {image_path: imagePath}, {where: {id: req.job.substring(1)}} )
             .then(() => {
                 console.log("success to update worker profile image");
                 return res.json({

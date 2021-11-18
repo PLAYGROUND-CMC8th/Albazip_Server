@@ -26,5 +26,16 @@ router.get('/chobi', pushAlarm.testChobi, async (req,res)=>{
   return;
 });
 
+// make task manually
+var taskUtil = require('../module/taskUtil');
+router.get('/task', async (req,res)=> {
+
+  await taskUtil.makeAllTask();
+  res.json({
+    code:"200",
+    message: "업무를 수동생성에 성공했습니다."
+  })
+  return;
+});
 
 module.exports = router;

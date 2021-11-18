@@ -162,8 +162,7 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
     name = voca.replaceAll(name, " ", "");
     ownerName = voca.replaceAll(ownerName, " ", "");
     registerNumber = voca.replaceAll(registerNumber, "-", "");
-    let shopBusinessTime = startTime + "-"+ endTime;
-    let shopHoliday = holiday.join(", ");
+    let shopHoliday = holiday.join(",");
 
     let shopData = {
         name: name,
@@ -171,10 +170,10 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
         address: address,
         owner_name: ownerName,
         register_number: registerNumber,
-        business_time: shopBusinessTime,
+        start_time: startTime,
+        end_time: endTime,
         holiday: shopHoliday,
-        payday: payday,
-        image_path: default_path+"m1.png"
+        payday: payday
     };
 
     // 매장생성
@@ -211,7 +210,8 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                    shop_id: newShop.id,
                    shop_name: shopData.name,
                    user_first_name: userData.first_name,
-                   user_last_name: userData.last_name
+                   user_last_name: userData.last_name,
+                   image_path: default_path+"m1.png"
                };
 
                // 매장 관리자 생성
@@ -220,12 +220,11 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                        console.log("success create manager: ", newManager.id);
 
                        // 유저의 마지막 업무 저장
-                       return await models.user.update({last_job: "S"+newManager.shop_id}, {where: {id: userId}, transaction: t})
+                       return await models.user.update({last_job: "M"+newManager.id}, {where: {id: userId}, transaction: t})
                            .then(async (updateUser) => {
                                console.log("success update last position");
 
-                               const udata = await user.findOne({where: {id: userId}});
-                               const token = jwt.sign(udata);
+                               const token = jwt.sign({id: userId, last_job: "M"+newManager.id});
 
                                console.log("success manager signup");
                                return res.json({
@@ -276,7 +275,7 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
 
     try {
         // 근무자 중복 체크
-        const workerCount = await worker.count( {where: {id: positionData.id}} );
+        const workerCount = await worker.count( {where: {position_id: positionData.id}} );
         if(workerCount > 0){
             return res.json({
                 code: "202",
@@ -290,13 +289,14 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
             position_id: positionData.id,
             shop_name: shopData.name,
             position_title: positionData.title,
-            user_first_name: userData.first_name
+            user_first_name: userData.first_name,
+            image_paht: default_path+"w1.png"
 
         }).then(async (newWorker) => {
             console.log("success create worker");
 
             // 유저의 마지막 업무 저장
-            await models.user.update({last_job: "P"+newWorker.position_id}, {where: {id: userId}})
+            await models.user.update({last_job: "W"+newWorker.id}, {where: {id: userId}})
                 .then(async (updateUser) => {
                     console.log("success update last position");
 
@@ -308,8 +308,8 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
                     await models.position.update({image_path: default_path+"w1.png"}, {where: {id: positionData.id}})
                         .then(async () => {
                             console.log("success update position image path");
-                            const udata = await user.findOne({where: {id: userId}});
-                            const token = jwt.sign(udata);
+
+                            const token = jwt.sign({id: userId, last_job: "W"+newWorker.id});
 
                             return res.json({
                                 code: "200",

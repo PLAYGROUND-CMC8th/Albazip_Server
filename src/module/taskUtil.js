@@ -8,29 +8,32 @@ const { schedule, time, position, task, shop, manager, worker } = require("../mo
 
 
 module.exports ={
+    // 업무 생성 스케줄러
     makeAllTask: async() => {
         const now = new Date();
         const yearNow = now.getFullYear();
-        const monthNow = now.getMonth();
+        const monthNow = now.getMonth()+1;
         const dateNow = now.getDate();
 
         await schedule.findAll({
-            attributes: ['position_id'],
+            attributes: ['worker_id'],
             where: {
                 year: yearNow,
                 month: monthNow,
                 day: dateNow
             }
         })
-            .then((scheduleData) => {
+            .then(async (scheduleData) => {
 
                 for(const sdata of scheduleData) {
-                    let taskData = task.findAll({where: {status: 0, target_id: sdata.position_id}});
+                    let workerData = await worker.findOne({where: {id: sdata.worker_id}});
+                    let taskData = await task.findAll({where: {status: 0, target_id: workerData.position_id}});
 
                     for (let tdata of taskData) {
-                        tdata.status = 2;
-                        tdata.target_date = new Date();
-                        task.create(tdata);
+                        tdata.dataValues.id = null;
+                        tdata.dataValues.status = 2;
+                        tdata.dataValues.target_id = workerData.id;
+                        task.create(tdata.dataValues);
                     }
                 }
             })
@@ -68,14 +71,15 @@ module.exports ={
                 try {
                     for (let tdata of taskData) {
 
-                        if (tdata.dataValues.writerTitle[0] == 'S') {
-                            let managerData = await manager.findOne({where: {shop_id: tdata.dataValues.writerTitle.substring(1)}});
-                            tdata.dataValues.writerName = managerData.user_last_name + managerData.user_first_name;
+                        let jobData;
+                        if (tdata.dataValues.writerTitle[0] == 'M') {
+                            jobData = await manager.findOne({where: {id: tdata.dataValues.writerTitle.substring(1)}});
+                            tdata.dataValues.writerName = jobData.user_last_name + jobData.user_first_name;
                             tdata.dataValues.writerTitle = "사장님";
-                        } else if (tdata['writerTitle'][0] == 'P') {
-                            let workerData = await worker.findOne({where: {position_id: tdata.dataValues.writerTitle.substring(1)}});
-                            tdata.dataValues.writerName = workerData.user_first_name;
-                            tdata.dataValues.writerTitle = workerData.position_title;
+                        } else if (tdata.dataValues.writerTitle[0] == 'W') {
+                            jobData = await worker.findOne({where: {id: tdata.dataValues.writerTitle.substring(1)}});
+                            tdata.dataValues.writerName = jobData.user_first_name;
+                            tdata.dataValues.writerTitle = jobData.position_title;
                         }
                     }
                     console.log("success to get task writer");
@@ -117,7 +121,7 @@ module.exports ={
                        from task 
                        where (1 = 1)
                        and	status = 1
-                       and  completer_job = "P${positionId}"
+                       and  completer_job = "W${workerData.id}"
                        and	date(register_date) between "${workerData.register_date}" and now()
                        order by year desc, month desc, date desc;`;
 
@@ -166,7 +170,7 @@ module.exports ={
                                 from task
                                 where (1 = 1)
                                 and	status = 2
-                                and target_id = ${positionId}
+                                and target_id = ${workerData.id}
                                 and date(register_date) between "${workerData.register_date}" and now()
                         ) tmp
                         group by tmp.year, tmp.month
@@ -220,7 +224,7 @@ module.exports ={
                                 from task
                                 where (1 = 1)
                                 and	status = 2
-                                and target_id = ${positionId}
+                                and target_id = ${workerData.id}
                                 and year(register_date)= "${year}" and month(register_date) = "${month}"
                                 and date(register_date) between "${workerData.register_date}" and now()
                         ) tmp
@@ -260,7 +264,7 @@ module.exports ={
         const cQuery = `select	title, content, update_date as complete_date
                         from    task
                         where   status = 2
-                        and     target_id = ${positionId}
+                        and     target_id = ${workerData.id}
                         and     completer_job is not null
                         and     year(register_date) = "${year}"
                         and     month(register_date) = "${month}"
@@ -277,7 +281,7 @@ module.exports ={
                         from(  select title, content, register_date, writer_job
                                from    task
                                where   status = 2
-                               and     target_id = ${positionId}
+                               and     target_id = ${workerData.id}
                                and     completer_job is null
                                and     year(register_date) = "${year}"
                                and     month(register_date) = "${month}"

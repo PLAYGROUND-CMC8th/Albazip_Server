@@ -56,9 +56,9 @@ router.post('/',async (req,res)=>{
                     let job;
                     if(!userData.last_job)
                         job = 0;
-                    else if (userData.last_job[0] == 'S')
+                    else if (userData.last_job[0] == 'M')
                         job = 1;
-                    else if (userData.last_job[0] == 'P')
+                    else if (userData.last_job[0] == 'W')
                         job = 2;
 
                     console.log("signin success");

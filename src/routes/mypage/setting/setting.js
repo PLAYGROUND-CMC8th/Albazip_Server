@@ -7,6 +7,7 @@ var userUtil = require('../../../module/userUtil');
 
 const { user } = require('../../../models');
 
+// 마이페이지 > 설정 > 나의정보 조회
 router.get('/myinfo',userUtil.LoggedIn, async (req,res)=> {
 
     await user.findOne({
@@ -34,6 +35,7 @@ router.get('/myinfo',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
+// 마이페이지 > 설정 > 나의정보 > 나의정보 업데이트
 router.post('/myinfo',userUtil.LoggedIn, async (req,res)=> {
 
     const { firstName, lastName, birthyear, gender } = req.body;
@@ -73,6 +75,7 @@ router.post('/myinfo',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
+// 마이페이지 > 설정 > 나의정보 > 휴대폰번호 업데이트
 router.post('/myinfo/phone',userUtil.LoggedIn, async (req,res)=> {
 
     let phone = req.body.phone;

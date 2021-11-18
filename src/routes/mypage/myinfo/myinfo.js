@@ -14,7 +14,14 @@ const { worker } = require('../../../models');
 // 마이페이지보 > 하단 > 내정보
 router.get('/', userUtil.LoggedIn, async (req,res)=> {
 
-    const myinfoResult = await positionUtil.getWorkerInfo(req.job.substring(1));
+    let workerData;
+    try {
+        workerData = await worker.findOne({ where : {id: req.job.substring(1)} });
+    } catch(err) {
+        workerData = null;
+    }
+
+    const myinfoResult = await positionUtil.getWorkerInfo(workerData.position_id);
     if (myinfoResult.code == "400"){
         return res.json(myinfoResult);
         return;
@@ -32,16 +39,14 @@ router.get('/', userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 내정보 > 지각횟수
 router.get('/lateCount',userUtil.LoggedIn, async (req,res)=> {
 
-    const positionId = req.job.substring(1);
-
     let workerData;
     try {
-        workerData = await worker.findOne({ attributes: ['register_date'], where : {position_id: positionId}})
+        workerData = await worker.findOne({ where : {id: req.job.substring(1)}});
     }
     catch(err) {
         workerData = null;
     }
-    const lateCountResult = await workerUtil.getLateCount(positionId, workerData.register_date);
+    const lateCountResult = await workerUtil.getLateCount(workerData.position_id, workerData.register_date);
     return res.json(lateCountResult);
 });
 
@@ -49,16 +54,15 @@ router.get('/lateCount',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 내정보 > 공동업무 참여횟수
 router.get('/coTaskCount',userUtil.LoggedIn, async (req,res)=> {
 
-    const positionId = req.job.substring(1);
-
     let workerData;
     try {
-        workerData = await worker.findOne({ attributes: ['register_date'], where : {position_id: positionId}})
+        workerData = await worker.findOne({ where : {id: req.job.substring(1)}});
     }
     catch(err) {
         workerData = null;
     }
-    const coTaskCountResult = await workerUtil.getCoTaskCount(positionId, workerData.register_date);
+
+    const coTaskCountResult = await workerUtil.getCoTaskCount(workerData.position_id, workerData.register_date);
     return res.json(coTaskCountResult);
 
 });
@@ -66,16 +70,14 @@ router.get('/coTaskCount',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 내정보 > 업무 완수율
 router.get('/taskRate',userUtil.LoggedIn, async (req,res)=> {
 
-    const positionId = req.job.substring(1);
-
     let workerData;
     try {
-        workerData = await worker.findOne({ attributes: ['register_date'], where : {position_id: positionId}})
+        workerData = await worker.findOne({ where : {id: req.job.substring(1)}});
     }
     catch(err) {
         workerData = null;
     }
-    const completeTaskInfo = await workerUtil.getTaskRate(positionId, workerData.register_date);
+    const completeTaskInfo = await workerUtil.getTaskRate(workerData.position_id, workerData.register_date);
     return res.json(completeTaskInfo);
 
 });
@@ -83,7 +85,7 @@ router.get('/taskRate',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 하단 퇴사요청
 router.put('/resign', userUtil.LoggedIn, async (req,res)=> {
 
-    if(req.job[0] != 'P'){
+    if(req.job[0] != 'W'){
         res.json({
             code: "202",
             message: "퇴사요청은 근무자만 할 수 있습니다."
@@ -91,7 +93,7 @@ router.put('/resign', userUtil.LoggedIn, async (req,res)=> {
         return;
     }
 
-    worker.update({status: 2}, {where: {position_id: req.job.substring(1)}})
+    worker.update({status: 2}, {where: {id: req.job.substring(1)}})
         .then(updateWorker => {
 
             console.log("success to update user resign request");
@@ -109,12 +111,6 @@ router.put('/resign', userUtil.LoggedIn, async (req,res)=> {
             });
             return;
         });
-
-});
-
-// 마이페이지 하단 퇴사수락, 퇴사적용
-router.post('/resign/apply', userUtil.LoggedIn, async (req,res)=> {
-
 
 });
 

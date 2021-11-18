@@ -26,7 +26,7 @@ module.exports = {
         return randomCode;
     },
 
-    // 관리자: 마이페이지 > 하단 > 근무자
+    // 관리자: 마이페이지 > 하단 > 근무자 리스트
     getWorkersList : async(shopId) => {
 
         try {
@@ -58,7 +58,7 @@ module.exports = {
                             positionId: pdata.id,
                             status: workerData == null ? 0 : workerData.status,
                             rank: pdata.rank,
-                            image_path: pdata.image_path,
+                            image_path: workerData == null ? null : workerData.image_path,
                             title: pdata.title,
                             first_name: workerData == null ? "" : workerData.user_first_name
                         }
@@ -73,6 +73,7 @@ module.exports = {
                     message: "근무자 정보 조회에 오류가 발생했습니다.",
                 };
             }
+
             console.log("success get mypage worker list");
             return {
                 code: "200",
@@ -93,11 +94,14 @@ module.exports = {
     // 관리자: 마이페이지 > 하단 > 근무자 > 상단 > 근무자 프로필
     getPositionProfile: async (positionId) => {
 
-        let positionProfileData;
+        let workerProfileData = {};
         try {
-            positionProfileData = await position.findOne({
-                attributes: ['rank', 'title', ['image_path', 'imagePath']],
+             const positionData = await position.findOne({
+                attributes: ['rank', 'title'],
                 where: {id: positionId}});
+
+            workerProfileData.rank = positionData.rank;
+            workerProfileData.title = positionData.title;
             console.log("success to get position data");
         }
         catch(err) {
@@ -111,18 +115,20 @@ module.exports = {
         try {
             const workerData = await worker.findOne({where: {position_id: positionId}});
             console.log("success to get worker data");
-            positionProfileData.dataValues.firstName = workerData.user_first_name;
+            workerProfileData.imagePath = workerData.image_path;
+            workerProfileData.firstName = workerData.user_first_name;
 
         }
         catch(err) {
             console.log("get worker data error or no worker exist", err);
-            positionProfileData.dataValues.firstName = "";
+            workerProfileData.imagePath = null;
+            workerProfileData.dataValues.firstName = "";
         }
 
         return {
             code: "200",
             message: "근무자 프로필 조회를 성공했습니다!",
-            data: positionProfileData
+            data: workerProfileData
         };
 
     },
@@ -223,7 +229,6 @@ module.exports = {
                 message: "근무자 포지션 조회를 성공했습니다.",
                 data: positionData
             };
-
         }
         catch(err) {
             console.log("get position data error", err);
@@ -232,6 +237,8 @@ module.exports = {
                 message: "근무자 포지션 조회에 오류가 발생했습니다."
             };
         }
-    }
+    },
+
+    // 포지션 삭제
 
 };

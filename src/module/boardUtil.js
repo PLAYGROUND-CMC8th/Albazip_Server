@@ -1,11 +1,11 @@
-const { user, position, board, comment } = require('../models');
+const { user, position, board, comment, worker, manager } = require('../models');
 
 const pagesize = 20;
 
 module.exports = {
 
     // 마이페이지 > 하단 > 작성글 > 게시글
-    getPost: async (reqId, reqJob, reqPage) => {
+    getPost: async (reqJob, reqPage) => {
 
         try {
             const offset = 0 + (reqPage - 1) * pagesize
@@ -13,13 +13,23 @@ module.exports = {
 
             let postData;
             try {
-                postData = await board.findAll({
-                    offset: offset,
-                    limit: pagesize,
-                    attributes: ['id', 'title', 'content', 'register_date'],
-                    where: {writer_job: reqJob, status: 1},
-                    order: [['register_date', 'DESC']]
-                });
+                if(reqJob) {
+                    postData = await board.findAll({
+                        offset: offset,
+                        limit: pagesize,
+                        attributes: ['id', 'title', 'content', 'register_date'],
+                        where: {writer_job: reqJob, status: 1},
+                        order: [['register_date', 'DESC']]
+                    });
+                } else {
+                    postData = await board.findAll({
+                        offset: offset,
+                        limit: pagesize,
+                        attributes: ['id', 'title', 'content', 'writer_job', 'register_date'],
+                        where: {status: 1},
+                        order: [['register_date', 'DESC']]
+                    });
+                }
                 console.log("success to get recent post");
 
             } catch (err) {
@@ -30,30 +40,27 @@ module.exports = {
                 };
             }
 
-            let writerJob;
-            if (reqJob[0] == 'S') {
-                writerJob = "사장님";
-                console.log("success to get writer position data");
-            } else {
-                try {
-                    const positionData = await position.findOne({attributes: ['title'], where: {id: reqJob.substring(1)}});
-                    console.log("success to get writer position data");
-                    writerJob = positionData.title;
-                } catch (err) {
-                    console.log("get writer position data error", err);
-                    writerJob = null;
+            let writerJob, writerName;
+            if(reqJob) {
+                if (reqJob[0] == 'M') {
+                    let managerData = await manager.findOne({where: {id: reqJob.substring(1)}});
+                    writerJob = "사장님";
+                    writerName = managerData.user_last_name + managerData.user_first_name;
+
+                } else {
+                    try {
+                        let workerData = await worker.findOne({where: {id: reqJob.substring(1)}});
+                        writerJob = workerData.position_title;
+                        writerName = workerData.user_first_name;
+
+                    } catch (err) {
+                        writerJob = null;
+                        writerName = null;
+                    }
                 }
+                console.log("success to get writer data");
             }
 
-            let writerName;
-            try {
-                const userData = await user.findOne({attributes: ['last_name', 'first_name'], where: {id: reqId}});
-                console.log("success to get writer name data");
-                writerName = userData.last_name + userData.first_name;
-            } catch {
-                console.log("get writer name data error", err);
-                writerName = null;
-            }
 
             let postInfo = [];
             if (postData) {
@@ -62,11 +69,31 @@ module.exports = {
                     let commentCount;
                     try {
                         let count = await comment.count({where: {status: [1, 2], board_id: pdata.id}});
-                        console.log("success to get comment count data");
                         commentCount = count;
+                        console.log("success to get comment count data");
+
                     } catch (err) {
-                        console.log("get comment count data error", err);
                         commentCount = 0;
+                        console.log("get comment count data error", err);
+                    }
+
+                    if(!reqJob){
+                        if (pdata.writer_job[0] == 'M') {
+                            let managerData = await manager.findOne({where: {id: reqJob.substring(1)}});
+                            writerJob = "사장님";
+                            writerName = managerData.user_last_name + managerData.user_first_name;
+
+                        } else {
+                            try {
+                                let workerData = await worker.findOne({where: {id: reqJob.substring(1)}});
+                                writerJob = workerData.position_title;
+                                writerName = workerData.user_first_name;
+
+                            } catch (err) {
+                                writerJob = null;
+                                writerName = null;
+                            }
+                        }
                     }
 
                     let data = {
@@ -107,13 +134,26 @@ module.exports = {
         console.log("request notice page",reqPage);
 
         try {
-            const noticeData = await board.findAll({
-                offset: offset,
-                limit: pagesize,
-                attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
-                where: {writer_job: reqJob, status: 0},
-                order: [['register_date', 'DESC']]
-            });
+            let noticeData;
+            if(reqJob) {
+                noticeData = await board.findAll({
+                    offset: offset,
+                    limit: pagesize,
+                    attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
+                    where: {writer_job: reqJob, status: 0},
+                    order: [['register_date', 'DESC']]
+                });
+
+            } else {
+                noticeData = await board.findAll({
+                    offset: offset,
+                    limit: pagesize,
+                    attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
+                    where: { status: 0},
+                    order: [['register_date', 'DESC']]
+                });
+            }
+
             console.log("success to get recent notice");
             return {
                 code: "200",

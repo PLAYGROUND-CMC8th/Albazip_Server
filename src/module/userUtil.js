@@ -2,6 +2,7 @@ var jwt = require('../module/jwt');
 const { user } = require('../models');
 
 module.exports = {
+    // 휴대폰 중복여부
     checkPhoneExistance: async (phone) => {
         return await user.count({
             where: {
@@ -13,6 +14,8 @@ module.exports = {
                 return count !== 0;
             });
     },
+
+    // 로그인 유효성 검사
     LoggedIn: (req, res, next) => {
         const token = req.headers.token;
 

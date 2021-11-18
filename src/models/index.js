@@ -95,7 +95,7 @@ db.task.belongsTo(db.shop, {
     targetKey: 'id'
 });
 
-// position과 schedule
+/*// position과 schedule
 db.position.hasMany(db.schedule, {
     foreignKey: 'position_id',
     sourceKey: 'id',
@@ -104,7 +104,7 @@ db.position.hasMany(db.schedule, {
 db.schedule.belongsTo(db.position, {
     foreignKey: 'position_id',
     targetKey: 'id'
-});
+});*/
 
 // board와 board_image
 db.board.hasMany(db.board_image, {

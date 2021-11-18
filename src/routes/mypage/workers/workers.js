@@ -229,7 +229,7 @@ router.get('/:positionId/workerInfo/taskInfo',userUtil.LoggedIn, async (req,res)
 router.get('/:positionId/workerInfo/taskInfo/:year/:month',userUtil.LoggedIn, async (req,res)=> {
 
     const { positionId, year, month } = req.params;
-    const completeTaskMonthResult = await taskUtil.getCompleteTaskMonth(req.job.substring(1), year, month);
+    const completeTaskMonthResult = await taskUtil.getCompleteTaskMonth(positionId, year, month);
     return res.json(completeTaskMonthResult);
 
 });
@@ -238,7 +238,7 @@ router.get('/:positionId/workerInfo/taskInfo/:year/:month',userUtil.LoggedIn, as
 router.get('/:positionId/workerInfo/taskInfo/:year/:month/:date',userUtil.LoggedIn, async (req,res)=> {
 
     const { positionId, year, month, date } = req.params;
-    const completeTaskDateResult = await taskUtil.getCompleteTaskDate(req.job.substring(1), year, month, date);
+    const completeTaskDateResult = await taskUtil.getCompleteTaskDate(positionId, year, month, date);
     return res.json(completeTaskDateResult);
 
 });
@@ -267,6 +267,13 @@ router.get('/:positionId/taskList',userUtil.LoggedIn, async (req,res)=> {
 
     const positionTaskListResult = await taskUtil.getPositionTaskList(req.params.positionId);
     return res.json(positionTaskListResult);
+
+});
+
+// 마이페이지 > 하단 > 근무자 > 근무자 선택 > 퇴사하기
+router.delete('/:positionId',userUtil.LoggedIn, async (req,res)=> {
+
+
 
 });
 
