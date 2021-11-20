@@ -197,5 +197,49 @@ module.exports ={
             };
         }
 
+    },
+
+    updateClock: async (workerId) => {
+
+        const now = new Date();
+        const yearNow = now.getFullYear();
+        const monthNow = now.getMonth()+1;
+        const dateNow = now.getDate();
+        const hourNow = String(now.getHours()).padStart(2, '0');
+        const minNow = String(now.getMinutes()).padStart(2, '0');
+
+        try {
+            const scheduleData = await schedule.findOne({
+                where: {
+                    worker_id: workerId,
+                    year: yearNow, month: monthNow, day: dateNow
+                }
+            });
+
+            console.log(scheduleData.real_start_time);
+
+            if (!scheduleData.real_start_time) {
+                await schedule.update({real_start_time: hourNow + minNow}, {where: {id: scheduleData.id}});
+                console.log("success to clock in");
+                return {
+                    code: "200",
+                    message: "근무자 출근하기를 성공했습니다."
+                }
+            } else {
+                await schedule.update({real_end_time: hourNow + minNow}, {where: {id: scheduleData.id}});
+                console.log("success to clock out");
+                return {
+                    code: "200",
+                    message: "근무자 퇴근하기를 성공했습니다."
+                }
+            }
+        }
+        catch(err){
+            console.log("clock update error", err);
+            return {
+                code: "400",
+                message: "출근하기 및 퇴근하기에 오류가 발생했습니다."
+            }
+        }
     }
 };

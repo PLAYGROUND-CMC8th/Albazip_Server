@@ -5,10 +5,10 @@ const publicHolidayApiKey = require('../../config/publicHolidayApiKey');
 const holidays = require('holidays-kr');
 const sequelize = require('sequelize');
 
-
 var userUtil = require('../../module/userUtil');
 var timeUtil = require('../../module/timeUtil');
 var pushAlarm = require('../../module/pushAlarm');
+var scheduleUtil = require('../../module/scheduleUtil');
 
 const { manager, worker, shop, position, task, board, schedule, comment } = require('../../models');
 
@@ -344,6 +344,15 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
         });
         return;
     }
+
+});
+
+// 출근하기
+router.put('/clock', userUtil.LoggedIn, async (req,res)=>{
+
+    const workerId = req.job.substring(1);
+    const updateClockResult = await scheduleUtil.updateClock(workerId);
+    return res.json(updateClockResult);
 
 });
 
