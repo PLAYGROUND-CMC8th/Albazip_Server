@@ -7,7 +7,7 @@ var router = asyncify(express.Router());
 var userUtil = require('../../../module/userUtil');
 var taskUtil = require('../../../module/taskUtil');
 
-const { position, worker, manager } = require('../../../models');
+const { task, position, worker, manager } = require('../../../models');
 
 
 // 근무자: 홈 > 오늘의 할일
@@ -148,6 +148,42 @@ router.get('/manager/workerPerTask/:workerId', userUtil.LoggedIn, async (req,res
 
     const todayPerTaskResult = await taskUtil.getTodayPerTask(req.params.workerId);
     return res.json(todayPerTaskResult);
+
+});
+
+// 업무 완료하기 및 되돌리기
+router.put('/:taskId', userUtil.LoggedIn, async (req,res)=> {
+
+    const taskId = req.params.taskId;
+    const taskData = await task.findOne({where: {id: taskId}});
+
+    try {
+        console.log(taskData.completer_job);
+        if (!taskData.completer_job) {
+            await task.update({completer_job: req.job}, {where: {id: taskId}});
+            console.log("success to complete task");
+            return res.json({
+                code: "200",
+                message: "업무완료하기를 성공했습니다."
+            });
+
+        }
+        else {
+            await task.update({completer_job: null}, {where: {id: taskId}});
+            console.log("success to return task");
+            return res.json({
+                code: "200",
+                message: "업무되돌리기를 성공했습니다."
+            });
+        }
+    }
+    catch(err){
+        console.log("complete or return task error", err);
+        return res.json({
+            code: "400",
+            message: "업무 완료 및 되돌리기에 오류가 발생했습니다."
+        });
+    }
 
 });
 
