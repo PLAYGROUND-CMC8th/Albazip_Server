@@ -8,6 +8,7 @@ const { position, task, user, manager, worker, schedule } = require('../models')
 
 module.exports = {
 
+    // 포지션 랜덤코드 생성
     makeRandomCode: async ()=> {
         const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         const charactersLength = characters.length;
@@ -18,11 +19,9 @@ module.exports = {
             for (let i = 0; i < 10; i++) {
                 randomCode += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
-
             let count = await position.count({where: {code: randomCode} });
             if(count == 0) break;
         }
-
         return randomCode;
     },
 

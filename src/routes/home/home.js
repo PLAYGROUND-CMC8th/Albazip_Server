@@ -11,7 +11,7 @@ var pushAlarm = require('../../module/pushAlarm');
 var scheduleUtil = require('../../module/scheduleUtil');
 var taskUtil = require('../../module/taskUtil');
 
-const { manager, worker, shop, position, task, board, schedule, comment } = require('../../models');
+const { manager, worker, shop, position, board, schedule, comment } = require('../../models');
 
 // 오늘의 날짜
 const now = new Date();
@@ -269,11 +269,11 @@ router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
             attributes: ['worker_id'],
             where: {shop_id: shopData.id, year: yearNow, month: monthNow, day: dateNow}
         });
-        for(const sc of scheduledData){
-            let workerData = await worker.findOne({attributes: [
-                ['position_title', 'workerTitle'], ['user_first_name', 'workerName'], ['image_path', 'workerImage']
-                ]
-            });
+
+        for(const sdata of scheduledData){
+            let workerData = await worker.findOne({
+                attributes: [['id', 'workerId'], ['position_title', 'workerTitle'], ['user_first_name', 'workerName'], ['image_path', 'workerImage']],
+            where: {id: sdata.worker_id}});
             workersInfo.push(workerData);
         }
         console.log("success to get today workers list");
@@ -293,7 +293,5 @@ router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
         return;
     }
 });
-
-
 
 module.exports = router;
