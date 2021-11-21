@@ -14,6 +14,11 @@ var taskUtil = require('../../module/taskUtil');
 const { user, position, task, time, schedule, worker, manager } = require('../../models');
 const models = require('../../models');
 
+const now = new Date();
+const yearNow = now.getFullYear();
+const monthNow = now.getMonth()+1;
+const dateNow = now.getDate();
+
 //포지션 추가하기
 router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
@@ -330,17 +335,14 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
         const workerData = await worker.findAll({where: {position_id: positionId}});
         if (workerData.length > 0) {
 
-            const now = new Date();
-            const yearNow = now.getFullYear();
-            const monthNow = now.getMonth();
-            const dateNow = now.getDate();
+            // 오늘의 날짜
 
             const query = ` delete 
                         from schedule
                         where worker_id = ${workerData[0].id}
-                        and ((year > ${yearNow}) 
-                        or (year = ${yearNow} and month > ${monthNow})
-                        or (year = ${yearNow} and month = ${monthNow} and day > ${dateNow}))`;
+                        and ((year+0 > ${yearNow}) 
+                        or (year+0 = ${yearNow} and month+0 > ${monthNow})
+                        or (year+0 = ${yearNow} and month+0 = ${monthNow} and day+0 > ${dateNow}))`;
 
             try {
                 await schedule.sequelize.query(query);
@@ -506,17 +508,15 @@ router.delete('/:positionId', userUtil.LoggedIn, async (req,res)=> {
         }
 
         // 2. worker의 앞으로의 스케줄 삭제
-        const now = new Date();
-        const yearNow = now.getFullYear();
-        const monthNow = now.getMonth();
-        const dateNow = now.getDate();
+
+        // 오늘의 날짜
 
         const query = ` delete 
                     from schedule
                     where worker_id = ${workerData.id}
-                    and ((year > ${yearNow}) 
-                    or (year = ${yearNow} and month > ${monthNow})
-                    or (year = ${yearNow} and month = ${monthNow} and day > ${dateNow}))`;
+                    and ((year+0 > ${yearNow}) 
+                    or (year+0 = ${yearNow} and month+0 > ${monthNow})
+                    or (year+0 = ${yearNow} and month+0 = ${monthNow} and day+0 > ${dateNow}))`;
 
         try {
             await schedule.sequelize.query(query);
