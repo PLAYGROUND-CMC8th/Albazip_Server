@@ -98,7 +98,6 @@ router.get('/coTask', userUtil.LoggedIn, async (req,res)=> {
             const positionData = await position.findOne({where: {id: workerData.position_id}});
             shopId = positionData.shop_id;
         }
-        console.log(shopId);
 
         const todayCoTaskResult = await taskUtil.getTodayCoTask(shopId);
         return res.json(todayCoTaskResult);
@@ -186,5 +185,62 @@ router.put('/:taskId', userUtil.LoggedIn, async (req,res)=> {
     }
 
 });
+
+// 공동업무 추가하기
+router.post('/coTask', userUtil.LoggedIn, async (req,res)=> {
+
+    const coTaskList = req.body.coTaskList;
+    const managerData = await manager.findOne({attributes:['shop_id'], where: {id: req.job.substring(1)}});
+    const writerJob = req.job;
+
+    let count = 0;
+    try {
+        if (coTaskList.length > 0) {
+            for (const coTask of coTaskList) {
+
+                // 필수값 확인
+                if (!coTask.title) {
+                    console.lot("not enough parameter");
+                    res.json({
+                        code: "202",
+                        message: "업무명을 입력해주세요."
+                    });
+                    return;
+                }
+
+                await task.create({
+                    shop_id: managerData.shop_id,
+                    writer_job: writerJob,
+                    status: 1,
+                    title: coTask.title,
+                    content: coTask.content
+                });
+                count += 1;
+            }
+        }
+
+        console.log("success to make new cooperate tasks");
+        res.json({
+            code: "200",
+            message: `${count}개의 공동업무 생성에 성공했습니다.`
+        });
+        return;
+    }
+    catch(err) {
+        console.log("make new cooperate tasks error", err);
+        res.json({
+            code: "400",
+            message: `공동업무 생성에 실패했습니다. (성공 ${count}개, 실패 ${coTaskList.length-count}개)`
+        });
+        return;
+    }
+
+});
+
+// 개인업무 추가하기
+
+
+// 업무 삭제하기
+
 
 module.exports = router;
