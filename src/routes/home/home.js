@@ -9,22 +9,22 @@ var userUtil = require('../../module/userUtil');
 var timeUtil = require('../../module/timeUtil');
 var pushAlarm = require('../../module/pushAlarm');
 var scheduleUtil = require('../../module/scheduleUtil');
+var taskUtil = require('../../module/taskUtil');
 
 const { manager, worker, shop, position, task, board, schedule, comment } = require('../../models');
 
 const weekdays = [ '일', '월', '화', '수', '목', '금', '토'];
 
-// 관리자
+// 관리자: 홈
 router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
 
     try {
         let totalData = {};
 
-        // 매장 정보
-        const managerData = await manager.findOne({where: {id: req.job.substring(1)}});
+        const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
         const shopData = await shop.findOne({where: {id: managerData.shop_id}});
 
-        // 오늘 날짜
+        // 오늘의 날짜
         const now = new Date();
         const yearNow = now.getFullYear();
         const monthNow = now.getMonth()+1;
@@ -40,6 +40,7 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         }
         totalData.todayInfo = todayInfo;
 
+        // 매장 정보
         const shopInfo = {
             status: 0, // 0 : 영업 전, 1: 영업 중, 2: 영업 후, 3: 휴무
             name: shopData.name,
@@ -48,9 +49,7 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         };
         totalData.shopInfo = shopInfo;
 
-
-
-        // 공휴일 유무에 따라 shopStatus 결정
+        // 공휴일 유무에 따라 shopInfo의 status 결정
         holidays.serviceKey = publicHolidayApiKey.encoding;
         holidays.serviceKey = publicHolidayApiKey.encoding;
         const holidayResult = await holidays.getHolidays({
@@ -76,15 +75,16 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
 
 
         if(shopInfo.status != 3) {
-            // 금일 근무자
+
+            // 오늘 근무자
             let workers = [];
 
-            const scheduledData = await schedule.findAll({
+            const scheduleData = await schedule.findAll({
                 attributes: ['worker_id'],
                 where: {shop_id: shopData.id, year: yearNow, month: monthNow, day: dateNow}
             });
 
-            for (const sdata of scheduledData) {
+            for (const sdata of scheduleData) {
                 let workerData = await worker.findOne({
                     attributes: [['position_title', 'title'], ['user_first_name', 'firstName']],
                     where: {id: sdata.worker_id}
@@ -92,58 +92,11 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
                 workerData.dataValues.title = workerData.dataValues.title.substring(2);
                 workers.push(workerData);
             }
+
             totalData.workerInfo = workers;
 
-
-            // 업무
-            const coTaskTotalCountQeury = `select *
-                                       from task 
-                                       where (1 = 1)
-                                       and status = 1
-                                       and shop_id = ${shopData.id}
-                                       and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-            const coTaskTotalCount = await task.sequelize.query(coTaskTotalCountQeury, {type: sequelize.QueryTypes.SELECT});
-
-            const coTaskCompleteCountQeury = `select *
-                                          from task 
-                                          where (1 = 1)
-                                          and status = 1
-                                          and shop_id = ${shopData.id}
-                                          and completer_job is not null
-                                          and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-            const coTaskCompleteCount = await task.sequelize.query(coTaskCompleteCountQeury, {type: sequelize.QueryTypes.SELECT});
-            const coTask = {
-                completeCount: coTaskCompleteCount.length,
-                totalCount: coTaskTotalCount.length
-            };
-
-            const taskTotalCountQuery = `select *
-                                     from task 
-                                     where (1 = 1)
-                                     and status = 2
-                                     and shop_id = ${shopData.id}
-                                     and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-            const taskTotalCount = await task.sequelize.query(taskTotalCountQuery, {type: sequelize.QueryTypes.SELECT});
-
-            const taskCompleteCountQuery = `select *
-                                        from task 
-                                        where (1 = 1)
-                                        and status = 2
-                                        and shop_id = ${shopData.id}
-                                        and completer_job is not null
-                                        and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-
-            const taskCompleteCount = await task.sequelize.query(taskCompleteCountQuery, {type: sequelize.QueryTypes.SELECT});
-            const perTask = {
-                completeCount: taskCompleteCount.length,
-                totalCount: taskTotalCount.length
-            };
-
-            const taskInfo = {
-                coTask: coTask,
-                perTask: perTask
-            };
-            totalData.taskInfo = taskInfo;
+            // 오늘 업무
+            totalData.taskInfo = await taskUtil.getTodayTaskCount(shopData.id, null);
 
         }
 
@@ -175,12 +128,12 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
 
 });
 
-// 근무자 홈
+// 근무자: 홈
 router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
     try {
         let totalData = {};
 
-        // 오늘 날짜
+        // 오늘의 날짜
         const now = new Date();
         const yearNow = now.getFullYear();
         const monthNow = now.getMonth()+1;
@@ -196,13 +149,13 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
         }
         totalData.todayInfo = todayInfo;
 
-        // 매장명
+        // 매장 정보
         const workerData = await worker.findOne({
             attributes: ['id', 'position_id', 'shop_name', 'position_title'],
             where: {id: req.job.substring(1)}
         });
+        const positionData = await position.findOne({attributes: ['shop_id'], where:{id: workerData.position_id }});
 
-        const positionData = await position.findOne({ where:{id: workerData.position_id }});
         let shopInfo = {
             status: 3, // 0 : 근무 전, 1: 근무 중, 2: 근무 후, 3: 휴무
             shopName: workerData.shop_name
@@ -210,17 +163,21 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
 
         let scheduledData;
         try {
-            // 근무정보
+            // 근무자 스케줄 정보
             scheduledData = await schedule.findOne({
                 attributes: ['start_time', 'end_time', 'real_start_time', 'real_end_time', 'shop_id'],
-                where: {worker_id: workerData.id, year: yearNow, month: monthNow, day: dateNow}
+                where: {
+                    worker_id: workerData.id, shop_id: positionData.shop_id,
+                    year: yearNow, month: monthNow, day: dateNow
+                }
             });
             console.log("success to get today position schedule info");
-
-        } catch (err) {
+        }
+        catch (err) {
             console.log("no today position schedule ", err);
         }
         totalData.shopInfo = shopInfo;
+
 
         if (scheduledData) {
 
@@ -234,7 +191,6 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
                 || (hourNow == scheduledData.end_time.substring(0,2) && minNow > scheduledData.end_time.substring(2,2)))
                 totalData.shopInfo.status = 2;
 
-
             const scheduleInfo = {
                 positionTitle: workerData.position_title.substring(0, 2) + " " + workerData.position_title.substring(2),
                 startTime: scheduledData.start_time,
@@ -247,57 +203,7 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
 
 
             // 업무
-            const coTaskTotalCountQeury = `select *
-                                            from task 
-                                            where (1 = 1)
-                                            and status = 1
-                                            and shop_id = ${scheduledData.shop_id}
-                                            and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-            const coTaskTotalCount = await task.sequelize.query(coTaskTotalCountQeury, {type: sequelize.QueryTypes.SELECT});
-
-            const coTaskCompleteCountQeury = `select *
-                                              from task 
-                                              where (1 = 1)
-                                              and status = 1
-                                              and shop_id = ${scheduledData.shop_id}
-                                              and completer_job is not null
-                                              and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-            const coTaskCompleteCount = await task.sequelize.query(coTaskCompleteCountQeury, {type: sequelize.QueryTypes.SELECT});
-            const coTask = {
-                completeCount: coTaskCompleteCount.length,
-                totalCount: coTaskTotalCount.length
-            };
-
-            const perTaskTotalCountQeury = `select *
-                                            from task 
-                                            where (1 = 1)
-                                            and target_id = ${workerData.id}
-                                            and status = 2
-                                            and shop_id = ${scheduledData.shop_id}
-                                            and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-            const perTaskTotalCount = await task.sequelize.query(perTaskTotalCountQeury, {type: sequelize.QueryTypes.SELECT});
-
-            const perTaskCompleteQeury = `select *
-                                            from task 
-                                            where (1 = 1)
-                                            and target_id = ${workerData.id}
-                                            and status = 2
-                                            and shop_id = ${scheduledData.shop_id}
-                                            and completer_job is not null
-                                            and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-            const perTaskCompleteCount = await task.sequelize.query(perTaskCompleteQeury, {type: sequelize.QueryTypes.SELECT});
-
-            const perTask = {
-                completeCount: perTaskCompleteCount.length,
-                totalCount: perTaskTotalCount.length
-            };
-
-            const taskInfo = {
-                coTask: coTask,
-                perTask: perTask
-            };
-            totalData.taskInfo = taskInfo;
-
+            totalData.taskInfo = await taskUtil.getTodayTaskCount(scheduledData.shop_id, workerData.id);
         }
 
             // 소통창
@@ -347,7 +253,7 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 출근하기
+// 근무자: 출근하기
 router.put('/clock', userUtil.LoggedIn, async (req,res)=>{
 
     const workerId = req.job.substring(1);
@@ -355,6 +261,26 @@ router.put('/clock', userUtil.LoggedIn, async (req,res)=>{
     return res.json(updateClockResult);
 
 });
+
+// 관리자: 오늘의 근무자
+router.put('/todayWorker', userUtil.LoggedIn, async (req,res)=> {
+
+    const managerData = await manager.findOne({where: {id: req.job.substring(1)}});
+    const shopData = await shop.findOne({where: {id: managerData.shop_id}});
+
+    try {
+        // 근무정보
+        scheduledData = await schedule.findOne({
+            attributes: ['worker_id'],
+            where: {shop_id: shopData.id, year: yearNow, month: monthNow, day: dateNow}
+        });
+        console.log("success to get today position schedule info");
+
+    } catch (err) {
+        console.log("no today position schedule ", err);
+    }
+});
+
 
 
 module.exports = router;

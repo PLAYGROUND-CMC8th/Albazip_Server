@@ -314,6 +314,99 @@ module.exports ={
 
     },
 
+    // 근무자: 홈 > 오늘의 할일
+    // 관리자: 홈 > 오늘의 할일 근무자
+    getTodayTaskCount: async (shopId, workerId) => {
+
+        let coTask = {};
+        try {
+            // 공동업무
+            const coTaskTotalCountQeury = `select *
+                                       from task 
+                                       where (1 = 1)
+                                       and status = 1
+                                       and shop_id = ${shopId}
+                                       and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+            const coTaskTotalCount = await task.sequelize.query(coTaskTotalCountQeury, {type: sequelize.QueryTypes.SELECT});
+
+            const coTaskCompleteCountQeury = `select *
+                                          from task 
+                                          where (1 = 1)
+                                          and status = 1
+                                          and shop_id = ${shopId}
+                                          and completer_job is not null
+                                          and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+            const coTaskCompleteCount = await task.sequelize.query(coTaskCompleteCountQeury, {type: sequelize.QueryTypes.SELECT});
+
+            console.log("success to get today cooperate task");
+            coTask.completeCount = coTaskCompleteCount.length;
+            coTask.totalCount = coTaskTotalCount.length;
+        }
+        catch(err) {
+            console.log("get today cooperate task error", err);
+            coTask.completeCount = 0;
+            coTask.totalCount = 0;
+        }
+
+        let perTask = {};
+        try {
+            if (!workerId) {
+                const taskTotalCountQuery = `select *
+                                     from task 
+                                     where (1 = 1)
+                                     and status = 2
+                                     and shop_id = ${shopId}
+                                     and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+                const taskTotalCount = await task.sequelize.query(taskTotalCountQuery, {type: sequelize.QueryTypes.SELECT});
+
+                const taskCompleteCountQuery = `select *
+                                        from task 
+                                        where (1 = 1)
+                                        and status = 2
+                                        and shop_id = ${shopId}
+                                        and completer_job is not null
+                                        and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+
+                const taskCompleteCount = await task.sequelize.query(taskCompleteCountQuery, {type: sequelize.QueryTypes.SELECT});
+
+                perTask.completeCount = taskCompleteCount.length;
+                perTask.totalCount = taskTotalCount.length;
+
+            } else {
+                const perTaskTotalCountQeury = `select *
+                                            from task 
+                                            where (1 = 1)
+                                            and target_id = ${workerId}
+                                            and status = 2
+                                            and shop_id = ${shopId}
+                                            and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+                const perTaskTotalCount = await task.sequelize.query(perTaskTotalCountQeury, {type: sequelize.QueryTypes.SELECT});
+
+                const perTaskCompleteQeury = `select *
+                                            from task 
+                                            where (1 = 1)
+                                            and target_id = ${workerId}
+                                            and status = 2
+                                            and shop_id = ${shopId}
+                                            and completer_job is not null
+                                            and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+                const perTaskCompleteCount = await task.sequelize.query(perTaskCompleteQeury, {type: sequelize.QueryTypes.SELECT});
+
+                console.log("success to get today personal task");
+                perTask.completeCount = perTaskCompleteCount.length;
+                perTask.totalCount = perTaskTotalCount.length;
+            }
+        }
+        catch(err) {
+            console.log("get today personal task error");
+            perTask.completeCount = 0;
+            perTask.totalCount = 0;
+        }
+
+        return { coTask, perTask };
+    },
+
+
     // 관리자: 홈 > 오늘의 할일 > 포지션 업무 리스트
     getTodayPerTaskList: async (shopId) => {
 
