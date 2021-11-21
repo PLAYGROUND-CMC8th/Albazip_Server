@@ -13,6 +13,14 @@ var taskUtil = require('../../module/taskUtil');
 
 const { manager, worker, shop, position, task, board, schedule, comment } = require('../../models');
 
+// 오늘의 날짜
+const now = new Date();
+const yearNow = now.getFullYear();
+const monthNow = now.getMonth()+1;
+const dateNow = now.getDate();
+const dayNow = now.getDay();
+const hourNow = String(now.getHours()).padStart(2, '0');
+const minNow = String(now.getMinutes()).padStart(2, '0');
 const weekdays = [ '일', '월', '화', '수', '목', '금', '토'];
 
 // 관리자: 홈
@@ -25,13 +33,6 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         const shopData = await shop.findOne({where: {id: managerData.shop_id}});
 
         // 오늘의 날짜
-        const now = new Date();
-        const yearNow = now.getFullYear();
-        const monthNow = now.getMonth()+1;
-        const dateNow = now.getDate();
-        const dayNow = now.getDay();
-        const hourNow = String(now.getHours()).padStart(2, '0');
-        const minNow = String(now.getMinutes()).padStart(2, '0');
 
         const todayInfo = {
             month: monthNow,
@@ -134,13 +135,6 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
         let totalData = {};
 
         // 오늘의 날짜
-        const now = new Date();
-        const yearNow = now.getFullYear();
-        const monthNow = now.getMonth()+1;
-        const dateNow = now.getDate();
-        const dayNow = now.getDay();
-        const hourNow = String(now.getHours()).padStart(2, '0');
-        const minNow = String(now.getMinutes()).padStart(2, '0');
 
         const todayInfo = {
             month: monthNow,
@@ -263,21 +257,40 @@ router.put('/clock', userUtil.LoggedIn, async (req,res)=>{
 });
 
 // 관리자: 오늘의 근무자
-router.put('/todayWorker', userUtil.LoggedIn, async (req,res)=> {
+router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
 
     const managerData = await manager.findOne({where: {id: req.job.substring(1)}});
     const shopData = await shop.findOne({where: {id: managerData.shop_id}});
 
+    let workersInfo = [];
     try {
-        // 근무정보
-        scheduledData = await schedule.findOne({
+        // 근무자 정보
+        const scheduledData = await schedule.findAll({
             attributes: ['worker_id'],
             where: {shop_id: shopData.id, year: yearNow, month: monthNow, day: dateNow}
         });
-        console.log("success to get today position schedule info");
+        for(const sc of scheduledData){
+            let workerData = await worker.findOne({attributes: [
+                ['position_title', 'workerTitle'], ['user_first_name', 'workerName'], ['image_path', 'workerImage']
+                ]
+            });
+            workersInfo.push(workerData);
+        }
+        console.log("success to get today workers list");
+        res.json({
+            code: "200",
+            message: "오늘의 근무자 조회를 성공했습니다.",
+            data: workersInfo
+        })
+        return;
 
     } catch (err) {
-        console.log("no today position schedule ", err);
+        console.log("get today workers list error", err);
+        res.json({
+            code: "400",
+            message: "오늘의 근무자 조회에 오류가 발생했습니다."
+        })
+        return;
     }
 });
 
