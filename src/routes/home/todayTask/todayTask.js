@@ -241,6 +241,27 @@ router.post('/coTask', userUtil.LoggedIn, async (req,res)=> {
 
 
 // 업무 삭제하기
+router.delete('/:taskId', userUtil.LoggedIn, async (req,res)=> {
 
+    try {
+        const taskId = req.params.taskId;
+        await task.destroy({where: {id: taskId}});
+
+        console.log("success to delete today task");
+        res.json({
+            code: "200",
+            message: "업무 삭제를 성공했습니다."
+        });
+        return;
+    }
+    catch(err){
+        console.log("delete today task", err);
+        res.json({
+            code: "400",
+            message: "업무 삭제에 오류가 발생했습니다."
+        });
+        return;
+    }
+});
 
 module.exports = router;
