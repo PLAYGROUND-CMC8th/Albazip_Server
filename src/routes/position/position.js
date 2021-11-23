@@ -481,103 +481,74 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 router.delete('/:positionId', userUtil.LoggedIn, async (req,res)=> {
 
     try {
-        // 0. 관리자인지 확인
-        if(req.job[0] != 'M'){
-            console.log("manager can only resign worker");
+        // 1. worker가 존재하는지 확인
+        const positionId = req.params.positionId;
+        const workerCount = await worker.count({where: {position_id: positionId}});
+
+        if(workerCount > 0){
+            console.log("worker already exist");
             res.json({
                 code: "202",
-                message: "관리자만 근무자를 퇴사시킬 수 있습니다."
+                message: "포지션에 근무자가 존재합니다."
             });
             return;
         }
 
-        const positionId = req.params.positionId;
-        const workerData = await worker.findOne({where: {position_id: positionId}});
-
-        // 1. worker 삭제
+        // 2. position의 time 삭제
         try {
-            await worker.destroy({where: {id: workerData.id}});
-            console.log("success to delete worker data ");
+            await time.destroy({where: {status: 1, target_id: positionId}});
+            console.log("success to delete position's time data");
+
         } catch (err) {
-            console.log("delete worker data error", err);
+            console.log("delete position's time data error", err);
             res.json({
                 code: "400",
-                message: "근무자 정보 삭제에 오류가 발생했습니다."
+                message: "포지션의 근무시간 삭제에 오류가 발생했습니다."
             });
             return;
         }
 
-        // 2. worker의 앞으로의 스케줄 삭제
-
-        // 오늘의 날짜
-
-        const query = ` delete 
-                    from schedule
-                    where worker_id = ${workerData.id}
-                    and ((year+0 > ${yearNow}) 
-                    or (year+0 = ${yearNow} and month+0 > ${monthNow})
-                    or (year+0 = ${yearNow} and month+0 = ${monthNow} and day+0 > ${dateNow}))`;
-
+        // 3. position의 task 삭제
         try {
-            await schedule.sequelize.query(query);
-            console.log("success to delete schedule");
+            await task.destroy({where: {status: 0, target_id: positionId}});
+            console.log("success to delete position's task data");
+
         } catch (err) {
-            console.log("delete schedule error", err);
+            console.log("delete position's task data error", err);
             res.json({
                 code: "400",
-                message: "근무자의 스케줄 삭제에 오류가 발생했습니다."
+                message: "포지션업무 삭제에 오류가 발생했습니다."
             });
             return;
         }
 
-        // 3. 포지션 값 변경
+        // 4. position 삭제
         try {
-            let code = await positionUtil.makeRandomCode();
-            await position.update({code: code}, {where: {id: positionId}});
-            console.log("success to update position dataa");
+            await position.destroy({where: {id: positionId}});
+            console.log("success to delete position data");
+
         } catch (err) {
-            console.log("update position data error", err);
+            console.log("delete position data error", err);
             res.json({
                 code: "400",
-                message: "포지션 정보 업데이트에 오류가 발생했습니다."
+                message: "포지션 삭제에 오류가 발생했습니다."
             });
             return;
         }
 
-        // 4. 유저 값 변경
-        try {
-            const anotherWorker = await worker.findAll({where: {user_id: workerData.user_id}});
-            const anotherManager = await manager.findAll({where: {user_id: workerData.user_id}});
-
-            // 유저의 다른 정보로 업데이트
-            let lastJob = null;
-            if(anotherWorker.length > 0) lastJob = "W"+anotherWorker[0].id;
-            else if(anotherManager.length > 0) lastJob = "M"+anotherManager[0].id;
-
-            await user.update({last_job: lastJob}, {where: {id: workerData.user_id}});
-            console.log("success to update user data");
-        } catch (err) {
-            console.log("update user data error", err);
-            res.json({
-                code: "400",
-                message: "유저 정보 업데이트에 오류가 발생했습니다."
-            });
-            return;
-        }
-
-        console.log("success to resign position");
+        console.log("success to delete position");
         res.json({
             code: "200",
-            message: "포지션 퇴사처리를 성공했습니다."
+            message: "포지션 삭제를 성공했습니다."
         });
         return;
 
     }
     catch(err) {
-        console.log("resign position error", err);
+        console.log("delete position error", err);
         res.json({
             code: "400",
-            message: "포지션 퇴사처리에 오류가 발생했습니다."
+            message: "포지션 삭제 과정에서 오류가 발생했습니다."
         });
         return;
     }

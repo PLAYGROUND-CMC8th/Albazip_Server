@@ -140,4 +140,58 @@ router.post('/myinfo/phone',userUtil.LoggedIn, async (req,res)=> {
         });
 });
 
+// 마이페이지 > 설정 > 탈퇴하기
+router.delete('/',userUtil.LoggedIn, async (req,res)=> {
+
+    const userId = req.id;
+
+    try {
+        const workerData = await worker.findAll({attributes: ['id'], where: {user_id: userId}});
+        if (workerData.length > 0) {
+            for (const wdata of workerData) {
+                let deleteWorkerResult = await userUtil.deleteWorker(wdata.id);
+                if (deleteWorkerResult.code == "400")
+                    return res.json(deleteWorkerResult);
+            }
+        }
+        const managerData = await manager.findAll({attributes: ['id'], where: {user_id: userId}});
+        if (managerData.length > 0) {
+            for (const mdata of managerData) {
+                let deleteManagerResult = await userUtil.deleteManager(mdata.id);
+                if (deleteManagerResult.code == "400")
+                    return res.json(deleteManagerResult);
+            }
+        }
+        console.log("success to delete user's manager and worker data");
+    }
+    catch(err) {
+        console.log("delete user's manager and worker data error", err);
+        res.json({
+            code: "400",
+            message: "유저의 근무자, 관리자 정보 제거중 오류가 발생했습니다."
+        });
+        return;
+    }
+
+    try {
+        await user.update({status: 0}, {where: {id: userId}});
+        console.log("success to update user's status to resign");
+        res.json({
+            code: "200",
+            message: "유저의 탈퇴처리를 성공했습니다."
+        });
+        return;
+    }
+    catch(err) {
+        console.log("update user's status to resign error", err);
+        res.json({
+            code: "400",
+            message: "유저의 탈퇴 정보 업데이트 중 오류가 발생했습니다."
+        });
+        return;
+    }
+});
+
+
+
 module.exports = router;
