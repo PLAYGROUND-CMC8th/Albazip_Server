@@ -300,7 +300,7 @@ router.get('/qrcode', userUtil.LoggedIn, async (req,res)=>{
 
     try {
         const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
-        const data = managerData.shop_id;
+        const data = managerData.shop_id.toString();
         const url = await qrcode.toDataURL(data, function (err, url) {
             //res.send(url);
             const qrdata = url.replace(/.*,/, '');
