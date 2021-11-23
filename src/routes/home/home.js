@@ -4,6 +4,7 @@ var router = express.Router();
 const publicHolidayApiKey = require('../../config/publicHolidayApiKey');
 const holidays = require('holidays-kr');
 const sequelize = require('sequelize');
+const qrcode = require('qrcode');
 
 var userUtil = require('../../module/userUtil');
 var timeUtil = require('../../module/timeUtil');
@@ -247,15 +248,6 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 근무자: 출근하기
-router.put('/clock', userUtil.LoggedIn, async (req,res)=>{
-
-    const workerId = req.job.substring(1);
-    const updateClockResult = await scheduleUtil.updateClock(workerId);
-    return res.json(updateClockResult);
-
-});
-
 // 관리자: 오늘의 근무자
 router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
 
@@ -292,6 +284,43 @@ router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
         })
         return;
     }
+});
+
+// 근무자: 출근하기
+router.put('/clock', userUtil.LoggedIn, async (req,res)=>{
+
+    const workerId = req.job.substring(1);
+    const updateClockResult = await scheduleUtil.updateClock(workerId);
+    return res.json(updateClockResult);
+
+});
+
+// 관리자: QR코드
+router.get('/qrcode', userUtil.LoggedIn, async (req,res)=>{
+
+    try {
+        const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
+        const data = managerData.shop_id;
+        const url = await qrcode.toDataURL(data, function (err, url) {
+            //res.send(url);
+            const qrdata = url.replace(/.*,/, '');
+            const img = new Buffer(qrdata, 'base64');
+
+            console.log("success to make qrcode");
+            res.writeHead(200, {'Content-Type': 'image/png'});
+            res.end(img);
+            return;
+        });
+    }
+    catch(err){
+
+        console.log("make qrcode error", err);
+        res.json({
+            code: "400",
+            message: "매장 큐알코드 생성에 오류가 발생했습니다."
+        });
+    }
+
 });
 
 module.exports = router;
