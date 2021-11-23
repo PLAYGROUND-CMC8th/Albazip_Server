@@ -304,7 +304,7 @@ router.get('/qrcode', userUtil.LoggedIn, async (req,res)=>{
         const url = await qrcode.toDataURL(data, function (err, url) {
             //res.send(url);
             const qrdata = url.replace(/.*,/, '');
-            const img = new Buffer(qrdata, 'base64');
+            const img = Buffer.from(qrdata, 'base64');
 
             console.log("success to make qrcode");
             res.writeHead(200, {'Content-Type': 'image/png'});
