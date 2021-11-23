@@ -107,15 +107,16 @@ module.exports ={
                     .then(async (timeData) => {
                         for (const data of timeData) {
 
-                            let positionData = await position.findOne({
-                                attributes: ['shop_id'],
+                            let workerData = await worker.findOne({
+                                attributes: ['position_id'],
                                 where: {id: data.target_id}
                             });
 
-                            const workerData = await worker.findOne({
-                                attributes: ['id'],
-                                where: {position_id: data.target_id}
+                            let positionData = await position.findOne({
+                                attributes: ['shop_id'],
+                                where: {id: workerData.position_id}
                             });
+
 
                             let shopData = await shop.findOne({
                                 attributes: ['holiday'],
@@ -126,7 +127,7 @@ module.exports ={
                             if (offHoliday == 0 || !publicHolidays.includes((date.getMonth() + 1) + "/" + date.getDate())) {
 
                                 let scheduleData = {
-                                    worker_id: workerData.id,
+                                    worker_id: data.target_id,
                                     shop_id: positionData.shop_id,
                                     year: date.getFullYear(),
                                     month: date.getMonth() + 1,
