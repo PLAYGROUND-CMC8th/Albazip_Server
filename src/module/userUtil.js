@@ -158,6 +158,21 @@ module.exports = {
                 const positionData = await position.findAll({where: {shop_id: shopId}});
                 for (const pdata of positionData) {
                     await time.destroy({where: {status: 1, target_id: pdata.id}});
+
+                    let workerData = await worker.findOne({attributes: ['user_id'], where: {position_id: pdata.id}});
+                    if(workerData) {
+                        let userId = workerData.user_id;
+
+                        let anotherWorkerData = await worker.findAll({attributes: ['id'], where: {user_id: userId}});
+                        let anotherManagerData = await manager.findAll({attributes: ['id'], where: {user_id: userId}});
+
+                        if (anotherWorkerData.length > 0)
+                            await user.update({last_job: anotherWorkerData[0].id}, {where: {id: userId}});
+                        else if (anotherManagerData.length > 0)
+                            await user.update({last_job: anotherWorkerData[0].id}, {where: {id: userId}});
+                        else
+                            await user.update({last_job: null}, {where: {id: userId}});
+                    }
                 }
                 console.log("success to delete shop postion's time data ");
             } catch (err) {
