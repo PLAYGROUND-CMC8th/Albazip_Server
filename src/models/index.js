@@ -128,6 +128,17 @@ db.comment.belongsTo(db.board, {
     targetKey: 'id'
 });
 
+// shop schedule
+db.shop.hasMany(db.schedule, {
+    foreignKey: 'shop_id',
+    sourceKey: 'id',
+    onDelete: 'cascade'
+});
+db.schedule.belongsTo(db.shop, {
+    foreignKey: 'shop_id',
+    targetKey: 'id'
+});
+
 // manager, shop과 user
 db.shop.belongsToMany(db.user, {
     through: 'manager',
