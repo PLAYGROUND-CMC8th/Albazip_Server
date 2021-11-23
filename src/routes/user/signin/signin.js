@@ -23,7 +23,7 @@ router.post('/',async (req,res)=>{
 
     //2.휴대폰번호 확인
     try{
-        var userData = await user.findOne({ where: { phone: phone } });
+        var userData = await user.findOne({ where: { phone: phone, status: [1,2] } });
         if(!userData){
             console.log("no such user");
             res.json({
@@ -43,7 +43,7 @@ router.post('/',async (req,res)=>{
 
     //3.비밀번호 체크
     try{
-        let userData = await user.findOne({ where: { phone: phone } });
+        let userData = await user.findOne({ where: { phone: phone,  status: [1,2]} });
         const encryptPwd = (encryption.makeCrypto(pwd, userData.salt)).toString('base64');
         if(encryptPwd == userData.pwd){
             const token = jwt.sign(userData);
