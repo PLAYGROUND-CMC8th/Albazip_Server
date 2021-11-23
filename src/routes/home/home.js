@@ -221,8 +221,8 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
                         }
                     });
                     if (confirmCount > 0)
-                        bdata.confirm = 1;
-                    else bdata.confirm = 0;
+                        bdata.dataValues.confirm = 1;
+                    else bdata.dataValues.confirm = 0;
                 }
                 boardInfo.push(bdata);
             }
