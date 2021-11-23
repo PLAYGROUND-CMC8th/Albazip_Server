@@ -313,10 +313,10 @@ router.delete('/:positionId',userUtil.LoggedIn, async (req,res)=> {
         const anotherManagerData = await manager.findAll({attributes: ['id'], where: {user_id: userId}});
 
         if (anotherWorkerData.length > 0)
-            await user.update({last_job: anotherWorkerData[0].id}, {where: {id: userId}});
+            await user.update({last_job: "W"+anotherWorkerData[0].id}, {where: {id: userId}});
 
         else if (anotherManagerData.length > 0)
-            await user.update({last_job: anotherWorkerData[0].id}, {where: {id: userId}});
+            await user.update({last_job: "M"+anotherWorkerData[0].id}, {where: {id: userId}});
 
         else
             await user.update({last_job: null}, {where: {id: userId}});
