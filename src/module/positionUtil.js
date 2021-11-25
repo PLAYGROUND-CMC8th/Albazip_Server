@@ -121,7 +121,7 @@ module.exports = {
         catch(err) {
             console.log("get worker data error or no worker exist", err);
             workerProfileData.imagePath = null;
-            workerProfileData.dataValues.firstName = "";
+            workerProfileData.firstName = "";
         }
 
         return {
