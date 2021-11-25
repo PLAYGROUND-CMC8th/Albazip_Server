@@ -532,9 +532,12 @@ module.exports ={
             const todayCoTask = await task.sequelize.query(todayCoTaskQuery, {type: sequelize.QueryTypes.SELECT});
 
             let completCoTask = [];
-            let completeCoTaskWorker = {};
-            let completerWorkerNum = 0;
             let nonCompleteCoTask = [];
+
+            // 공동업무 완료한 근무자 정보
+            let comWorker = [];
+            let completerWorkerNum = 0;
+            let completeCoTaskWorker = {};
 
             if(todayCoTask) {
                 for (let tct of todayCoTask) {
@@ -604,6 +607,13 @@ module.exports ={
                         nonCompleteCoTask.push(nct);
                     }
                 }
+
+                for(const cctw in completeCoTaskWorker){
+                    comWorker.push({
+                        worker: cctw,
+                        count: completeCoTaskWorker[cctw]
+                    });
+                }
             }
             console.log("success to get today cooperate task data")
             return {
@@ -613,7 +623,7 @@ module.exports ={
                     nonComCoTask: nonCompleteCoTask,
                     comWorker: {
                         comWorkerNum: completerWorkerNum,
-                        comWorker: completeCoTaskWorker
+                        comWorker: comWorker
                     },
                     comCoTask: completCoTask
                 }
