@@ -16,7 +16,7 @@ module.exports = {
         let randomCode = '';
         while(1) {
             randomCode = '';
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 9; i++) {
                 randomCode += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
             let count = await position.count({where: {code: randomCode} });
