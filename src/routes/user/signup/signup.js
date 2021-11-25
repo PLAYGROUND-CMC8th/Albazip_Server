@@ -205,13 +205,15 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
                }
                 console.log("success create times");
 
+                let randomImage = Math.floor(Math.random() * 5) + 1;
+
                let managerData = {
                    user_id: userId,
                    shop_id: newShop.id,
                    shop_name: shopData.name,
                    user_first_name: userData.first_name,
                    user_last_name: userData.last_name,
-                   image_path: default_path+"m1.png"
+                   image_path: default_path+"m"+randomImage+".png"
                };
 
                // 매장 관리자 생성
@@ -283,6 +285,7 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
             });
         }
 
+        let randomImage = default_path+"w"+(Math.floor(Math.random() * 5) + 1)+".png";
         // 근무자 생성
         worker.create({
             user_id: userId,
@@ -290,7 +293,7 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
             shop_name: shopData.name,
             position_title: positionData.title,
             user_first_name: userData.first_name,
-            image_paht: default_path+"w1.png"
+            image_path: randomImage
 
         }).then(async (newWorker) => {
             console.log("success create worker");
