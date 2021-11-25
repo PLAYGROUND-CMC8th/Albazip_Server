@@ -316,7 +316,7 @@ router.delete('/:positionId',userUtil.LoggedIn, async (req,res)=> {
             await user.update({last_job: "W"+anotherWorkerData[0].id}, {where: {id: userId}});
 
         else if (anotherManagerData.length > 0)
-            await user.update({last_job: "M"+anotherWorkerData[0].id}, {where: {id: userId}});
+            await user.update({last_job: "M"+anotherManagerData[0].id}, {where: {id: userId}});
 
         else
             await user.update({last_job: null}, {where: {id: userId}});
