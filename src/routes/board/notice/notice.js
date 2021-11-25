@@ -171,7 +171,6 @@ router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=>
         .then(async (newBoard) => {
             console.log("success to create notice");
 
-            console.log(req.files);
             // 3. 공지사항 이미지 생성
             try {
                 if (req.files && req.files.length > 0) {
@@ -237,7 +236,6 @@ router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (re
         title: title,
         content: content
     };
-    console.log(title, typeof title);
 
     // 2. 공지사항 수정
     await board.update(boardData, {where: {id: noticeId}})
