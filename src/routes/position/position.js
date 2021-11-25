@@ -252,7 +252,7 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
         const {rank, title, workDay, startTime, endTime, breakTime, salaryType, salary, taskList} = req.body;
 
         // 3. 파라미터 값 확인
-        if (!rank || !title || !workDay || !startTime || !endTime || !breakTime || !salaryType || !salary) {
+        if (!rank || !title || !workDay || !startTime || !endTime || !breakTime || (salaryType < 0 || salaryType > 2) || !salary) {
             res.json({
                 code: "202",
                 message: "필수 정보가 부족합니다."
