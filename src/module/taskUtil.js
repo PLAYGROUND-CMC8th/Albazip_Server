@@ -536,8 +536,8 @@ module.exports ={
 
             // 공동업무 완료한 근무자 정보
             let comWorker = [];
-            let completerWorkerNum = 0;
-            let completeCoTaskWorker = {};
+            let comWorkerMap = {};
+            let comWorkerCount = 0;
 
             if(todayCoTask) {
                 for (let tct of todayCoTask) {
@@ -551,28 +551,10 @@ module.exports ={
                         }
                         completCoTask.push(ct);
 
-                        let completerName, completerTitle;
-                        try{
-                            if(tct.completer_job[0]=='M'){
-                                let managerData = await manager.findOne({where: {id: tct.completer_job.substring(1)}});
-                                completerName = managerData.user_last_name + managerData.user_first_name;
-                                completerTitle = "사장님";
-                            } else if (tct.completer_job[0]=='W'){
-                                let workerData = await worker.findOne({where: {id: tct.completer_job.substring(1)}});
-                                completerName = workerData.user_first_name;
-                                completerTitle = workerData.position_title;
-                            }
-                        }
-                        catch(err) {
-                            console.log("get completer data error", err);
-                            completerName = null;
-                            completerTitle = null;
-                        }
-
-                        let completer = completerTitle+" "+completerName;
-                        if(completeCoTaskWorker[completer]) completeCoTaskWorker[completer] += 1;
-                        else completeCoTaskWorker[completer] = 1;
-                        completerWorkerNum += 1;
+                        if(comWorkerMap[tct.completer_job])
+                            comWorkerMap[tct.completer_job] += 1;
+                        else
+                            comWorkerMap[tct.completer_job] = 1;
 
                     }
                     // 미완료 업무
@@ -608,11 +590,36 @@ module.exports ={
                     }
                 }
 
-                for(const cctw in completeCoTaskWorker){
+                for(const cwm in comWorkerMap){
+
+                    let completerName, completerTitle, completerImage;
+                    try{
+                        if(cwm[0]=='M'){
+                            let managerData = await manager.findOne({where: {id: cwm.substring(1)}});
+                            completerName = managerData.user_last_name + managerData.user_first_name;
+                            completerTitle = "사장님";
+                            completerImage = managerData.image_path;
+
+                        } else if (cwm[0]=='W'){
+                            let workerData = await worker.findOne({where: {id: cwm.substring(1)}});
+                            completerName = workerData.user_first_name;
+                            completerTitle = workerData.position_title;
+                            completerImage = workerData.image_path;
+                        }
+                    }
+                    catch(err) {
+                        console.log("get completer data error", err);
+                        completerName = null;
+                        completerTitle = null;
+                        completerImage = null;
+                    }
+
                     comWorker.push({
-                        worker: cctw,
-                        count: completeCoTaskWorker[cctw]
+                        worker: completerTitle+" "+completerName,
+                        count: comWorkerMap[cwm],
+                        image: completerImage
                     });
+                    comWorkerCount += comWorkerMap[cwm];
                 }
             }
             console.log("success to get today cooperate task data")
@@ -622,7 +629,7 @@ module.exports ={
                 data: {
                     nonComCoTask: nonCompleteCoTask,
                     comWorker: {
-                        comWorkerNum: completerWorkerNum,
+                        comWorkerNum: comWorkerCount,
                         comWorker: comWorker
                     },
                     comCoTask: completCoTask
