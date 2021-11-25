@@ -128,14 +128,14 @@ module.exports = {
     },
 
     // 마이페이지 > 하단 > 작성글 > 공지사항
-    getNotice: async (reqJob, reqPage) => {
+    getNotice: async (reqJob, reqPage, confirm) => {
 
         const offset = 0 + (reqPage - 1) * pagesize
         console.log("request notice page",reqPage);
 
         try {
             let noticeData;
-            if(reqJob) {
+            if(confirm == 0) {
                 noticeData = await board.findAll({
                     offset: offset,
                     limit: pagesize,
@@ -152,6 +152,21 @@ module.exports = {
                     where: { status: 0},
                     order: [['register_date', 'DESC']]
                 });
+
+                if(noticeData.length > 0){
+                    for(let ndata of noticeData){
+                        let confirmCount = await comment.count({
+                            where: {
+                                writer_job: reqJob,
+                                status: 0,
+                                board_id: ndata.id
+                            }
+                        });
+                        if(confirmCount > 0)
+                            ndata.dataValues.confirm = 1;
+                        else ndata.dataValues.confirm = 0;
+                    }
+                }
             }
 
             console.log("success to get recent notice");
