@@ -202,7 +202,7 @@ module.exports = {
         }
     },
 
-    searchBoard: async (reqJob, reqPage, searchWord) => {
+    searchNotice: async (reqJob, reqPage, searchWord) => {
 
         try {
             const offset = 0 + (reqPage - 1) * pagesize
@@ -231,29 +231,21 @@ module.exports = {
                        limit ${pagesize}
                        offset ${offset}`;
 
-            const boardData = await board.sequelize.query(query, {type: sequelize.QueryTypes.SELECT});
-
-            if (boardData) {
-                for (let bdata of boardData) {
-                    if (bdata.status == 1) {
-                        bdata.dataValues.pin = null;
-                    }
-                }
-            }
+            const noticeData = await board.sequelize.query(query, {type: sequelize.QueryTypes.SELECT});
 
             console.log("success to get search board");
             return {
                 code: "200",
-                message: "소통창 검색에 성공했습니다.",
+                message: "공지사항 검색에 성공했습니다.",
                 page: reqPage,
-                data: boardData
+                data: noticeData
             };
         }
         catch(err) {
             console.log("get search board error", err);
             return {
                 code: "400",
-                message: "소통창 검색에 오류가 발생했습니다.",
+                message: "공지사항 검색에 오류가 발생했습니다.",
                 page: reqPage
             };
         }

@@ -38,6 +38,136 @@ router.get('/page/:page', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
+// 관리자: 공지사항 작성 (이미지 업로드)
+router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=> {
+
+    // 공지사항 작성
+    const { pin, title, content } = req.body;
+    const managerData = await manager.findOne({attributes: ['shop_id'], where:{id: req.job.substring(1)}});
+
+    // 0. 관리자만 작성
+    if(req.job[0] != "M"){
+        console.log("only manager can write notice");
+        return res.json({
+            code: "202",
+            message: "공지사항은 관리자만 작성할 수 있습니다."
+        });
+    }
+
+    // 1. 파라미터 체크
+    if( (pin != 0 && pin != 1) || !title){
+        console.log("board parameter not enough", title, pin);
+        return res.json({
+            code: "202",
+            message: "필수정보가 부족합니다."
+        });
+    }
+
+    let boardData = {
+        shop_id: managerData.shop_id,
+        writer_job: req.job,
+        pin: pin,
+        status: 0,
+        title: title,
+        content: content
+    };
+
+    // 2. 공지사항 생성
+    await board.create(boardData)
+        .then(async (newBoard) => {
+            console.log("success to create notice");
+
+            // 3. 공지사항 이미지 생성
+            try {
+                if (req.files && req.files.length > 0) {
+                    for (const file of req.files) {
+                        await board_image.create({
+                            board_id: newBoard.id,
+                            image_path: file.location
+                        })
+                    }
+                    console.log("success to create notibe image");
+                }
+
+                return res.json({
+                    code: "200",
+                    message: "공지사항 생성을 성공했습니다."
+                });
+            }
+            catch(err) {
+                console.log("create notibe image error", err);
+                return res.json({
+                    code: "400",
+                    message: "공지사항 이미지 생성에 오류가 발생했습니다."
+                });
+            }
+        })
+        .catch((err) => {
+            console.log("create notice error", err);
+            return res.json({
+                code: "400",
+                message: "공지사항 생성에 오류가 발생했습니다."
+            });
+        })
+
+});
+
+// 관리자: 공지사항 핀
+router.put('/pin/:noticeId', userUtil.LoggedIn, async (req,res)=> {
+
+    if(req.job[0] != "M"){
+        console.log("manager can only pin notice");
+        return res.json({
+            code: "202",
+            message: "관리자만 공지사항 핀을 설정할 수 있습니다."
+        });
+    }
+
+    const noticeId = req.params.noticeId;
+    const boardData = await board.findOne({ attributes:['pin'], where: {id: noticeId, status: 0}});
+
+    board.update({pin: (boardData.pin + 1)%2 }, {where: {id: noticeId, status: 0 }})
+        .then(() => {
+            console.log("success to pin notice");
+            return res.json({
+                code: "200",
+                message: "공지사항의 핀 설정변경을 성공했습니다."
+            });
+        })
+        .catch((err) => {
+            console.log("pin notice error", err);
+            return res.json({
+                code: "400",
+                message: "공지사항의 핀 설정변경에 오류가 발생했습니다. "
+            });
+        })
+
+});
+
+// 소통창 검색
+router.get('/search', userUtil.LoggedIn, async (req,res)=> {
+
+    const searchWord = req.body.searchWord;
+    const searchBoardResult = await boardUtil.searchNotice(req.job, 1, searchWord);
+    return res.json(searchBoardResult);
+
+});
+
+// 소통창 검색 (페이지)
+router.get('/search/:page', userUtil.LoggedIn, async (req,res)=> {
+
+    const reqPage = req.params.page;
+    const searchWord = req.body.searchWord;
+    const searchBoardResult = await boardUtil.searchNotice(req.job, reqPage, searchWord);
+    return res.json(searchBoardResult);
+
+});
+
+// 소통창 검색 (페이지)
+router.post('/report/:noticeId', userUtil.LoggedIn, async (req,res)=> {
+
+});
+
 // 관리자, 근무자: 공지사항 읽기
 router.get('/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 
@@ -128,81 +258,6 @@ router.get('/:noticeId', userUtil.LoggedIn, async (req,res)=> {
             message: "공지사항 읽기에 오류가 발생했습니다."
         });
     }
-
-});
-
-
-// 관리자: 공지사항 작성 (이미지 업로드)
-router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=> {
-
-    // 공지사항 작성
-    const { pin, title, content } = req.body;
-    const managerData = await manager.findOne({attributes: ['shop_id'], where:{id: req.job.substring(1)}});
-
-    // 0. 관리자만 작성
-    if(req.job[0] != "M"){
-        console.log("only manager can write notice");
-        return res.json({
-            code: "202",
-            message: "공지사항은 관리자만 작성할 수 있습니다."
-        });
-    }
-
-    // 1. 파라미터 체크
-    if( (pin != 0 && pin != 1) || !title){
-        console.log("board parameter not enough", title, pin);
-        return res.json({
-            code: "202",
-            message: "필수정보가 부족합니다."
-        });
-    }
-
-    let boardData = {
-        shop_id: managerData.shop_id,
-        writer_job: req.job,
-        pin: pin,
-        status: 0,
-        title: title,
-        content: content
-    };
-
-    // 2. 공지사항 생성
-    await board.create(boardData)
-        .then(async (newBoard) => {
-            console.log("success to create notice");
-
-            // 3. 공지사항 이미지 생성
-            try {
-                if (req.files && req.files.length > 0) {
-                    for (const file of req.files) {
-                        await board_image.create({
-                            board_id: newBoard.id,
-                            image_path: file.location
-                        })
-                    }
-                    console.log("success to create notibe image");
-                }
-
-                return res.json({
-                    code: "200",
-                    message: "공지사항 생성을 성공했습니다."
-                });
-            }
-            catch(err) {
-                console.log("create notibe image error", err);
-                return res.json({
-                    code: "400",
-                    message: "공지사항 이미지 생성에 오류가 발생했습니다."
-                });
-            }
-        })
-        .catch((err) => {
-            console.log("create notice error", err);
-            return res.json({
-                code: "400",
-                message: "공지사항 생성에 오류가 발생했습니다."
-            });
-        })
 
 });
 
@@ -335,36 +390,5 @@ router.put('/:noticeId/confirm', userUtil.LoggedIn, async (req,res)=> {
         });
 });
 
-// 관리자: 공지사항 핀
-router.put('/pin/:noticeId', userUtil.LoggedIn, async (req,res)=> {
-
-    if(req.job[0] != "M"){
-        console.log("manager can only pin notice");
-        return res.json({
-            code: "202",
-            message: "관리자만 공지사항 핀을 설정할 수 있습니다."
-        });
-    }
-
-    const noticeId = req.params.noticeId;
-    const boardData = await board.findOne({ attributes:['pin'], where: {id: noticeId, status: 0}});
-
-    board.update({pin: (boardData.pin + 1)%2 }, {where: {id: noticeId, status: 0 }})
-        .then(() => {
-            console.log("success to pin notice");
-            return res.json({
-                code: "200",
-                message: "공지사항의 핀 설정변경을 성공했습니다."
-            });
-        })
-        .catch((err) => {
-            console.log("pin notice error", err);
-            return res.json({
-                code: "400",
-                message: "공지사항의 핀 설정변경에 오류가 발생했습니다. "
-            });
-        })
-
-});
 
 module.exports = router;
