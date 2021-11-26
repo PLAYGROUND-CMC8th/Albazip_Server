@@ -29,7 +29,7 @@ router.get('/manager',userUtil.LoggedIn, async (req,res)=> {
     }
 
     // 작성글 공지사항
-    const noticeResult = await boardUtil.getNotice(req.job, 1);
+    const noticeResult = await boardUtil.getNotice(req.job, 1, 0);
     if( noticeResult.code == "400" ){
         res.json(noticeResult);
         return;
