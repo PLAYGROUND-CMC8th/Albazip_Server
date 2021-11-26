@@ -155,7 +155,7 @@ module.exports ={
     // 근무자: 마이페이지 > 내정보 > 출퇴근기록
     // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 출퇴근기록
     getCommuteRecord: async (positionId, year, month) => {
-        console.log(positionId, year, month)
+        //console.log(positionId, year, month)
 
         let workerData;
         try {
@@ -165,7 +165,8 @@ module.exports ={
         }
 
         const query = `select	*,
-                                if(ifnull(real_start_time, start_time)+0 > start_time+0, 1, 0) as is_late
+                                if(ifnull(real_start_time, start_time)+0 > start_time+0, 1, 0) as start_late,
+                                if(ifnull(real_end_time, end_time)+0 > end_time+0, 1, 0) as end_late
                        from(	select year, month, day, start_time, end_time, real_start_time, real_end_time
                                 from schedule
                                 where worker_id = ${workerData.id}
