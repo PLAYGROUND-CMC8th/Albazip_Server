@@ -11,19 +11,19 @@ module.exports = {
             const offset = 0 + (reqPage - 1) * pagesize
             console.log("request post page", reqPage);
 
+            let shopId;
+            if(reqJob[0] == "M"){
+                let managerData = await manager.findOne({attributes:['shop_id'], where: {id: reqJob.substring(1)}});
+                shopId = managerData.shop_id
+            } else  if(reqJob[0] == "W") {
+                let workerData = await worker.findOne({attributes:['position_id'], where: {id: reqJob.substring(1)}});
+                let positionData = await position.findOne({attributes:['shop_id'], where: {id: workerData.position_id}});
+                shopId = positionData.shop_id;
+            }
+
             let postData;
             try {
                 if(reqJob) {
-
-                    let shopId;
-                    if(reqJob[0] == "M"){
-                        let managerData = await manager.findOne({attributes:['shop_id'], where: {id: reqJob.substring(1)}});
-                        shopId = managerData.shop_id
-                    } else  if(reqJob[0] == "W") {
-                        let workerData = await worker.findOne({attributes:['position_id'], where: {id: reqJob.substring(1)}});
-                        let positionData = await position.findOne({attributes:['shop_id'], where: {id: workerData.position_id}});
-                    }
-
                     postData = await board.findAll({
                         offset: offset,
                         limit: pagesize,
@@ -138,6 +138,7 @@ module.exports = {
     },
 
     // 마이페이지 > 하단 > 작성글 > 공지사항
+    // 홈 > 하단 > 소통창
     getNotice: async (reqJob, reqPage, confirm) => {
 
         const offset = 0 + (reqPage - 1) * pagesize
@@ -197,6 +198,63 @@ module.exports = {
             return {
                 code: "400",
                 message: "공지사항 조회에 오류가 발생했습니다.",
+            };
+        }
+    },
+
+    searchBoard: async (reqJob, reqPage, searchWord) => {
+
+        try {
+            const offset = 0 + (reqPage - 1) * pagesize
+            console.log("request post page", reqPage);
+
+            let shopId;
+            if (reqJob[0] == "M") {
+                let managerData = await manager.findOne({attributes: ['shop_id'], where: {id: reqJob.substring(1)}});
+                shopId = managerData.shop_id
+            } else if (reqJob[0] == "W") {
+                let workerData = await worker.findOne({attributes: ['position_id'], where: {id: reqJob.substring(1)}});
+                let positionData = await position.findOne({
+                    attributes: ['shop_id'],
+                    where: {id: workerData.position_id}
+                });
+                shopId = positionData.shop_id;
+            }
+
+            // 검색여부
+            const query = `select id, pin, title, register_date as registerDate
+                       from board
+                       where status = 0
+                       and shop_id = ${shopId}
+                       and (content like "%${searchWord}%" or title like "%${searchWord}%")
+                       order by register_date desc
+                       limit ${pagesize}
+                       offset ${offset}`;
+
+            const boardData = await board.sequelize.query(query, {type: sequelize.QueryTypes.SELECT});
+
+            if (boardData) {
+                for (let bdata of boardData) {
+                    if (bdata.status == 1) {
+                        bdata.dataValues.pin = null;
+                    }
+                }
+            }
+
+            console.log("success to get search board");
+            return {
+                code: "200",
+                message: "소통창 검색에 성공했습니다.",
+                page: reqPage,
+                data: boardData
+            };
+        }
+        catch(err) {
+            console.log("get search board error", err);
+            return {
+                code: "400",
+                message: "소통창 검색에 오류가 발생했습니다.",
+                page: reqPage
             };
         }
     }
