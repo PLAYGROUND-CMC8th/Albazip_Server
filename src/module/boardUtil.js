@@ -136,20 +136,25 @@ module.exports = {
         try {
             let noticeData;
             if(confirm == 0) {
+                const managerData = await manager.findOne({where: {id: reqJob.substring(1)}});
+
                 noticeData = await board.findAll({
                     offset: offset,
                     limit: pagesize,
                     attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
-                    where: {writer_job: reqJob, status: 0},
+                    where: {writer_job: reqJob, status: 0, shop_id: managerData.shop_id},
                     order: [['register_date', 'DESC']]
                 });
 
             } else {
+                const workerData = await worker.findOne({where: {id: reqJob.substring(1)}});
+                const positionData = await position.findOne({where: {id: workerData.position_id}});
+
                 noticeData = await board.findAll({
                     offset: offset,
                     limit: pagesize,
                     attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
-                    where: { status: 0},
+                    where: { status: 0, shop_id: positionData.shop_id},
                     order: [['register_date', 'DESC']]
                 });
 
