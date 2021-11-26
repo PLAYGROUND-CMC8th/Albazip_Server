@@ -126,10 +126,10 @@ module.exports = {
     deleteManager: async (managerId) => {
 
         try {
-            const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: managerId}});
+            const managerData = await manager.findOne({attributes: ['shop_id', 'user_id'], where: {id: managerId}});
             const shopId = managerData.shop_id;
 
-            // 1. manager 삭제
+            // 1. manager 삭제 (shop 삭제 시 cascade 삭제)
             /* try {
                  await manager.destroy({where: {id: managerId}});
                  console.log("success to delete manager data ");
@@ -140,6 +140,24 @@ module.exports = {
                      message: "관리자 정보 삭제에 오류가 발생했습니다."
                  };
              }*/
+
+            // 1. shop 의 manager last job 업데이트
+            try {
+                let userId = managerData.user_id;
+                let anotherWorkerData = await worker.findAll({attributes: ['id'], where: {user_id: userId}});
+                let anotherManagerData = await manager.findAll({attributes: ['id'], where: {user_id: userId}});
+
+                if (anotherWorkerData.length > 0)
+                    await user.update({last_job: "W" + anotherWorkerData[0].id}, {where: {id: userId}});
+                else if (anotherManagerData.length > 0)
+                    await user.update({last_job: "M" + anotherWorkerData[0].id}, {where: {id: userId}});
+                else
+                    await user.update({last_job: null}, {where: {id: userId}});
+                console.log("success to update shop's manager user last job");
+            }
+            catch(err) {
+                console.log("update shop's manager user last job error", err);
+            }
 
             // 2. shop의 time 삭제
             try {
