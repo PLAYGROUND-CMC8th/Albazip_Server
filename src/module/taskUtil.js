@@ -147,6 +147,56 @@ module.exports ={
 
     },
 
+    // 근무자: 마이페이지 > 내정보 > 공동업무 (카이트)
+    // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 공동업무 (카이트)
+    getCotaskInfoK: async(positionId) => {
+
+        let workerData;
+        try {
+            workerData = await worker.findOne({ where : {position_id: positionId} });
+        } catch(err) {
+            workerData = null;
+        }
+
+        const query = `select title, content, 
+                              substr(register_date, 1, 4) as year, substr(register_date, 6, 2) as month, substr(register_date, 9, 2) as date, 
+                              update_date as complete_date
+                       from task 
+                       where (1 = 1)
+                       and	status = 1
+                       and  completer_job = "W${workerData.id}"
+                       and	date(register_date) between "${workerData.register_date}" and now()
+                       order by year desc, month desc, date desc;`;
+
+        try {
+            const coTaskDataTmp = await task.sequelize.query( query, { type: sequelize.QueryTypes.SELECT });
+
+            let coTaskData = {};
+            for(const ctdt of coTaskDataTmp){
+                let registerDate = "y_"+ctdt.year+"_"+ctdt.month+"_"+ctdt.date;
+                if(coTaskData[registerDate])
+                    coTaskData[registerDate].push(ctdt);
+                else coTaskData[registerDate] = new Array(ctdt);
+            }
+
+            console.log("success to get worker coTask");
+            return {
+                code: "200",
+                message: "근무자의 공동업무 조회에 성공했습니다.",
+                data: coTaskData
+            };
+        }
+        catch(err) {
+            console.log("get worker ccoTask error", err);
+            return {
+                code: "400",
+                message: "근무자의 공동업무 조회에 오류가 발생했습니다."
+            };
+        }
+
+    },
+
+
     // 근무자: 마이페이지 > 내정보 > 완료한업무 > 전체조회
     // 관리자: 마이페이지 > 근무자 > 근무자 정보 > 완료한업무 > 전체조회
     getCompleteTaskTotal: async(positionId) => {

@@ -25,6 +25,21 @@ router.get('/coTaskInfo', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
+// 마이페이지보 > 하단 > 내정보 > 공동업무 (카이트)
+router.get('/coTaskInfoK', userUtil.LoggedIn, async (req,res)=> {
+
+    let workerData;
+    try {
+        workerData = await worker.findOne({ where : {id: req.job.substring(1)} });
+    } catch(err) {
+        workerData = null;
+    }
+
+    const coTaskInfoResult = await taskUtil.getCotaskInfoK(workerData.position_id);
+    return res.json(coTaskInfoResult);
+
+});
+
 
 // 마이페이지보 > 하단 > 내정보 > 업무 완수 정보
 router.get('/', userUtil.LoggedIn, async (req,res)=> {
