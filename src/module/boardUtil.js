@@ -14,11 +14,21 @@ module.exports = {
             let postData;
             try {
                 if(reqJob) {
+
+                    let shopId;
+                    if(reqJob[0] == "M"){
+                        let managerData = await manager.findOne({attributes:['shop_id'], where: {id: reqJob.substring(1)}});
+                        shopId = managerData.shop_id
+                    } else  if(reqJob[0] == "W") {
+                        let workerData = await worker.findOne({attributes:['position_id'], where: {id: reqJob.substring(1)}});
+                        let positionData = await position.findOne({attributes:['shop_id'], where: {id: workerData.position_id}});
+                    }
+
                     postData = await board.findAll({
                         offset: offset,
                         limit: pagesize,
                         attributes: ['id', 'title', 'content', 'register_date'],
-                        where: {writer_job: reqJob, status: 1},
+                        where: {writer_job: reqJob, status: 1, shop_id: shopId},
                         order: [['register_date', 'DESC']]
                     });
                 } else {
@@ -26,7 +36,7 @@ module.exports = {
                         offset: offset,
                         limit: pagesize,
                         attributes: ['id', 'title', 'content', 'writer_job', 'register_date'],
-                        where: {status: 1},
+                        where: {status: 1, shop_id: shopId},
                         order: [['register_date', 'DESC']]
                     });
                 }
@@ -136,7 +146,7 @@ module.exports = {
         try {
             let noticeData;
             if(confirm == 0) {
-                const managerData = await manager.findOne({where: {id: reqJob.substring(1)}});
+                const managerData = await manager.findOne({attributes:['shop_id'], where: {id: reqJob.substring(1)}});
 
                 noticeData = await board.findAll({
                     offset: offset,
@@ -147,8 +157,8 @@ module.exports = {
                 });
 
             } else {
-                const workerData = await worker.findOne({where: {id: reqJob.substring(1)}});
-                const positionData = await position.findOne({where: {id: workerData.position_id}});
+                const workerData = await worker.findOne({attributes:['position_id'], where: {id: reqJob.substring(1)}});
+                const positionData = await position.findOne({attributes:['shop_id'], where: {id: workerData.position_id}});
 
                 noticeData = await board.findAll({
                     offset: offset,
