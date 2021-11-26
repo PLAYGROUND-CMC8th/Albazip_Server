@@ -200,6 +200,14 @@ router.get('/:positionId/workerInfo/coTaskInfo',userUtil.LoggedIn, async (req,re
 
 });
 
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 공동업무 (카이트)
+router.get('/:positionId/workerInfo/coTaskInfoK',userUtil.LoggedIn, async (req,res)=> {
+
+    const positionId = req.params.positionId;
+    const coTaskInfoResult = await taskUtil.getCotaskInfoK(positionId);
+    return res.json(coTaskInfoResult);
+
+});
 
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 업무 완수율
 router.get('/:positionId/workerInfo/taskRate',userUtil.LoggedIn, async (req,res)=> {
