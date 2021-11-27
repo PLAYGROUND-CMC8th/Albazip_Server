@@ -180,16 +180,29 @@ router.post('/report', userUtil.LoggedIn, async (req,res)=> {
             return;
         }
 
-        let jobData;
-        if (noticeData.writer_job[0] == 'M') {
-            jobData = await manager.findOne({attributes: ['user_id'], where: {id: noticeData.writer_job.substring(1)}});
-        } else (noticeData.writer_job[0] == 'W')
-        {
-            jobData = await worker.findOne({attributes: ['user_id'], where: {id: noticeData.writer_job.substring(1)}});
+        let userId;
+        try {
+            if (noticeData.writer_job[0] == 'M') {
+                const managerData = await manager.findOne({
+                    attributes: ['user_id'],
+                    where: {id: noticeData.writer_job.substring(1)}
+                });
+                userId = managerData.user_id;
+            } else (noticeData.writer_job[0] == 'W')
+            {
+                const workerData = await worker.findOne({
+                    attributes: ['user_id'],
+                    where: {id: noticeData.writer_job.substring(1)}
+                });
+                userId = workerData.user_id;
+            }
+        }
+        catch(err){
+            userId = null;
         }
 
         const reportData = {
-            user_id: jobData.user_id,
+            user_id: userId,
             job: noticeData.writer_job,
             status: 0,
             target_id: noticeId,
