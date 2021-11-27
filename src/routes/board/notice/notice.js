@@ -42,7 +42,7 @@ router.get('/page/:page', userUtil.LoggedIn, async (req,res)=> {
 router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=> {
 
     // 공지사항 작성
-    const { pin, title, content } = req.body;
+    const { title, content } = req.body;
     const managerData = await manager.findOne({attributes: ['shop_id'], where:{id: req.job.substring(1)}});
 
     // 0. 관리자만 작성
@@ -55,7 +55,7 @@ router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=>
     }
 
     // 1. 파라미터 체크
-    if( (pin != 0 && pin != 1) || !title){
+    if( (!title){
         console.log("board parameter not enough", title, pin);
         return res.json({
             code: "202",
@@ -66,7 +66,7 @@ router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=>
     let boardData = {
         shop_id: managerData.shop_id,
         writer_job: req.job,
-        pin: pin,
+        pin: 0,
         status: 0,
         title: title,
         content: content
