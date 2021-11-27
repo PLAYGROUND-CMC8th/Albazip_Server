@@ -27,8 +27,12 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false,
             unique: true
         },
-        business_time: {
-            type: DataTypes.STRING(11),
+        start_time: {
+            type: DataTypes.STRING(5),
+            allowNull: false
+        },
+        end_time: {
+            type: DataTypes.STRING(5),
             allowNull: false
         },
         holiday: {
@@ -38,7 +42,7 @@ module.exports = (sequelize, DataTypes) => (
         payday: {
             type: DataTypes.STRING(2),
             allowNull: false
-        },
+        }
     }, {
         timestamps: true,
         paranoid: false,

@@ -9,8 +9,8 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        writer_id:{
-            type: DataTypes.INTEGER,
+        writer_job:{
+            type: DataTypes.STRING(10),
             allowNull: false
         },
         pin: {
@@ -27,8 +27,8 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false
         },
         content: {
-            type: DataTypes.STRING(200),
-            allowNull: false
+            type: DataTypes.STRING(500),
+            allowNull: true
         }
     }, {
         timestamps: true,

@@ -36,16 +36,12 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        image_path: {
-            type: DataTypes.STRING(50),
-            allowNull: true
-        },
         status: {
             type: DataTypes.INTEGER,
             allowNull: false,
             defaultValue : 1
         },
-        last_position: {
+        last_job: {
             type: DataTypes.STRING(10),
             allowNull: true
         },

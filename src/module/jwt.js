@@ -9,9 +9,10 @@ const options = {
 };
 
 module.exports ={
-    sign:(user) =>{
+    sign:  (user) =>{
         const payload = {
-            id:user.id
+            id:user.id,
+            job:user.last_job
         };
 
         const newToken = {
@@ -21,7 +22,7 @@ module.exports ={
         return newToken;
     },
 
-    verify:(token) =>{
+    verify: (token) =>{
         let decoded;
         try{
             decoded = jwt.verify(token, key);
@@ -40,7 +41,7 @@ module.exports ={
         return decoded;
     },
 
-    /*refresh:(user) =>{
+    /*refresh: (user) =>{
         const payload = {
             id:user.id
         };

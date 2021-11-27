@@ -20,6 +20,7 @@ let options = {
 };
 
 module.exports = {
+    // 매장 생성 전 유효성 검사
     beforeRegister: async (req, res, next) => {
         let {name, ownerName, registerNumber, holiday} = req.body;
         const {type, address, startTime, endTime, payday } = req.body;
@@ -68,6 +69,8 @@ module.exports = {
             }
         }
     },
+
+    // 사업자 등록번호 존재여부
     checkRegisterNumber: async (request, response, next) => {
         const registerNum = request.params.registerNumber;
         let registerNumber = voca.replaceAll(registerNum, '-', '');
@@ -111,6 +114,8 @@ module.exports = {
         }
 
     },
+
+    // 사업자 등록번호와 대표자 인증여부
     checkOwnerName : async (request, response, next) => {
         const registerNum = request.params.registerNumber;
         const ownerName =  request.params.ownerName;
@@ -166,4 +171,6 @@ module.exports = {
             });
         }
     },
+
+    // 매장 삭제
 };

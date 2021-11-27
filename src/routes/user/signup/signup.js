@@ -2,12 +2,17 @@ var express = require('express');
 var router = express.Router();
 
 var voca = require('voca');
+var encryption = require('../../../module/encryption');
+var jwt = require('../../../module/jwt');
+
 var shopUtil = require('../../../module/shopUtil');
 var userUtil = require('../../../module/userUtil');
-var encryption = require('../../../module/encryption');
+var scheduleUtil = require('../../../module/scheduleUtil');
 
 const models = require('../../../models');
 const { user, position, shop, worker } = require('../../../models');
+
+const default_path = 'https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/';
 
 // 기본가입 휴대폰 중복체크
 router.get('/:phone',async (req,res)=> {
@@ -69,7 +74,7 @@ router.post('/',async (req,res)=>{
     }
 
     //2. 휴대폰정보 중복체크
-   /* try {
+    try {
         if(phone.length != 11){
             console.log("not enough phone number: ", phone);
             return res.status(202).json({
@@ -91,7 +96,7 @@ router.post('/',async (req,res)=>{
                 message:"휴대폰 중복체크에 오류가 발생했습니다."
             })
         }
-    }*/
+    }
 
     //3. 비밀번호 암호화
     const salt = encryption.salt();
@@ -101,7 +106,16 @@ router.post('/',async (req,res)=>{
     lastName = voca.replaceAll(lastName, " ", "");
     firstName = voca.replaceAll(firstName, " ", "");
     try {
-        user.create({
+
+        let resignedUser = await user.findAll({ where: { phone: phone, status: 0}});
+        if(resignedUser){
+            await user.destroy({ where: { phone: phone, status: 0}})
+                .then(() => {
+                    console.log("delete resigned user success");
+                });
+        }
+
+        let userData = {
             phone: phone,
             pwd: key,
             salt: salt,
@@ -109,18 +123,22 @@ router.post('/',async (req,res)=>{
             first_name: firstName,
             birthyear:birthyear,
             gender: gender == 'M'? 0 : 1
-        }).then((newUser) => {
-            console.log("signup success " + newUser);
+        };
+
+        user.create(userData).then((newUser) => {
+            console.log("signup success");
+            const token = jwt.sign(newUser);
             return res.json({
                 code: "200",
                 message: "성공적으로 기본가입이 완료되었습니다.",
                 data: {
-                    token:newUser.id
+                    token:token
                 }
             });
         }).catch(err => {
             console.log(err);
         })
+
     }catch(err){
         console.log("user server error: ", err);
         res.json({
@@ -132,9 +150,11 @@ router.post('/',async (req,res)=>{
 });
 
 //매장 등록, 관리자 가입
-router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
+router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,res, next)=> {
 
-    const userId  = req.header('token');
+    const userId  = req.id;
+    const userData = await user.findOne({attributes: ['first_name', 'last_name'], where: {id: userId}});
+
     let { name, ownerName, registerNumber, holiday } = req.body;
     const { type, address, startTime, endTime, payday } = req.body;
     let weekday = ['월', '화', '수', '목', '금', '토', '일'];
@@ -142,8 +162,7 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
     name = voca.replaceAll(name, " ", "");
     ownerName = voca.replaceAll(ownerName, " ", "");
     registerNumber = voca.replaceAll(registerNumber, "-", "");
-    let shopBusinessTime = startTime + "-"+ endTime;
-    let shopHoliday = holiday.join(", ");
+    let shopHoliday = holiday.join(",");
 
     let shopData = {
         name: name,
@@ -151,11 +170,13 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
         address: address,
         owner_name: ownerName,
         register_number: registerNumber,
-        business_time: shopBusinessTime,
+        start_time: startTime,
+        end_time: endTime,
         holiday: shopHoliday,
         payday: payday
     };
 
+    // 매장생성
     models.sequelize.transaction(t=> {
         return models.shop.create(shopData, {transaction: t})
             .then(async(newShop) => {
@@ -171,6 +192,7 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
                        end_time: endTime
                    };
 
+                   // 매장 엽업일 생성
                    await models.time.create(timeData, {transaction: t})
                        .catch((err) => {
                            console.log("time server error: ", err);
@@ -183,24 +205,34 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
                }
                 console.log("success create times");
 
+                let randomImage = Math.floor(Math.random() * 5) + 1;
+
                let managerData = {
                    user_id: userId,
                    shop_id: newShop.id,
-                   shop_name: shopData.name
+                   shop_name: shopData.name,
+                   user_first_name: userData.first_name,
+                   user_last_name: userData.last_name,
+                   image_path: default_path+"m"+randomImage+".png"
                };
 
+               // 매장 관리자 생성
                return await models.manager.create(managerData, {transaction: t})
                    .then(async (newManager) => {
                        console.log("success create manager: ", newManager.id);
 
-                       return await models.user.update({last_position: "M"+newManager.id}, {where: {id: userId}, transaction: t})
+                       // 유저의 마지막 업무 저장
+                       return await models.user.update({last_job: "M"+newManager.id}, {where: {id: userId}, transaction: t})
                            .then(async (updateUser) => {
-                               console.log("success update last position: ", updateUser);
+                               console.log("success update last position");
 
-                               console.log("success manager signup: ", newManager);
+                               const token = jwt.sign({id: userId, last_job: "M"+newManager.id});
+
+                               console.log("success manager signup");
                                return res.json({
                                    code: "200",
-                                   message: "성공적으로 관리자 가입이 완료되었습니다."
+                                   message: "성공적으로 관리자 가입이 완료되었습니다.",
+                                   data: token
                                });
                            })
                            .catch((err) => {
@@ -234,33 +266,68 @@ router.post('/manager',  shopUtil.beforeRegister, async (req,res, next)=> {
 });
 
 //근무자 가입
-router.post('/worker',async (req,res)=> {
+router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
 
-    const userId  = req.header('token');
+    const userId  = req.id;
+    const userData = await user.findOne({ where: {id: userId}});
 
     const code = req.body.code;
     const positionData = await position.findOne({ attributes: ['id', 'shop_id', 'title'], where: {code: code} });
     const shopData = await shop.findOne({ attributes: ['name'] , where: {id: positionData.shop_id} });
 
     try {
+        // 근무자 중복 체크
+        const workerCount = await worker.count( {where: {position_id: positionData.id}} );
+        if(workerCount > 0){
+            return res.json({
+                code: "202",
+                message: "해당 포지션에 이미 근무자가 존재합니다."
+            });
+        }
+
+        let randomImage = default_path+"w"+(Math.floor(Math.random() * 5) + 1)+".png";
+        // 근무자 생성
         worker.create({
             user_id: userId,
             position_id: positionData.id,
             shop_name: shopData.name,
-            position_title: positionData.title
+            position_title: positionData.title,
+            user_first_name: userData.first_name,
+            image_path: randomImage
 
         }).then(async (newWorker) => {
             console.log("success create worker");
 
-            await models.user.update({last_position: "W"+newWorker.id}, {where: {id: userId}})
+            // 유저의 마지막 업무 저장
+            await models.user.update({last_job: "W"+newWorker.id}, {where: {id: userId}})
                 .then(async (updateUser) => {
                     console.log("success update last position");
 
                     console.log("success worker signup");
-                    return res.json({
-                        code: "200",
-                        message: "성공적으로 근무자 가입이 완료되었습니다."
-                    });
+                    // 0일부터 100일치 스케줄 생성
+                    scheduleUtil.makeASchedule(newWorker.position_id, 0);
+
+                    // 근무자 가입시 포지션의 프로필 이미지 생성
+                    await models.position.update({image_path: default_path+"w1.png"}, {where: {id: positionData.id}})
+                        .then(async () => {
+                            console.log("success update position image path");
+
+                            const token = jwt.sign({id: userId, last_job: "W"+newWorker.id});
+
+                            return res.json({
+                                code: "200",
+                                message: "성공적으로 근무자 가입이 완료되었습니다.",
+                                data: token
+                            });
+                        })
+                        .catch((err) =>{
+                            console.log("update position image path error", err);
+                            return res.json({
+                                code: "200",
+                                message: "포지션의 프로필 이미지 업데이트에 오류가 발생했습니다."
+                            });
+                        })
+
                 })
                 .catch((err) => {
                     console.log("user last position update error: ", err);

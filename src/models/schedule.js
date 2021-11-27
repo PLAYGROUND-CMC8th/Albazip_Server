@@ -5,7 +5,11 @@ module.exports = (sequelize, DataTypes) => (
             primaryKey: true,
             autoIncrement: true
         },
-        position_id:{
+        worker_id:{
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        shop_id:{
             type: DataTypes.INTEGER,
             allowNull: false
         },
@@ -31,7 +35,8 @@ module.exports = (sequelize, DataTypes) => (
         },
         status: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: false,
+            defaultValue: 0
         },
         real_start_time: {
             type: DataTypes.STRING(5),
