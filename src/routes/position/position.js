@@ -331,9 +331,25 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
             console.log("success to create time");
         }
 
-        // 9. 근무자 존재시, 스케줄 삭제, 재생성
+        // 7. 포지션 명 변경여부 worker에 적용하기
         const workerData = await worker.findAll({where: {position_id: positionId}});
-        if (workerData.length > 0) {
+        try {
+            if (before.title != title) {
+                await worker.update({position_title: title}, {where: {id: workerData[0].id}});
+                console.log("success to update worker data");
+            }
+        }
+        catch(err) {
+            console.log("update worker data error", err);
+            res.json({
+                code: "400",
+                message: "포지션 변경에 따른 근무자 변경에 오류가 발생했습니다."
+            });
+            return;
+        }
+
+        // 8. 근무자 존재시, 스케줄 삭제, 재생성
+        if (workerData.length > 0 && timeChange) {
 
             // 오늘의 날짜
 
@@ -372,7 +388,7 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
         }
 
-        // 7. 업무리스트 변경여부 확인하고 업데이트하기
+        // 9. 업무리스트 변경여부 확인하고 업데이트하기
         if (before.taskList && taskList) {
             for (const bt of before.taskList) {
                 let tmp = false;
@@ -420,7 +436,7 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
             }
         }
 
-        // 8. 새로운 업무리스트 추가하기
+        // 10. 새로운 업무리스트 추가하기
         if (taskList) {
             let positionData = await position.findOne({attributes: ['shop_id'], where: {id: positionId}});
             let newTaskList = taskList.filter(t => !t.id);

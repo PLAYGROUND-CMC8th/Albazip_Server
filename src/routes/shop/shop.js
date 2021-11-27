@@ -3,7 +3,7 @@ var router = express.Router();
 
 var userUtil = require('../../module/userUtil');
 
-const { time, shop, manager } = require('../../models');
+const { time, shop, manager, worker } = require('../../models');
 
 // 매장 변경 전 조회하기
 router.get('/:managerId', userUtil.LoggedIn, async (req,res)=>{
@@ -116,6 +116,38 @@ router.post('/:managerId', userUtil.LoggedIn, async (req,res)=>{
             res.json({
                 code: "400",
                 message: "매장 요일별 영업시간 업데이트 오류가 발생했습니다."
+            });
+            return;
+        }
+
+        // 5. 매장명 변경여부 manager, worker에 적용하기
+        console.log(before.name, name)
+        try {
+            if (before.name != name) {
+
+                // manager shop_name
+                await manager.update({shop_name: name}, {where: {id: managerData.shop_id}});
+                console.log("success to update manager data");
+
+                const query = `update worker
+                               set shop_name = "${name}" 
+                               where id in 
+                               (select * from (select w.id 
+			                                   from position p 
+			                                   inner join worker w
+			                                   on p.id = w.position_id
+			                                   where p.shop_id = ${managerData.shop_id})tmp)`;
+
+                // worker shop_name
+                await worker.sequelize.query( query, { type: sequelize.QueryTypes.UPDATE });
+                console.log("success to update worker data");
+            }
+        }
+        catch(err) {
+            console.log("update manager date error", err);
+            res.json({
+                code: "400",
+                message: "매장 변경에 따른 관리자 및 근무자 정보 변경시 오류가 발생했습니다."
             });
             return;
         }
