@@ -282,55 +282,39 @@ router.get('/:positionId/taskList',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 근무자 > 근무자 선택 > 퇴사하기
 router.delete('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
-    // 관리자인지 확인
-    if (req.job[0] != 'M') {
-        console.log("manager can only resign worker");
-        res.json({
-            code: "202",
-            message: "관리자만 포지션을 퇴사시킬 수 있습니다."
-        });
-        return;
-    }
-
-    // 포지션 코드 갱신
-    const positionId = req.params.positionId;
     try {
-        const newCode = await positionUtil.makeRandomCode();
-        await position.update({code: newCode}, {where: {id: positionId}});
-        console.log("success to update position code");
-    }catch(err) {
-        console.log("update position code error", err);
-        res.json({
-            code: "400",
-            message: "포지션 코드 업데이트에 오류가 발생했습니다."
-        })
-        return;
-    }
+        // 관리자인지 확인
+        if (req.job[0] != 'M') {
+            console.log("manager can only resign worker");
+            res.json({
+                code: "202",
+                message: "관리자만 포지션을 퇴사시킬 수 있습니다."
+            });
+            return;
+        }
+
+        // 포지션 코드 갱신
+        const positionId = req.params.positionId;
+        try {
+            const newCode = await positionUtil.makeRandomCode();
+            await position.update({code: newCode}, {where: {id: positionId}});
+            console.log("success to update position code");
+        } catch (err) {
+            console.log("update position code error", err);
+            res.json({
+                code: "400",
+                message: "포지션 코드 업데이트에 오류가 발생했습니다."
+            })
+            return;
+        }
 
 
-    // worker 삭제
-    const workerData = await worker.findOne({attributes: ['id', 'user_id'], where: {position_id: positionId}});
-    const userId = workerData.user_id;
-    const deleteWorkerResult= await userUtil.deleteWorker(workerData.id);
-    if(deleteWorkerResult.code == "400")
-        return res.json(deleteWorkerResult);
-
-    try {
-        // user last job 갱신
-        const anotherWorkerData = await worker.findAll({attributes: ['id'], where: {user_id: userId}});
-        const anotherManagerData = await manager.findAll({attributes: ['id'], where: {user_id: userId}});
-
-        if (anotherWorkerData.length > 0)
-            await user.update({last_job: "W"+anotherWorkerData[0].id}, {where: {id: userId}});
-
-        else if (anotherManagerData.length > 0)
-            await user.update({last_job: "M"+anotherManagerData[0].id}, {where: {id: userId}});
-
-        else
-            await user.update({last_job: null}, {where: {id: userId}});
-
-        /*const userData = await user.findOne({where: {id: userId}});
-        const token = jwt.sign(userData);*/
+        // worker 삭제
+        const workerData = await worker.findOne({attributes: ['id', 'user_id'], where: {position_id: positionId}});
+        const userId = workerData.user_id;
+        const deleteWorkerResult = await userUtil.deleteWorker(workerData.id);
+        if (deleteWorkerResult.code == "400")
+            return res.json(deleteWorkerResult);
 
         console.log("success to update user last job");
         res.json({
