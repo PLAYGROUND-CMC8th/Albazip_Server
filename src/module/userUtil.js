@@ -177,7 +177,7 @@ module.exports = {
                 };
             }
 
-            // 4. shop 삭제
+            // 3. shop 삭제
             try {
                 await shop.destroy({where: {id: shopId}});
                 console.log("success to delete shop data ");
@@ -189,7 +189,7 @@ module.exports = {
                 };
             }
 
-            // 1. shop 의 manager last job 업데이트
+            // 4. shop 의 manager last job 업데이트
             try {
                 let userId = managerData.user_id;
                 let anotherWorkerData = await worker.findOne({attributes: ['id'], where: {user_id: userId}});
@@ -200,8 +200,6 @@ module.exports = {
                 else if (anotherManagerData)
                     await user.update({last_job: "M" + anotherManagerData.id}, {where: {id: userId}});
                 else {
-                    console.log("hi");
-                    console.log(userId);
                     await user.update({last_job: null}, {where: {id: userId}});
                 }
                 console.log("success to update shop's manager user last job");
@@ -211,7 +209,7 @@ module.exports = {
             }
 
 
-            // 3. shop의 position의 time 삭제
+            // 5. shop의 position의 time 삭제, position의 worker last job
             try {
                 const positionData = await position.findAll({where: {shop_id: shopId}});
                 for (const pdata of positionData) {
