@@ -1,44 +1,39 @@
 module.exports = (sequelize, DataTypes) => (
-    sequelize.define('task', {
+    sequelize.define('report', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
-        shop_id:{
+        user_id:{
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: true
         },
-        writer_job:{
+        job: {
             type: DataTypes.STRING(10),
             allowNull: false
         },
         status: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.INTEGER, //0: 공지사항 1: 게시글
             allowNull: false
-        },
-        title: {
-            type: DataTypes.STRING(100),
-            allowNull: false
-        },
-        content: {
-            type: DataTypes.STRING(100),
-            allowNull: true
         },
         target_id: {
             type: DataTypes.INTEGER,
-            allowNull: true
+            allowNull: false
         },
-        completer_job: {
+        reason: {
+            type: DataTypes.STRING(20),
+            allowNull: false
+        },
+        reporter_job: {
             type: DataTypes.STRING(10),
-            allowNull: true
-        }
+            allowNull: false
+        },
     }, {
         timestamps: true,
         paranoid: false,
-        tableName: 'task',
+        tableName: 'report',
         charset: 'utf8',
-        createdAt: 'register_date',
-        updatedAt: 'update_date'
+        createdAt: 'register_date'
     })
 );

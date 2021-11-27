@@ -25,6 +25,8 @@ db.comment = require('./comment')(sequelize, Sequelize);
 db.schedule = require('./schedule')(sequelize, Sequelize);
 db.time = require('./time')(sequelize, Sequelize);
 
+db.report = require('./report')(sequelize, Sequelize);
+
 /**
  * 다대다 관계 명시 및 테이블 선언부분
  */
@@ -95,7 +97,7 @@ db.task.belongsTo(db.shop, {
     targetKey: 'id'
 });
 
-// position과 schedule
+/*// position과 schedule
 db.position.hasMany(db.schedule, {
     foreignKey: 'position_id',
     sourceKey: 'id',
@@ -104,7 +106,7 @@ db.position.hasMany(db.schedule, {
 db.schedule.belongsTo(db.position, {
     foreignKey: 'position_id',
     targetKey: 'id'
-});
+});*/
 
 // board와 board_image
 db.board.hasMany(db.board_image, {
@@ -125,6 +127,17 @@ db.board.hasMany(db.comment, {
 });
 db.comment.belongsTo(db.board, {
     foreignKey: 'board_id',
+    targetKey: 'id'
+});
+
+// shop schedule
+db.shop.hasMany(db.schedule, {
+    foreignKey: 'shop_id',
+    sourceKey: 'id',
+    onDelete: 'cascade'
+});
+db.schedule.belongsTo(db.shop, {
+    foreignKey: 'shop_id',
     targetKey: 'id'
 });
 

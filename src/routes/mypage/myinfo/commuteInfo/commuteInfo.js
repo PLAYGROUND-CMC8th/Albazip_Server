@@ -17,7 +17,14 @@ router.get('/', userUtil.LoggedIn, async (req,res)=> {
     const yearNow = now.getFullYear();
     const monthNow = now.getMonth() + 1;
 
-    const commuteRecordResult = await scheduleUtil.getCommuteRecord(req.job.substring(1), yearNow, monthNow);
+    let workerData;
+    try {
+        workerData = await worker.findOne({ where : {id: req.job.substring(1)} });
+    } catch(err) {
+        workerData = null;
+    }
+
+    const commuteRecordResult = await scheduleUtil.getCommuteRecord(workerData.position_id, yearNow, monthNow);
     return res.json(commuteRecordResult);
 
 });
@@ -26,7 +33,14 @@ router.get('/:year/:month', userUtil.LoggedIn, async (req,res)=> {
 
     const { year, month } = req.params;
 
-    const commuteRecordResult = await scheduleUtil.getCommuteRecord(req.job.substring(1), year, month);
+    let workerData;
+    try {
+        workerData = await worker.findOne({ where : {id: req.job.substring(1)} });
+    } catch(err) {
+        workerData = null;
+    }
+
+    const commuteRecordResult = await scheduleUtil.getCommuteRecord(workerData.position_id, year, month);
     return res.json(commuteRecordResult);
 
 });

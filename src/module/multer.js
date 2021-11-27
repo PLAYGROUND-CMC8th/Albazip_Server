@@ -17,8 +17,10 @@ const upload = multer({
             let extension = path.extname(file.originalname)
             cb(null, Date.now().toString() + extension)
         }
-    })
+    })/*,
+    limits: { fileSize: 2 * 1024 * 1024 },*/
 });
+
 
 module.exports = upload;
 

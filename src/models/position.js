@@ -23,10 +23,6 @@ module.exports = (sequelize, DataTypes) => (
             type: DataTypes.STRING(10),
             allowNull: false
         },
-        image_path: {
-            type: DataTypes.STRING(200),
-            allowNull: true
-        },
         salary: {
             type: DataTypes.STRING(10),
             allowNull: false

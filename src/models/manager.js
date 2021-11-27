@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => (
         user_last_name: {
             type: DataTypes.STRING(10),
             allowNull: false
+        },
+        image_path: {
+            type: DataTypes.STRING(200),
+            allowNull: true
         }
     }, {
         timestamps: true,

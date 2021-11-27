@@ -4,13 +4,15 @@ var express = require('express');
 var asyncify = require('express-asyncify');
 var router = asyncify(express.Router());
 
+var jwt = require('../../../module/jwt');
 var userUtil = require('../../../module/userUtil');
 var positionUtil = require('../../../module/positionUtil');
 var taskUtil = require('../../../module/taskUtil');
 var workerUtil = require('../../../module/workerUtil');
 var scheduleUtil = require('../../../module/scheduleUtil');
 
-const { worker } = require('../../../models');
+const { user, worker, manager, schedule, position } = require('../../../models');
+
 
 // 마이페이지 > 하단 > 근무자
 router.get('/',userUtil.LoggedIn, async (req,res)=> {
@@ -19,6 +21,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
     return res.json(workersListResult);
 
 });
+
 
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택
 router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
@@ -110,6 +113,7 @@ router.get('/ne/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
+
 // 마이페이지 > 하단 > 근무자 > 근무자 선택 > 상단 > 근무자 프로필
 router.get('/:positionId/profile',userUtil.LoggedIn, async (req,res)=> {
 
@@ -117,7 +121,6 @@ router.get('/:positionId/profile',userUtil.LoggedIn, async (req,res)=> {
     return res.json(positionProfiletResult);
 
 });
-
 
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보
 router.get('/:positionId/workerInfo',userUtil.LoggedIn, async (req,res)=> {
@@ -144,6 +147,7 @@ router.get('/:positionId/workerInfo/lateCount',userUtil.LoggedIn, async (req,res
     return res.json(lateCountResult);
 });
 
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 지각횟수 > 출퇴근기록
 router.get('/:positionId/workerInfo/commuteInfo',userUtil.LoggedIn, async (req,res)=> {
 
     const positionId = req.params.positionId;
@@ -158,6 +162,7 @@ router.get('/:positionId/workerInfo/commuteInfo',userUtil.LoggedIn, async (req,r
 
 });
 
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 지각횟수 > 출퇴근기록 > 월별조회
 router.get('/:positionId/workerInfo/commuteInfo/:year/:month',userUtil.LoggedIn, async (req,res)=> {
 
     const { positionId, year, month } = req.params;
@@ -166,7 +171,6 @@ router.get('/:positionId/workerInfo/commuteInfo/:year/:month',userUtil.LoggedIn,
     return res.json(commuteRecordResult);
 
 });
-
 
 
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 공동업무 참여횟수
@@ -196,7 +200,14 @@ router.get('/:positionId/workerInfo/coTaskInfo',userUtil.LoggedIn, async (req,re
 
 });
 
+// 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 공동업무 (카이트)
+router.get('/:positionId/workerInfo/coTaskInfoK',userUtil.LoggedIn, async (req,res)=> {
 
+    const positionId = req.params.positionId;
+    const coTaskInfoResult = await taskUtil.getCotaskInfoK(positionId);
+    return res.json(coTaskInfoResult);
+
+});
 
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 업무 완수율
 router.get('/:positionId/workerInfo/taskRate',userUtil.LoggedIn, async (req,res)=> {
@@ -215,7 +226,6 @@ router.get('/:positionId/workerInfo/taskRate',userUtil.LoggedIn, async (req,res)
 
 });
 
-
 // 마이페이지 > 하단 > 근무자 > 근무자 존재 > 근무자 선택 > 하단 > 근무자 정보 > 업무 완수율 > 전체 조회
 router.get('/:positionId/workerInfo/taskInfo',userUtil.LoggedIn, async (req,res)=> {
 
@@ -229,7 +239,7 @@ router.get('/:positionId/workerInfo/taskInfo',userUtil.LoggedIn, async (req,res)
 router.get('/:positionId/workerInfo/taskInfo/:year/:month',userUtil.LoggedIn, async (req,res)=> {
 
     const { positionId, year, month } = req.params;
-    const completeTaskMonthResult = await taskUtil.getCompleteTaskMonth(req.job.substring(1), year, month);
+    const completeTaskMonthResult = await taskUtil.getCompleteTaskMonth(positionId, year, month);
     return res.json(completeTaskMonthResult);
 
 });
@@ -238,7 +248,7 @@ router.get('/:positionId/workerInfo/taskInfo/:year/:month',userUtil.LoggedIn, as
 router.get('/:positionId/workerInfo/taskInfo/:year/:month/:date',userUtil.LoggedIn, async (req,res)=> {
 
     const { positionId, year, month, date } = req.params;
-    const completeTaskDateResult = await taskUtil.getCompleteTaskDate(req.job.substring(1), year, month, date);
+    const completeTaskDateResult = await taskUtil.getCompleteTaskDate(positionId, year, month, date);
     return res.json(completeTaskDateResult);
 
 });
@@ -252,7 +262,6 @@ router.get('/ne/:positionId/workerInfo',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-
 // 마이페이지 > 하단 > 근무자 > 근무자 선택 > 하단 > 근무자 포지션 정보
 router.get('/:positionId/positionInfo',userUtil.LoggedIn, async (req,res)=> {
 
@@ -261,7 +270,6 @@ router.get('/:positionId/positionInfo',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-
 // 마이페이지 > 하단 > 근무자 > 근무자 선택 > 하단 > 근무자 업무리스트
 router.get('/:positionId/taskList',userUtil.LoggedIn, async (req,res)=> {
 
@@ -269,5 +277,64 @@ router.get('/:positionId/taskList',userUtil.LoggedIn, async (req,res)=> {
     return res.json(positionTaskListResult);
 
 });
+
+
+// 마이페이지 > 하단 > 근무자 > 근무자 선택 > 퇴사하기
+router.delete('/:positionId',userUtil.LoggedIn, async (req,res)=> {
+
+    try {
+        // 관리자인지 확인
+        if (req.job[0] != 'M') {
+            console.log("manager can only resign worker");
+            res.json({
+                code: "202",
+                message: "관리자만 포지션을 퇴사시킬 수 있습니다."
+            });
+            return;
+        }
+
+        // 포지션 코드 갱신
+        const positionId = req.params.positionId;
+        try {
+            const newCode = await positionUtil.makeRandomCode();
+            await position.update({code: newCode}, {where: {id: positionId}});
+            console.log("success to update position code");
+        } catch (err) {
+            console.log("update position code error", err);
+            res.json({
+                code: "400",
+                message: "포지션 코드 업데이트에 오류가 발생했습니다."
+            })
+            return;
+        }
+
+
+        // worker 삭제
+        const workerData = await worker.findOne({attributes: ['id', 'user_id'], where: {position_id: positionId}});
+        const userId = workerData.user_id;
+        const deleteWorkerResult = await userUtil.deleteWorker(workerData.id);
+        if (deleteWorkerResult.code == "400")
+            return res.json(deleteWorkerResult);
+
+        console.log("success to update user last job");
+        res.json({
+            code: "200",
+            message: "근무자 퇴사를 성공했습니다.",
+            //token: token
+        });
+        return;
+    }
+    catch(err){
+        console.log(" update user last job error", err);
+        res.json({
+            code: "400",
+            message: "근무자 퇴사에 오류가 발생했습니다."
+        });
+        return;
+    }
+
+
+});
+
 
 module.exports = router;

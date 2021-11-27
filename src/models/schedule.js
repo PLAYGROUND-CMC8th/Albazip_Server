@@ -5,7 +5,11 @@ module.exports = (sequelize, DataTypes) => (
             primaryKey: true,
             autoIncrement: true
         },
-        position_id:{
+        worker_id:{
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        shop_id:{
             type: DataTypes.INTEGER,
             allowNull: false
         },

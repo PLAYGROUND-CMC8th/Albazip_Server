@@ -11,8 +11,13 @@ var userUtil = require('../../module/userUtil');
 var timeUtil = require('../../module/timeUtil');
 var taskUtil = require('../../module/taskUtil');
 
-const { position, task, time, schedule, worker } = require('../../models');
+const { user, position, task, time, schedule, worker, manager } = require('../../models');
 const models = require('../../models');
+
+const now = new Date();
+const yearNow = now.getFullYear();
+const monthNow = now.getMonth()+1;
+const dateNow = now.getDate();
 
 //포지션 추가하기
 router.post('/',userUtil.LoggedIn, async (req,res)=> {
@@ -20,8 +25,9 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
     // 한 매장 당 3명까지 포시션 추가하도록
 
     try {
+        console.log(req.id,req.job);
         const userId = req.id;
-        if (req.job[0] != 'S') {
+        if (req.job[0] != 'M') {
             console.log("user is not manager");
             res.json({
                 code: "202",
@@ -29,7 +35,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
             });
             return;
         }
-        const shopId = req.job.substring(1);
+        const managerData = await manager.findOne({where: {id: req.job.substring(1)}});
         const {rank, title, startTime, endTime, breakTime} = req.body;
         let {salary, salaryType, workDays, taskLists} = req.body;
 
@@ -39,8 +45,8 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
         salary = voca.replaceAll(salary, ' ', '');
 
         //1. 파라미터체크
-        if (!userId || !shopId || !rank || !title || !startTime || !endTime || !breakTime || !workDays || !salary || !salaryType) {
-            console.log("not enough parameter: ", userId, shopId, rank, title, startTime, endTime, workTime, breakTime, workDays, salary, salary_type);
+        if (!userId || !rank || !title || !startTime || !endTime || !breakTime || !workDays || !salary || !salaryType) {
+            console.log("not enough parameter");
             res.json({
                 code: "202",
                 message: "필수 정보가 부족합니다."
@@ -54,7 +60,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
         let breakTimes = breakTime == "없음" ? "0000" : (breakTime == "30분"? "0030" : "0100");
 
         let positionData = {
-            shop_id: shopId,
+            shop_id: managerData.shop_id,
             code: code,
             title: title,
             rank: rank,
@@ -111,7 +117,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
                             }
 
                             let taskData = {
-                                shop_id: shopId,
+                                shop_id: managerData.shop_id,
                                 writer_job: req.job,
                                 status: 0,
                                 title: task.title,
@@ -153,7 +159,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
     catch(err) {
         console.log("position server error: ", err);
         res.json({
-            code: "200",
+            code: "400",
             message:"포지션 등록에 오류가 발생했습니다."
         });
         return;
@@ -246,7 +252,7 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
         const {rank, title, workDay, startTime, endTime, breakTime, salaryType, salary, taskList} = req.body;
 
         // 3. 파라미터 값 확인
-        if (!rank || !title || !workDay || !startTime || !endTime || !breakTime || !salaryType || !salary) {
+        if (!rank || !title || !workDay || !startTime || !endTime || !breakTime || (salaryType < 0 || salaryType > 2) || !salary) {
             res.json({
                 code: "202",
                 message: "필수 정보가 부족합니다."
@@ -254,12 +260,9 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
             return;
         }
 
-        let tmpBeforeWorkDay = before.workDay;
-        let tmpWorkDay = workDay;
-
         // 4. 근무요일, 근무시간 변경여부 확인하기
         let timeChange = false;
-        if (before.workDay.length != workDay.length || tmpBeforeWorkDay.sort().toString() != tmpWorkDay.sort().toString())
+        if (before.workDay.length != workDay.length || before.workDay.sort().toString() != [...workDay].sort().toString())
             timeChange = true;
 
         // 5. 포지션 업데이트 시작
@@ -328,21 +331,34 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
             console.log("success to create time");
         }
 
-        // 9. 근무자 존재시, 스케줄 삭제, 재생성
-        const workerCount = await worker.count({where: {position_id: positionId}});
-        if (workerCount > 0) {
+        // 7. 포지션 명 변경여부 worker에 적용하기
+        const workerData = await worker.findAll({where: {position_id: positionId}});
+        try {
+            if (before.title != title) {
+                await worker.update({position_title: title}, {where: {id: workerData[0].id}});
+                console.log("success to update worker data");
+            }
+        }
+        catch(err) {
+            console.log("update worker data error", err);
+            res.json({
+                code: "400",
+                message: "포지션 변경에 따른 근무자 변경에 오류가 발생했습니다."
+            });
+            return;
+        }
 
-            const now = new Date();
-            const yearNow = now.getFullYear();
-            const monthNow = now.getMonth();
-            const dateNow = now.getDate();
+        // 8. 근무자 존재시, 스케줄 삭제, 재생성
+        if (workerData.length > 0 && timeChange) {
+
+            // 오늘의 날짜
 
             const query = ` delete 
                         from schedule
-                        where position_id = ${positionId}
-                        and ((year > ${yearNow}) 
-                        or (year = ${yearNow} and month > ${monthNow})
-                        or (year = ${yearNow} and month = ${monthNow} and day > ${dateNow}))`;
+                        where worker_id = ${workerData[0].id}
+                        and ((year+0 > ${yearNow}) 
+                        or (year+0 = ${yearNow} and month+0 > ${monthNow})
+                        or (year+0 = ${yearNow} and month+0 = ${monthNow} and day+0 > ${dateNow}))`;
 
             try {
                 await schedule.sequelize.query(query);
@@ -372,7 +388,7 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
         }
 
-        // 7. 업무리스트 변경여부 확인하고 업데이트하기
+        // 9. 업무리스트 변경여부 확인하고 업데이트하기
         if (before.taskList && taskList) {
             for (const bt of before.taskList) {
                 let tmp = false;
@@ -420,7 +436,7 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
             }
         }
 
-        // 8. 새로운 업무리스트 추가하기
+        // 10. 새로운 업무리스트 추가하기
         if (taskList) {
             let positionData = await position.findOne({attributes: ['shop_id'], where: {id: positionId}});
             let newTaskList = taskList.filter(t => !t.id);
@@ -476,5 +492,84 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
     }
 
 });
+
+// 포지션 삭제
+router.delete('/:positionId', userUtil.LoggedIn, async (req,res)=> {
+
+    try {
+        // 1. worker가 존재하는지 확인
+        const positionId = req.params.positionId;
+        const workerCount = await worker.count({where: {position_id: positionId}});
+
+        if(workerCount > 0){
+            console.log("worker already exist");
+            res.json({
+                code: "202",
+                message: "포지션에 근무자가 존재합니다."
+            });
+            return;
+        }
+
+        // 2. position의 time 삭제
+        try {
+            await time.destroy({where: {status: 1, target_id: positionId}});
+            console.log("success to delete position's time data");
+
+        } catch (err) {
+            console.log("delete position's time data error", err);
+            res.json({
+                code: "400",
+                message: "포지션의 근무시간 삭제에 오류가 발생했습니다."
+            });
+            return;
+        }
+
+        // 3. position의 task 삭제
+        try {
+            await task.destroy({where: {status: 0, target_id: positionId}});
+            console.log("success to delete position's task data");
+
+        } catch (err) {
+            console.log("delete position's task data error", err);
+            res.json({
+                code: "400",
+                message: "포지션업무 삭제에 오류가 발생했습니다."
+            });
+            return;
+        }
+
+        // 4. position 삭제
+        try {
+            await position.destroy({where: {id: positionId}});
+            console.log("success to delete position data");
+
+        } catch (err) {
+            console.log("delete position data error", err);
+            res.json({
+                code: "400",
+                message: "포지션 삭제에 오류가 발생했습니다."
+            });
+            return;
+        }
+
+        console.log("success to delete position");
+        res.json({
+            code: "200",
+            message: "포지션 삭제를 성공했습니다."
+        });
+        return;
+
+    }
+    catch(err) {
+        console.log("delete position error", err);
+        res.json({
+            code: "400",
+            message: "포지션 삭제 과정에서 오류가 발생했습니다."
+        });
+        return;
+    }
+
+});
+
 
 module.exports = router;
