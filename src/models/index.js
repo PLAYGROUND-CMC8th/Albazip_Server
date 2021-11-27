@@ -25,6 +25,8 @@ db.comment = require('./comment')(sequelize, Sequelize);
 db.schedule = require('./schedule')(sequelize, Sequelize);
 db.time = require('./time')(sequelize, Sequelize);
 
+db.report = require('./report')(sequelize, Sequelize);
+
 /**
  * 다대다 관계 명시 및 테이블 선언부분
  */

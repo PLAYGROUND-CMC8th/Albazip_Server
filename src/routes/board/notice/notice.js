@@ -8,7 +8,7 @@ var upload = require('../../../module/multer');
 var userUtil = require('../../../module/userUtil');
 var boardUtil = require('../../../module/boardUtil');
 
-const { board, board_image, comment, manager, worker } = require('../../../models');
+const { board, board_image, comment, manager, worker, report } = require('../../../models');
 
 // 관리자, 근무자: 공지사항
 router.get('/', userUtil.LoggedIn, async (req,res)=> {
@@ -144,7 +144,7 @@ router.put('/pin/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 소통창 검색
+// 공지사항 검색
 router.get('/search', userUtil.LoggedIn, async (req,res)=> {
 
     const searchWord = req.body.searchWord;
@@ -153,7 +153,7 @@ router.get('/search', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 소통창 검색 (페이지)
+// 공지사항 검색 (페이지)
 router.get('/search/:page', userUtil.LoggedIn, async (req,res)=> {
 
     const reqPage = req.params.page;
@@ -163,8 +163,55 @@ router.get('/search/:page', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 소통창 검색 (페이지)
-router.post('/report/:noticeId', userUtil.LoggedIn, async (req,res)=> {
+// 공지사항 신고
+router.post('/report', userUtil.LoggedIn, async (req,res)=> {
+
+    try {
+        const {noticeId, reportReason} = req.body;
+        const noticeData = await board.findOne({attributes: ['writer_job'], where: {id: noticeId}});
+
+        // 필수값 체크
+        if(!noticeId || !reportReason){
+            console.log("not enougn parameter");
+            res.json({
+                code: "202",
+                message: "필수값을 입력해주세요."
+            });
+            return;
+        }
+
+        let jobData;
+        if (noticeData.writer_job[0] == 'M') {
+            jobData = await manager.findOne({attributes: ['user_id'], where: {id: noticeData.writer_job.substring(1)}});
+        } else (noticeData.writer_job[0] == 'W')
+        {
+            jobData = await worker.findOne({attributes: ['user_id'], where: {id: noticeData.writer_job.substring(1)}});
+        }
+
+        const reportData = {
+            user_id: jobData.user_id,
+            job: noticeData.writer_job,
+            status: 0,
+            target_id: noticeId,
+            reason: reportReason,
+            reporter_job: req.job
+        };
+        await report.create(reportData);
+        console.log("success to report notice");
+        res.json({
+            code: "200",
+            message: "신고하기 접수를 성공했습니다."
+        });
+        return;
+    }
+    catch(err) {
+        console.log("report notice error", err);
+        res.json({
+            code: "400",
+            message: "신고하기 접수에 오류가 발생했습니다."
+        });
+        return;
+    }
 
 });
 
