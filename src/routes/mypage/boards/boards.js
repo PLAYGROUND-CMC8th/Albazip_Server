@@ -10,14 +10,11 @@ var boardUtil = require('../../../module/boardUtil');
 const { user, position, board, comment } = require('../../../models');
 
 
-const pagesize = 20;
-
-
 // 마이페이지 > 하단 > 작성글 > 관리자
 router.get('/manager',userUtil.LoggedIn, async (req,res)=> {
 
 
-    const noticeResult = await boardUtil.getNotice(req.job, 1, 0);
+    const noticeResult = await boardUtil.getMyNotice(req.job, 1);
     if( noticeResult.code == "400" ){
         res.json(noticeResult);
         return;
@@ -65,7 +62,7 @@ router.get('/worker',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 작성글 > 공지사항
 router.get('/notice/:page',userUtil.LoggedIn, async (req,res)=> {
 
-    const noticeResult = await boardUtil.getNotice(req.job, req.params.page, 0);
+    const noticeResult = await boardUtil.getMyNotice(req.job, req.params.page);
     return res.json(noticeResult);
 
 });

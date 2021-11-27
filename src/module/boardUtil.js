@@ -137,8 +137,8 @@ module.exports = {
 
     },
 
-    // 마이페이지 > 하단 > 작성글 > 공지사항
     // 홈 > 하단 > 소통창
+    // 소통창 > 공지사항
     getNotice: async (reqJob, reqPage, confirm) => {
 
         const offset = 0 + (reqPage - 1) * pagesize
@@ -153,8 +153,8 @@ module.exports = {
                     offset: offset,
                     limit: pagesize,
                     attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
-                    where: {writer_job: reqJob, status: 0, shop_id: managerData.shop_id},
-                    order: [['register_date', 'DESC']]
+                    where: {status: 0, shop_id: managerData.shop_id},
+                    order: [['pin', 'DESC'], ['register_date', 'DESC']]
                 });
 
             } else {
@@ -166,7 +166,7 @@ module.exports = {
                     limit: pagesize,
                     attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
                     where: { status: 0, shop_id: positionData.shop_id},
-                    order: [['register_date', 'DESC']]
+                    order: [['pin', 'DESC'], ['register_date', 'DESC']]
                 });
 
                 if(noticeData.length > 0){
@@ -198,6 +198,40 @@ module.exports = {
             return {
                 code: "400",
                 message: "공지사항 조회에 오류가 발생했습니다.",
+            };
+        }
+    },
+
+    // 마이페이지 > 하단 > 작성글 > 공지사항
+    getMyNotice: async (reqJob, reqPage) => {
+
+        const offset = 0 + (reqPage - 1) * pagesize
+        console.log("request notice page",reqPage);
+
+        try {
+            const managerData = await manager.findOne({attributes:['shop_id'], where: {id: reqJob.substring(1)}});
+
+            const noticeData = await board.findAll({
+                offset: offset,
+                limit: pagesize,
+                attributes: ['id', 'pin', 'title', ['register_date', 'registerDate']],
+                where: {writer_job: reqJob, status: 0, shop_id: managerData.shop_id},
+                order: [['register_date', 'DESC']]
+            });
+
+            console.log("success to get recent notice");
+            return {
+                code: "200",
+                message: "작성글 공지사항 조회에 성공했습니다.",
+                page: reqPage,
+                data: noticeData
+            };
+        }
+        catch(err) {
+            console.log("get recent notice error", err);
+            return {
+                code: "400",
+                message: "작성글 공지사항 조회에 오류가 발생했습니다.",
             };
         }
     },
