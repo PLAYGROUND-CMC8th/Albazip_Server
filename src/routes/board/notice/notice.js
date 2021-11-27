@@ -115,11 +115,23 @@ router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=>
 // 관리자: 공지사항 핀
 router.put('/pin/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 
+    // 관리자인지 체크
     if(req.job[0] != "M"){
         console.log("manager can only pin notice");
         return res.json({
             code: "202",
             message: "관리자만 공지사항 핀을 설정할 수 있습니다."
+        });
+    }
+
+    // 최대 5개까지
+    const managerData = await manager.findOne({attributes:['shop_id'], where: {id: req.job.substring(1)}});
+    const boardPinCount = await board.count({where: {pin: 1, status: 0, shop_id: managerData.shop_id}});
+    if(boardPinCount > 4){
+        console.log("max number of pin is only 5");
+        return res.json({
+            code: "202",
+            message: "핀 고정은 최대 5개 입니다."
         });
     }
 
