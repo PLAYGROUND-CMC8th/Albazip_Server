@@ -55,7 +55,7 @@ router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=>
     }
 
     // 1. 파라미터 체크
-    if( (!title){
+    if( !title){
         console.log("board parameter not enough", title, pin);
         return res.json({
             code: "202",
