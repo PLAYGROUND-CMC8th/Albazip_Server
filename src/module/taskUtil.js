@@ -461,7 +461,7 @@ module.exports ={
     getTodayPerTaskList: async (shopId) => {
 
         const todayPerTaskListQuery = `select w.id as workerId, w.position_title as workerTitle,
-                             count(t.completer_job) as totalCount, count(t.id) as completeCount
+                             count(t.completer_job) as completeCount, count(t.id) as totalCount
                              from task t
                              inner join worker w
                              on t.target_id = w.id
