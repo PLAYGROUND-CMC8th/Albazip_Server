@@ -267,6 +267,15 @@ module.exports = {
 
             const noticeData = await board.sequelize.query(query, {type: sequelize.QueryTypes.SELECT});
 
+            // 검색결과 확인
+            for(let ndata of noticeData) {
+                let count = await comment.count({where: {board_id: ndata.id, status: 0, writer_job: reqJob}});
+                if (count > 0)
+                    ndata.confirm = 1;
+                else
+                    ndata.confirm = 0;
+            }
+
             console.log("success to get search board");
             return {
                 code: "200",
