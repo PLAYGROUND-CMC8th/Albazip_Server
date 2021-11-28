@@ -157,7 +157,7 @@ router.put('/pin/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 공지사항 검색
+// 공지사항 검색 (body)
 router.get('/search', userUtil.LoggedIn, async (req,res)=> {
 
     const searchWord = req.body.searchWord;
@@ -166,11 +166,30 @@ router.get('/search', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
-// 공지사항 검색 (페이지)
+// 공지사항 검색 (url)
+router.get('/search/word/:searchWord', userUtil.LoggedIn, async (req,res)=> {
+
+    const searchWord = req.params.searchWord;
+    const searchBoardResult = await boardUtil.searchNotice(req.job, 1, searchWord);
+    return res.json(searchBoardResult);
+
+});
+
+// 공지사항 검색 페이지 (body)
 router.get('/search/:page', userUtil.LoggedIn, async (req,res)=> {
 
     const reqPage = req.params.page;
     const searchWord = req.body.searchWord;
+    const searchBoardResult = await boardUtil.searchNotice(req.job, reqPage, searchWord);
+    return res.json(searchBoardResult);
+
+});
+
+// 공지사항 검색 페이지 (url)
+router.get('/search/word/:searchWord/:page', userUtil.LoggedIn, async (req,res)=> {
+
+    const reqPage = req.params.page;
+    const searchWord = req.params.searchWord;
     const searchBoardResult = await boardUtil.searchNotice(req.job, reqPage, searchWord);
     return res.json(searchBoardResult);
 
