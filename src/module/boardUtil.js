@@ -281,7 +281,10 @@ module.exports = {
                 code: "200",
                 message: "공지사항 검색에 성공했습니다.",
                 page: reqPage,
-                data: noticeData
+                data: noticeData,
+                req: {
+                    searchWord: searchWord
+                }
             };
         }
         catch(err) {
