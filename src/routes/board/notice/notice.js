@@ -124,19 +124,20 @@ router.put('/pin/:noticeId', userUtil.LoggedIn, async (req,res)=> {
         });
     }
 
+    const noticeId = req.params.noticeId;
+    const boardData = await board.findOne({ attributes:['pin'], where: {id: noticeId, status: 0}});
+
+
     // 최대 5개까지
     const managerData = await manager.findOne({attributes:['shop_id'], where: {id: req.job.substring(1)}});
     const boardPinCount = await board.count({where: {pin: 1, status: 0, shop_id: managerData.shop_id}});
-    if(boardPinCount > 4){
+    if(boardData.pin == 0 && boardPinCount > 4){
         console.log("max number of pin is only 5");
         return res.json({
             code: "202",
             message: "핀 고정은 최대 5개 입니다."
         });
     }
-
-    const noticeId = req.params.noticeId;
-    const boardData = await board.findOne({ attributes:['pin'], where: {id: noticeId, status: 0}});
 
     board.update({pin: (boardData.pin + 1)%2 }, {where: {id: noticeId, status: 0 }})
         .then(() => {
