@@ -15,13 +15,13 @@ var taskUtil = require('../../module/taskUtil');
 const { manager, worker, shop, position, board, schedule, comment } = require('../../models');
 
 // 오늘의 날짜
-const now = new Date();
+/*const now = new Date();
 const yearNow = now.getFullYear();
 const monthNow = now.getMonth()+1;
 const dateNow = now.getDate();
 const dayNow = now.getDay();
 const hourNow = String(now.getHours()).padStart(2, '0');
-const minNow = String(now.getMinutes()).padStart(2, '0');
+const minNow = String(now.getMinutes()).padStart(2, '0');*/
 const weekdays = [ '일', '월', '화', '수', '목', '금', '토'];
 
 // 관리자: 홈
@@ -34,6 +34,13 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         const shopData = await shop.findOne({where: {id: managerData.shop_id}});
 
         // 오늘의 날짜
+        const now = new Date();
+        const yearNow = now.getFullYear();
+        const monthNow = now.getMonth()+1;
+        const dateNow = now.getDate();
+        const dayNow = now.getDay();
+        const hourNow = String(now.getHours()).padStart(2, '0');
+        const minNow = String(now.getMinutes()).padStart(2, '0');
 
         const todayInfo = {
             month: monthNow,
@@ -138,6 +145,13 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
         let totalData = {};
 
         // 오늘의 날짜
+        const now = new Date();
+        const yearNow = now.getFullYear();
+        const monthNow = now.getMonth()+1;
+        const dateNow = now.getDate();
+        const dayNow = now.getDay();
+        const hourNow = String(now.getHours()).padStart(2, '0');
+        const minNow = String(now.getMinutes()).padStart(2, '0');
 
         const todayInfo = {
             month: monthNow,
