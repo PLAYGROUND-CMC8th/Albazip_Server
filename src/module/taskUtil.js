@@ -157,7 +157,7 @@ module.exports ={
                        where (1 = 1)
                        and	status = 1
                        and  completer_job = "W${workerData.id}"
-                       and	date(register_date) between "${workerData.register_date}" and now()
+                       and	date(update_date) between "${workerData.register_date}" and now()
                        order by year desc, month desc, date desc;`;
 
         try {
@@ -199,7 +199,7 @@ module.exports ={
                        where (1 = 1)
                        and	status = 1
                        and  completer_job = "W${workerData.id}"
-                       and	date(register_date) between "${workerData.register_date}" and now()
+                       and	date(update_date) between "${workerData.register_date}" and now()
                        order by year desc, month desc, date desc;`;
 
         try {
@@ -256,7 +256,7 @@ module.exports ={
                                 where (1 = 1)
                                 and	status = 2
                                 and target_id = ${workerData.id}
-                                and date(register_date) between "${workerData.register_date}" and now()
+                                and date(update_date) between "${workerData.register_date}" and now()
                         ) tmp
                         group by tmp.year, tmp.month
                         order by tmp.year desc, tmp.month desc`;
@@ -311,7 +311,7 @@ module.exports ={
                                 and	status = 2
                                 and target_id = ${workerData.id}
                                 and year(register_date)= "${year}" and month(register_date) = "${month}"
-                                and date(register_date) between "${workerData.register_date}" and now()
+                                and date(update_date) between "${workerData.register_date}" and now()
                         ) tmp
                         group by tmp.month, tmp.day
                         order by tmp.month desc, tmp.day desc`;
@@ -354,7 +354,7 @@ module.exports ={
                         and     year(register_date) = "${year}"
                         and     month(register_date) = "${month}"
                         and     day(register_date) = "${date}"
-                        and     date(register_date) between "${workerData.register_date}" and now()`;
+                        and     date(update_date) between "${workerData.register_date}" and now()`;
 
         const nQuery = `select tmp.title, tmp.content,
                                if(substr(tmp.writer_job, 1, 1) = 'S',
@@ -371,7 +371,7 @@ module.exports ={
                                and     year(register_date) = "${year}"
                                and     month(register_date) = "${month}"
                                and     day(register_date) = "${date}"
-                               and     date(register_date) between "${workerData.register_date}" and now()
+                               and     date(update_date) between "${workerData.register_date}" and now()
                             )  tmp;`
 
         try {
