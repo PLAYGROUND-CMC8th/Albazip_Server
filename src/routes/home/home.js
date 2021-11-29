@@ -91,8 +91,10 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
                     attributes: [['position_title', 'title'], ['user_first_name', 'firstName']],
                     where: {id: sdata.worker_id}
                 });
-                workerData.dataValues.title = workerData.dataValues.title.substring(2);
-                workers.push(workerData);
+                if(workerData) {
+                    workerData.dataValues.title = workerData.dataValues.title.substring(2);
+                    workers.push(workerData);
+                }
             }
 
             totalData.workerInfo = workers;
