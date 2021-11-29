@@ -14,10 +14,10 @@ var taskUtil = require('../../module/taskUtil');
 const { user, position, task, time, schedule, worker, manager } = require('../../models');
 const models = require('../../models');
 
-const now = new Date();
+/*const now = new Date();
 const yearNow = now.getFullYear();
 const monthNow = now.getMonth()+1;
-const dateNow = now.getDate();
+const dateNow = now.getDate();*/
 
 //포지션 추가하기
 router.post('/',userUtil.LoggedIn, async (req,res)=> {
@@ -218,6 +218,11 @@ router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
 // 포지션 변경하기
 router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
+
+    const now = new Date();
+    const yearNow = now.getFullYear();
+    const monthNow = now.getMonth()+1;
+    const dateNow = now.getDate();
 
     try {
         // 1. 변경 전 데이터
