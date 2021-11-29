@@ -274,6 +274,15 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
 
     const code = req.body.code;
     const positionData = await position.findOne({ attributes: ['id', 'shop_id', 'title'], where: {code: code} });
+
+    // 코드 체크
+    if(!positionData){
+        console.log("no position matched with code")
+        return res.json({
+            code: "202",
+            message: "올바른 코드를 입력해주세요."
+        });
+    }
     const shopData = await shop.findOne({ attributes: ['name'] , where: {id: positionData.shop_id} });
 
     try {
