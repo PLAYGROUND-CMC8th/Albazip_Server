@@ -160,7 +160,7 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
     const { type, address, startTime, endTime, payday } = req.body;
     let weekday = ['월', '화', '수', '목', '금', '토', '일'];
 
-    name = voca.replaceAll(name, " ", "");
+    //name = voca.replaceAll(name, " ", "");
     ownerName = voca.replaceAll(ownerName, " ", "");
     registerNumber = voca.replaceAll(registerNumber, "-", "");
     let shopHoliday = holiday.join(",");

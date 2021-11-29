@@ -20,7 +20,7 @@ module.exports = {
             const lateCountQuery = `select *
                                     from schedule
                                     where worker_id = ${workerData.id}
-                                    and date(register_date) between "${workerData.register_date}" and now()
+                                    and date(update_date) between "${workerData.register_date}" and now()
                                     and real_start_time is not null 
                                     and real_start_time > start_time`;
 
@@ -59,7 +59,7 @@ module.exports = {
                            where (1 = 1)
                            and	status = 1
                            and  completer_job = "W${workerData.id}"
-                           and	date(register_date) between "${workerData.register_date}" and now()`;
+                           and	date(update_date) between "${workerData.register_date}" and now()`;
 
 
             const coTaskCount = await task.sequelize.query( query, { type: sequelize.QueryTypes.SELECT });
@@ -99,7 +99,7 @@ module.exports = {
                            and	status = 2
                            and target_id = ${workerData.id}
                            and completer_job = "W${workerData.id}"
-                           and date(register_date) between "${registerDate}" and now()`;
+                           and date(update_date) between "${registerDate}" and now()`;
 
 
             const completeTaskCount = await task.sequelize.query( completeTaskCountQuery, { type: sequelize.QueryTypes.SELECT });
@@ -109,7 +109,7 @@ module.exports = {
                            where (1 = 1)
                            and	status = 2
                            and target_id = ${workerData.id}
-                           and date(register_date) between "${workerData.register_date}" and now()`;
+                           and date(update_date) between "${workerData.register_date}" and now()`;
 
 
             const totalTaskCount = await task.sequelize.query( totalTaskCountQuery, { type: sequelize.QueryTypes.SELECT });
