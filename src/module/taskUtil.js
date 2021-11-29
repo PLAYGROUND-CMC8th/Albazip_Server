@@ -33,7 +33,7 @@ module.exports ={
                         tdata.dataValues.id = null;
                         tdata.dataValues.status = 2;
                         tdata.dataValues.target_id = workerData.id;
-                        tdata.dataValues.register_date = new Date();
+                        tdata.dataValues.register_date = null;
                         task.create(tdata.dataValues);
                     }
                 }
@@ -43,6 +43,40 @@ module.exports ={
                 return;
             })
         console.log("make todays task success");
+        return;
+    },
+
+    makeATask: async (workerId) => {
+        const now = new Date();
+        const yearNow = now.getFullYear();
+        const monthNow = now.getMonth()+1;
+        const dateNow = now.getDate();
+
+        await schedule.findOne({
+            where: {
+                worker_id: workerId,
+                year: yearNow,
+                month: monthNow,
+                day: dateNow
+            }
+        })
+            .then(async (scheduleData) => {
+                let workerData = await worker.findOne({where: {id: workerId}});
+                let taskData = await task.findAll({where: {status: 0, target_id: workerData.position_id}});
+
+                for (let tdata of taskData) {
+                    tdata.dataValues.id = null;
+                    tdata.dataValues.status = 2;
+                    tdata.dataValues.target_id = workerData.id;
+                    tdata.dataValues.register_date = null;
+                    task.create(tdata.dataValues);
+                }
+            })
+            .catch((err) => {
+                console.log("make worker's todays task error", err);
+                return;
+            })
+        console.log("make worker's todays task success");
         return;
     },
 
@@ -518,7 +552,7 @@ module.exports ={
                     }
                     // 미완료 업무
                     else {
-                        let writerName, wirterTitle;
+                        let writerName, writerTitle;
                         try{
                             if(tpt.writer_job[0]=='M'){
                                 let managerData = await manager.findOne({where: {id: tpt.writer_job.substring(1)}});
