@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => (
             allowNull: false
         },
         owner_name: {
-            type: DataTypes.STRING(5),
+            type: DataTypes.STRING(30),
             allowNull: false
         },
         register_number: {
