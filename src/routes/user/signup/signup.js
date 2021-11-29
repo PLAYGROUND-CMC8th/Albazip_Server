@@ -8,6 +8,7 @@ var jwt = require('../../../module/jwt');
 var shopUtil = require('../../../module/shopUtil');
 var userUtil = require('../../../module/userUtil');
 var scheduleUtil = require('../../../module/scheduleUtil');
+var taskUtil = require('../../../module/taskUtil');
 
 const models = require('../../../models');
 const { user, position, shop, worker } = require('../../../models');
@@ -307,26 +308,15 @@ router.post('/worker',userUtil.LoggedIn, async (req,res)=> {
                     // 0일부터 100일치 스케줄 생성
                     scheduleUtil.makeASchedule(newWorker.position_id, 0);
 
-                    // 근무자 가입시 포지션의 프로필 이미지 생성
-                    await models.position.update({image_path: default_path+"w1.png"}, {where: {id: positionData.id}})
-                        .then(async () => {
-                            console.log("success update position image path");
+                    // 근무자 가입시 당일 업무 생성
+                    taskUtil.makeATask(newWorker.id)
 
-                            const token = jwt.sign({id: userId, last_job: "W"+newWorker.id});
-
-                            return res.json({
-                                code: "200",
-                                message: "성공적으로 근무자 가입이 완료되었습니다.",
-                                data: token
-                            });
-                        })
-                        .catch((err) =>{
-                            console.log("update position image path error", err);
-                            return res.json({
-                                code: "200",
-                                message: "포지션의 프로필 이미지 업데이트에 오류가 발생했습니다."
-                            });
-                        })
+                    const token = jwt.sign({id: userId, last_job: "W"+newWorker.id});
+                    return res.json({
+                        code: "200",
+                        message: "성공적으로 근무자 가입이 완료되었습니다.",
+                        data: token
+                    });
 
                 })
                 .catch((err) => {
