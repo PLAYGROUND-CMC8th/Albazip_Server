@@ -272,6 +272,12 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
 // 관리자: 오늘의 근무자
 router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
 
+    // 오늘의 날짜
+    const now = new Date();
+    const yearNow = now.getFullYear();
+    const monthNow = now.getMonth()+1;
+    const dateNow = now.getDate();
+
     const managerData = await manager.findOne({where: {id: req.job.substring(1)}});
     const shopData = await shop.findOne({where: {id: managerData.shop_id}});
 
@@ -287,8 +293,10 @@ router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
             let workerData = await worker.findOne({
                 attributes: [['id', 'workerId'], ['position_title', 'workerTitle'], ['user_first_name', 'workerName'], ['image_path', 'workerImage']],
             where: {id: sdata.worker_id}});
-            workersInfo.push(workerData);
+            if(workerData)
+                workersInfo.push(workerData);
         }
+
         console.log("success to get today workers list");
         res.json({
             code: "200",
