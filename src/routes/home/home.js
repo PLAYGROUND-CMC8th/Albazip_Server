@@ -293,8 +293,10 @@ router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
             let workerData = await worker.findOne({
                 attributes: [['id', 'workerId'], ['position_title', 'workerTitle'], ['user_first_name', 'workerName'], ['image_path', 'workerImage']],
             where: {id: sdata.worker_id}});
-            workersInfo.push(workerData);
+            if(workerData)
+                workersInfo.push(workerData);
         }
+
         console.log("success to get today workers list");
         res.json({
             code: "200",
