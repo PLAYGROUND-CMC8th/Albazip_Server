@@ -172,7 +172,7 @@ module.exports ={
                                 where worker_id = ${workerData.id}
                                 and year = "${year}"
                                 and month = "${month}"
-                                and day <= day(now())
+                                and ((month = month(now()) and day+0 <= day(now())) or (month <> month(now())))
                                 and date(register_date) between date("${workerData.register_date}") and now()
                                 order by day+0 desc
                             )	tmp`;
