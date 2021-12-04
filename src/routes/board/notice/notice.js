@@ -55,8 +55,8 @@ router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=>
     }
 
     // 1. 파라미터 체크
-    if( !title){
-        console.log("board parameter not enough", title, pin);
+    if( !title || !content ){
+        console.log("board parameter not enough");
         return res.json({
             code: "202",
             message: "필수정보가 부족합니다."
@@ -357,7 +357,7 @@ router.get('/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=> {
 
     const noticeId = req.params.noticeId;
-    const { pin, title, content, boardImages } = req.body;
+    const { pin, title, content } = req.body;
     console.log(title);
 
     // 0. 관리자만 편집
@@ -392,7 +392,7 @@ router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (re
             // 3. 공지사항 이미지
             try {
                 await board_image.destroy({where: {board_id: noticeId}});
-                console.log("success to delete notibe image");
+                console.log("success to delete notice image");
 
                 if (req.files.length > 0) {
                     for (const file of req.files) {
