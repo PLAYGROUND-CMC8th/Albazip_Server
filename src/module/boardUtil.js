@@ -507,7 +507,7 @@ module.exports = {
                 code: "200",
                 message: "게시글 검색에 성공했습니다.",
                 page: reqPage,
-                data: postData,
+                data: postInfo,
                 req: {
                     searchWord: searchWord
                 }
