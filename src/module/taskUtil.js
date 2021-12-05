@@ -256,7 +256,6 @@ module.exports ={
                                 where (1 = 1)
                                 and	status = 2
                                 and target_id = ${workerData.id}
-                                and completer_job = "W${workerData.id}"
                                 and date(update_date) between date("${workerData.register_date}") and now()
                         ) tmp
                         group by tmp.year, tmp.month
