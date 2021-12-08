@@ -20,7 +20,7 @@ router.get('/manager',userUtil.LoggedIn, async (req,res)=> {
         return;
     }
 
-    const postResult = await boardUtil.getPost(req.job, 1);
+    const postResult = await boardUtil.getMyPost(req.job, 1);
     if (postResult.code == "400"){
         res.json(postResult);
         return;
@@ -41,7 +41,7 @@ router.get('/manager',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 작성글 > 근무자
 router.get('/worker',userUtil.LoggedIn, async (req,res)=> {
 
-    const postResult = await boardUtil.getPost(req.job, 1);
+    const postResult = await boardUtil.getMyPost(req.job, 1);
     if (postResult.code == "400"){
         res.json(postResult);
         return;
@@ -71,7 +71,7 @@ router.get('/notice/:page',userUtil.LoggedIn, async (req,res)=> {
 // 마이페이지 > 하단 > 작성글 > 게시글
 router.get('/post/:page',userUtil.LoggedIn, async (req,res)=> {
 
-    const postResult = await boardUtil.getPost(req.job, req.params.page);
+    const postResult = await boardUtil.getMyPost(req.job, req.params.page);
     return res.json(postResult);
 
 });
