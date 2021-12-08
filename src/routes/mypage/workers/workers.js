@@ -278,6 +278,40 @@ router.get('/:positionId/taskList',userUtil.LoggedIn, async (req,res)=> {
 
 });
 
+// 마이페이지 > 하단 > 근무자 > 근무자 선택 > 퇴사 거절하기
+router.put('/:positionId',userUtil.LoggedIn, async (req,res)=> {
+
+    try {
+        // 관리자인지 확인
+        if (req.job[0] != 'M') {
+            console.log("manager can only deny resign worker");
+            res.json({
+                code: "202",
+                message: "관리자만 포지션 퇴사 거절을 할 수 있습니다."
+            });
+            return;
+        }
+
+        const positionId = req.params.positionId;
+        await worker.update({status: 1}, {where: {position_id: positionId}});
+        console.log("success to deny position resign request");
+
+        res.json({
+            code: "200",
+            message: "포지션 퇴사요청 거절을 성공했습니다."
+        });
+        return;
+    }
+    catch(err){
+        console.log("deny position resign request error", err);
+        res.json({
+            code: "400",
+            message: "포지션 퇴사요청 거절에 오류가 발생했습니다."
+        });
+        return;
+    }
+
+});
 
 // 마이페이지 > 하단 > 근무자 > 근무자 선택 > 퇴사하기
 router.delete('/:positionId',userUtil.LoggedIn, async (req,res)=> {
