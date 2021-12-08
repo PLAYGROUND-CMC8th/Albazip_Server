@@ -310,12 +310,14 @@ router.get('/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 
                 } else if (cdata.writer_job[0] == "W") {
                     let workerData = await worker.findOne({where: {id: cdata.writer_job.substring(1)}});
-                    let info = {
-                        writerTitle: workerData.position_title,
-                        writerName: workerData.user_first_name,
-                        writerImage: workerData.image_path
-                    };
-                    confirmInfo.push(info);
+                    if(workerData) {
+                        let info = {
+                            writerTitle: workerData.position_title,
+                            writerName: workerData.user_first_name,
+                            writerImage: workerData.image_path
+                        };
+                        confirmInfo.push(info);
+                    }
                 }
             }
         }
