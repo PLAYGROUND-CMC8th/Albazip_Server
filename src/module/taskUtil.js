@@ -632,6 +632,7 @@ module.exports ={
             // 공동업무 완료한 근무자 정보
             let comWorker = [];
             let comWorkerMap = {};
+            let comWorkerTaskMap = {};
             let comWorkerCount = 0;
 
             if(todayCoTask) {
@@ -646,10 +647,14 @@ module.exports ={
                         }
                         completCoTask.push(ct);
 
-                        if(comWorkerMap[tct.completer_job])
+                        if(comWorkerMap[tct.completer_job]) {
                             comWorkerMap[tct.completer_job] += 1;
-                        else
+                            comWorkerTaskMap[tct.completer_job].push(tct.id);
+                        }
+                        else {
                             comWorkerMap[tct.completer_job] = 1;
+                            comWorkerTaskMap[tct.completer_job] = [tct.id];
+                        }
 
                     }
                     // 미완료 업무
@@ -712,7 +717,8 @@ module.exports ={
                     comWorker.push({
                         worker: completerTitle+" "+completerName,
                         count: comWorkerMap[cwm],
-                        image: completerImage
+                        image: completerImage,
+                        taskId: comWorkerTaskMap[cwm]
                     });
                     comWorkerCount += comWorkerMap[cwm];
                 }
