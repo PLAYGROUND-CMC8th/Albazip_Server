@@ -372,7 +372,7 @@ router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (re
     }
 
     // 1. 파라미터 체크
-    if(!pin || !title){
+    if(!content || !title){
         console.log("board parameter not enough");
         return res.json({
             code: "202",
