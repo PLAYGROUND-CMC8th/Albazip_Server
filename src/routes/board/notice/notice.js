@@ -55,8 +55,8 @@ router.post('/', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=>
     }
 
     // 1. 파라미터 체크
-    if( !title){
-        console.log("board parameter not enough", title, pin);
+    if( !title || !content ){
+        console.log("board parameter not enough");
         return res.json({
             code: "202",
             message: "필수정보가 부족합니다."
@@ -161,8 +161,8 @@ router.put('/pin/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 router.get('/search', userUtil.LoggedIn, async (req,res)=> {
 
     const searchWord = req.body.searchWord;
-    const searchBoardResult = await boardUtil.searchNotice(req.job, 1, searchWord);
-    return res.json(searchBoardResult);
+    const searchNoticeResult = await boardUtil.searchNotice(req.job, 1, searchWord);
+    return res.json(searchNoticeResult);
 
 });
 
@@ -170,8 +170,8 @@ router.get('/search', userUtil.LoggedIn, async (req,res)=> {
 router.get('/search/word/:searchWord', userUtil.LoggedIn, async (req,res)=> {
 
     const searchWord = req.params.searchWord;
-    const searchBoardResult = await boardUtil.searchNotice(req.job, 1, searchWord);
-    return res.json(searchBoardResult);
+    const searchNoticeResult = await boardUtil.searchNotice(req.job, 1, searchWord);
+    return res.json(searchNoticeResult);
 
 });
 
@@ -180,8 +180,8 @@ router.get('/search/:page', userUtil.LoggedIn, async (req,res)=> {
 
     const reqPage = req.params.page;
     const searchWord = req.body.searchWord;
-    const searchBoardResult = await boardUtil.searchNotice(req.job, reqPage, searchWord);
-    return res.json(searchBoardResult);
+    const searchNoticeResult = await boardUtil.searchNotice(req.job, reqPage, searchWord);
+    return res.json(searchNoticeResult);
 
 });
 
@@ -190,8 +190,8 @@ router.get('/search/word/:searchWord/:page', userUtil.LoggedIn, async (req,res)=
 
     const reqPage = req.params.page;
     const searchWord = req.params.searchWord;
-    const searchBoardResult = await boardUtil.searchNotice(req.job, reqPage, searchWord);
-    return res.json(searchBoardResult);
+    const searchNoticeResult = await boardUtil.searchNotice(req.job, reqPage, searchWord);
+    return res.json(searchNoticeResult);
 
 });
 
@@ -310,14 +310,12 @@ router.get('/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 
                 } else if (cdata.writer_job[0] == "W") {
                     let workerData = await worker.findOne({where: {id: cdata.writer_job.substring(1)}});
-                    if(workerData) {
-                        let info = {
-                            writerTitle: workerData.position_title,
-                            writerName: workerData.user_first_name,
-                            writerImage: workerData.image_path
-                        };
-                        confirmInfo.push(info);
-                    }
+                    let info = {
+                        writerTitle: workerData.position_title,
+                        writerName: workerData.user_first_name,
+                        writerImage: workerData.image_path
+                    };
+                    confirmInfo.push(info);
                 }
             }
         }
@@ -359,7 +357,7 @@ router.get('/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=> {
 
     const noticeId = req.params.noticeId;
-    const { pin, title, content, boardImages } = req.body;
+    const { pin, title, content } = req.body;
     console.log(title);
 
     // 0. 관리자만 편집
@@ -372,7 +370,7 @@ router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (re
     }
 
     // 1. 파라미터 체크
-    if(!content || !title){
+    if(!pin || !title){
         console.log("board parameter not enough");
         return res.json({
             code: "202",
@@ -394,7 +392,7 @@ router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (re
             // 3. 공지사항 이미지
             try {
                 await board_image.destroy({where: {board_id: noticeId}});
-                console.log("success to delete notibe image");
+                console.log("success to delete notice image");
 
                 if (req.files.length > 0) {
                     for (const file of req.files) {

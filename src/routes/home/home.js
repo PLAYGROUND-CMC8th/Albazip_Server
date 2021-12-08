@@ -115,7 +115,7 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         const boardData = await board.findAll({
             limit: 4,
             attributes: ['status', 'id', 'title'],
-            where: {shop_id: shopData.id, status: 0}, // 공지사항만 추후변경
+            where: {shop_id: shopData.id, status: 0}, // 추후에 소통창까지
             order: [['register_date', 'DESC']]
         });
         totalData.boardInfo = boardData;
@@ -226,7 +226,7 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
             const boardData = await board.findAll({
                 limit: 4,
                 attributes: ['status', 'id', 'title'],
-                where: {shop_id: positionData.shop_id, status: 0}, // 공지사항만 추후변경
+                where: {shop_id: positionData.shop_id, status: 0}, // 추후에 소통창까지
                 order: [['register_date', 'DESC']]
             });
 
