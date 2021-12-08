@@ -494,7 +494,7 @@ module.exports ={
     // 관리자: 홈 > 오늘의 할일 > 포지션 업무 리스트
     getTodayPerTaskList: async (shopId) => {
 
-        const todayPerTaskListQuery = `select w.id as workerId, w.position_title as workerTitle, w.user_first_name as workerName,
+        /*const todayPerTaskListQuery = `select w.id as workerId, w.position_title as workerTitle,
                              count(t.completer_job) as completeCount, count(t.id) as totalCount
                              from task t
                              inner join worker w
@@ -502,7 +502,18 @@ module.exports ={
                              where t.shop_id = ${shopId}
                              and t.status = 2
                              and date_format(t.register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')
-                             group by w.id`;
+                             group by w.id`;*/
+
+        const todayPerTaskListQuery = ` select w.id as workerId, w.position_title as workerTitle, w.user_first_name as workerName,
+                           count(t.completer_job) as completeCount, count(t.id) as totalCount
+                           from schedule s
+                           inner join worker w on s.worker_id = w.id
+                           inner join task t on t.target_id = w.id
+                           where s.shop_id = ${shopId}
+                           and t.status = 2
+                           and s.year = year(now()) and s.month = month(now()) and s.day = day(now())
+                           group by w.id
+                           order by s.start_time asc;`
 
         try {
             const todayPerTaskList = await task.sequelize.query(todayPerTaskListQuery, {type: sequelize.QueryTypes.SELECT});
@@ -516,7 +527,7 @@ module.exports ={
             console.log("get today position task list error", err);
             return {
                 code: "400",
-                message: "오늘의 할일 포지션별 개인업무 조회가 발생했습니다."
+                message: "오늘의 할일 포지션별 개인업무 조회에 오류가 발생했습니다."
             }
         }
 
@@ -621,7 +632,6 @@ module.exports ={
             // 공동업무 완료한 근무자 정보
             let comWorker = [];
             let comWorkerMap = {};
-            let comworkerTaskMap = {};
             let comWorkerCount = 0;
 
             if(todayCoTask) {
@@ -636,14 +646,10 @@ module.exports ={
                         }
                         completCoTask.push(ct);
 
-                        if(comWorkerMap[tct.completer_job]){
+                        if(comWorkerMap[tct.completer_job])
                             comWorkerMap[tct.completer_job] += 1;
-                            comworkerTaskMap[tct.completer_job].push(tct.id);
-                        }
-                        else{
+                        else
                             comWorkerMap[tct.completer_job] = 1;
-                            comworkerTaskMap[tct.completer_job] = [tct.id];
-                        }
 
                     }
                     // 미완료 업무
@@ -706,8 +712,7 @@ module.exports ={
                     comWorker.push({
                         worker: completerTitle+" "+completerName,
                         count: comWorkerMap[cwm],
-                        image: completerImage,
-                        taskId: comworkerTaskMap[cwm]
+                        image: completerImage
                     });
                     comWorkerCount += comWorkerMap[cwm];
                 }

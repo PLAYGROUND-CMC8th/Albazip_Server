@@ -286,7 +286,8 @@ router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
         // 근무자 정보
         const scheduledData = await schedule.findAll({
             attributes: ['worker_id'],
-            where: {shop_id: shopData.id, year: yearNow, month: monthNow, day: dateNow}
+            where: {shop_id: shopData.id, year: yearNow, month: monthNow, day: dateNow},
+            order: [['start_time', 'ASC']]
         });
 
         for(const sdata of scheduledData){
