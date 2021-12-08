@@ -82,7 +82,8 @@ module.exports = {
                     const nowTime = new Date();
                     const writeTime = new Date(pdata.register_date);
                     const passTime = parseInt(nowTime.getTime() - writeTime.getTime());
-                    const passHour = Math.round(passTime / (1000 * 60 * 60));
+                    const passHour = Math.round(passTime / (1000 * 60 * 60)) - 1;
+                    const passMin = Math.round(passTime / (1000 * 60));
                     if (passHour < 24) in24Hour = 1;
 
                     // 댓글수
@@ -107,7 +108,7 @@ module.exports = {
                         image: image,
                         //commentCount: commentCount,
                         writeIn24Hour: in24Hour,
-                        writeInHour: passHour,
+                        writeInTime: passHour == 0 ? passMin+"분" : passHour+"시간",
                         writeDate: pdata.register_date
                     }
                     postInfo.push(data);
