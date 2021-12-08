@@ -504,7 +504,7 @@ module.exports ={
                              and date_format(t.register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')
                              group by w.id`;*/
 
-        const todayPerTaskListQuery = ` select w.id as workerId, w.position_title as workerTitle,
+        const todayPerTaskListQuery = ` select w.id as workerId, w.position_title as workerTitle, w.user_first_name as workerName,
                            count(t.completer_job) as completeCount, count(t.id) as totalCount
                            from schedule s
                            inner join worker w on s.worker_id = w.id
