@@ -494,7 +494,7 @@ module.exports ={
     // 관리자: 홈 > 오늘의 할일 > 포지션 업무 리스트
     getTodayPerTaskList: async (shopId) => {
 
-        const todayPerTaskListQuery = `select w.id as workerId, w.position_title as workerTitle,
+        const todayPerTaskListQuery = `select w.id as workerId, w.position_title as workerTitle, w.user_first_name as workerName,
                              count(t.completer_job) as completeCount, count(t.id) as totalCount
                              from task t
                              inner join worker w
