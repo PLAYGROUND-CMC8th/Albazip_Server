@@ -359,7 +359,7 @@ router.get('/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (req,res)=> {
 
     const noticeId = req.params.noticeId;
-    const { pin, title, content } = req.body;
+    const { title, content } = req.body;
     console.log(title);
 
     // 0. 관리자만 편집
@@ -372,7 +372,7 @@ router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (re
     }
 
     // 1. 파라미터 체크
-    if(!pin || !title){
+    if(!content || !title){
         console.log("board parameter not enough");
         return res.json({
             code: "202",
@@ -381,7 +381,6 @@ router.put('/:noticeId', userUtil.LoggedIn, upload.array('images', 2), async (re
     }
 
     let boardData = {
-        pin: pin,
         title: title,
         content: content
     };
