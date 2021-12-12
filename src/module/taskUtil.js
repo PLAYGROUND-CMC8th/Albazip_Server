@@ -505,17 +505,15 @@ module.exports ={
                              group by w.id`;*/
 
         const todayPerTaskListQuery = `select w.id as workerId, w.position_title as workerTitle, w.user_first_name as workerName,
-                           count(t.completer_job) as completeCount, count(t.id) as totalCount
-                           from schedule s
-                           inner join worker w on s.worker_id = w.id
-                           inner join task t on t.target_id = w.id
-                           where s.shop_id = ${shopId}
-                           and t.status = 2
-                           
-                           and date_format(t.register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')
-                           group by w.id
-                           order by s.start_time asc;`
-        //and s.year = year(now()) and s.month = month(now()) and s.day = day(now())
+                            count(t.completer_job) as completeCount, count(t.id) as totalCount
+                            from schedule s
+                            inner join worker w on s.worker_id = w.id
+                            inner join task t on w.id = t.target_id and date_format(t.register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')
+                            where s.shop_id = ${shopId}
+                            and s.year+0 = year(now()) and s.month+0 = month(now()) and s.day+0 = day(now())
+                            and t.status = 2
+                            group by w.id
+                            order by s.start_time asc`
 
         try {
             const todayPerTaskList = await task.sequelize.query(todayPerTaskListQuery, {type: sequelize.QueryTypes.SELECT});
