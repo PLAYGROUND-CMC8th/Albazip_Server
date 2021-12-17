@@ -61,9 +61,9 @@ module.exports = {
                             writerImage = workerData.image_path;
 
                         } catch (err) {
-                            writerJob = null;
-                            writerName = null;
-                            writerImage = null;
+                            writerJob = "퇴사자";
+                            writerName = "이름없음";
+                            writerImage = "https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/n1.png";
                         }
                     }
                     //console.log("success to get writer data");
@@ -456,8 +456,8 @@ module.exports = {
                             writerImage = workerData.image_path;
 
                         } catch (err) {
-                            writerJob = null;
-                            writerName = null;
+                            writerJob = "퇴사자";
+                            writerName = "이름없음";
                             writerImage = null;
                         }
                     }

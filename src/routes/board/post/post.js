@@ -190,9 +190,9 @@ router.get('/:postId', userUtil.LoggedIn, async (req,res)=> {
             console.log("success to get writer info");
         } catch (err) {
             console.log("get writer info error", err);
-            writerTitle = null;
-            writerName = null;
-            writerImage = null;
+            writerTitle = "퇴사자";
+            writerName = "이름없음";
+            writerImage = "https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/n1.png";
         }
 
         // 댓글
