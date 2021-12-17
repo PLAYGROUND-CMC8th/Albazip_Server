@@ -74,12 +74,12 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         if(publicHolidays.includes(monthNow+"/"+dateNow) || shopData.holiday.includes(weekdays[dayNow]))
             shopInfo.status = 3;
 
-        if((hourNow > shopData.start_time.substring(0,2))
-            || (hourNow == shopData.start_time.substring(0,2) && minNow > shopData.start_time.substring(2,2)))
+        if((parseInt(hourNow) > parseInt(shopData.start_time.substring(0,2)))
+            || (hourNow == shopData.start_time.substring(0,2) && parseInt(minNow) > parseInt(shopData.start_time.substring(2,2))))
             shopInfo.status = 1;
 
-        if((hourNow > shopData.end_time.substring(0,2))
-            || (hourNow == shopData.end_time.substring(0,2) && minNow > shopData.end_time.substring(2,2)))
+        if((parseInt(hourNow) > parseInt(shopData.end_time.substring(0,2)))
+            || (hourNow == shopData.end_time.substring(0,2) && parseInt(minNow) > parseInt(shopData.end_time.substring(2,2))))
             shopInfo.status = 2;
 
 
@@ -194,14 +194,14 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
 
             totalData.shopInfo.status = 0;
 
-            if((hourNow > scheduledData.start_time.substring(0,2))
-                || (hourNow == scheduledData.start_time.substring(0,2) && minNow > scheduledData.start_time.substring(2,2))) {
+            if((parseInt(hourNow) > parseInt(scheduledData.start_time.substring(0,2)))
+                || (hourNow == scheduledData.start_time.substring(0,2) && parseInt(minNow) > parseInt(scheduledData.start_time.substring(2,2)))) {
                 // 출근시간을 찍지 않았으면 근무전으로 표시
                 if(scheduledData.real_start_time) totalData.shopInfo.status = 1;
             }
 
-            if((hourNow > scheduledData.end_time.substring(0,2))
-                || (hourNow == scheduledData.end_time.substring(0,2) && minNow > scheduledData.end_time.substring(2,2))) {
+            if((parseInt(hourNow) > parseInt(scheduledData.end_time.substring(0,2)))
+                || (hourNow == scheduledData.end_time.substring(0,2) && parseInt(minNow) > parseInt(scheduledData.end_time.substring(2,2)))) {
                 // 출근시간을 찍지 않았거나 퇴근시간을 찍었으면 근무후로 표시
                 if (!scheduledData.real_start_time || scheduledData.real_end_time) totalData.shopInfo.status = 2;
                 else totalData.shopInfo.status = 1;
@@ -352,5 +352,49 @@ router.get('/qrcode', userUtil.LoggedIn, async (req,res)=>{
     }
 
 });
+
+// 근무자: 홈 잔여시간
+router.get('/worker/remainTime', userUtil.LoggedIn, async (req,res)=> {
+
+    // 현재시간
+    const now = new Date();
+    const yearNow = now.getFullYear();
+    const monthNow = now.getMonth()+1;
+    const dateNow = now.getDate();
+    const hourNow = String(now.getHours()).padStart(2, '0');
+    const minNow = String(now.getMinutes()).padStart(2, '0');
+
+    // 퇴근시간
+
+    // 근무자 스케줄 정보
+    let scheduledData;
+    try {
+        scheduledData = await schedule.findOne({
+            attributes: ['start_time', 'end_time'],
+            where: {
+                worker_id: req.job.substring(1), year: yearNow, month: monthNow, day: dateNow
+            }
+        });
+        console.log("success to get worker schedule time");
+    }
+    catch (err) {
+        console.log("no today worker schedule", err);
+        res.json({
+            code: "400",
+            message: "근무자 남은 시간 조회에 오류가 발생했습니다."
+        });
+        return;
+
+    }
+
+    console.log("success to get worker remain time");
+    res.json({
+        code: "200",
+        message: "근무자 남은 시간 조회를 성공했습니다.",
+        data: timeUtil.subtract(hourNow + minNow, scheduledData.end_time)
+    });
+    return;
+
+})
 
 module.exports = router;
