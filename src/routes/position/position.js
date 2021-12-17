@@ -267,7 +267,7 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
         // 4. 근무요일, 근무시간 변경여부 확인하기
         let timeChange = false;
-        if (before.workDay.length != workDay.length || before.workDay.sort().toString() != [...workDay].sort().toString())
+        if (before.workDay.length != workDay.length || before.workDay.sort().toString() != [...workDay].sort().toString() || before.startTime != startTime || before.endTime != endTime)
             timeChange = true;
 
         // 5. 포지션 업데이트 시작
