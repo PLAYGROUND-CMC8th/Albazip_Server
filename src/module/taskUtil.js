@@ -674,8 +674,8 @@ module.exports ={
                         }
                         catch(err) {
                             console.log("get writer data error", err);
-                            writerName = null;
-                            writerTitle = null;
+                            writerName = "이름없음";
+                            writerTitle = "퇴사자";
                         }
 
                         let nct = {
@@ -709,9 +709,9 @@ module.exports ={
                     }
                     catch(err) {
                         console.log("get completer data error", err);
-                        completerName = null;
-                        completerTitle = null;
-                        completerImage = null;
+                        completerName = "이름없음";
+                        completerTitle = "퇴사자";
+                        completerImage = "https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/n1.png";
                     }
 
                     comWorker.push({
