@@ -75,11 +75,11 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
             shopInfo.status = 3;
 
         if((parseInt(hourNow) > parseInt(shopData.start_time.substring(0,2)))
-            || (hourNow == shopData.start_time.substring(0,2) && parseInt(minNow) > parseInt(shopData.start_time.substring(2,2))))
+            || (hourNow == shopData.start_time.substring(0,2) && parseInt(minNow) >= parseInt(shopData.start_time.substring(2,4))))
             shopInfo.status = 1;
 
         if((parseInt(hourNow) > parseInt(shopData.end_time.substring(0,2)))
-            || (hourNow == shopData.end_time.substring(0,2) && parseInt(minNow) > parseInt(shopData.end_time.substring(2,2))))
+            || (hourNow == shopData.end_time.substring(0,2) && parseInt(minNow) > parseInt(shopData.end_time.substring(2,4))))
             shopInfo.status = 2;
 
 
@@ -195,13 +195,13 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
             totalData.shopInfo.status = 0;
 
             if((parseInt(hourNow) > parseInt(scheduledData.start_time.substring(0,2)))
-                || (hourNow == scheduledData.start_time.substring(0,2) && parseInt(minNow) > parseInt(scheduledData.start_time.substring(2,2)))) {
+                || (hourNow == scheduledData.start_time.substring(0,2) && parseInt(minNow) > parseInt(scheduledData.start_time.substring(2,4)))) {
                 // 출근시간을 찍지 않았으면 근무전으로 표시
                 if(scheduledData.real_start_time) totalData.shopInfo.status = 1;
             }
 
             if((parseInt(hourNow) > parseInt(scheduledData.end_time.substring(0,2)))
-                || (hourNow == scheduledData.end_time.substring(0,2) && parseInt(minNow) > parseInt(scheduledData.end_time.substring(2,2)))) {
+                || (hourNow == scheduledData.end_time.substring(0,2) && parseInt(minNow) > parseInt(scheduledData.end_time.substring(2,4)))) {
                 // 출근시간을 찍지 않았거나 퇴근시간을 찍었으면 근무후로 표시
                 if (!scheduledData.real_start_time || scheduledData.real_end_time) totalData.shopInfo.status = 2;
                 else totalData.shopInfo.status = 1;
