@@ -282,8 +282,7 @@ module.exports = {
                                 writer_job: reqJob,
                                 status: 0,
                                 board_id: ndata.id
-                            },
-                            group: 'writer_job'
+                            }
                         });
                         if(confirmCount > 0)
                             ndata.dataValues.confirm = 1;

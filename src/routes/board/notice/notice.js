@@ -295,7 +295,7 @@ router.get('/:noticeId', userUtil.LoggedIn, async (req,res)=> {
 
         // 확인자
         let confirmInfo = [];
-        let confirmData = await comment.findAll({attributes: ['writer_job'], where: {board_id: noticeId, status: 0}});
+        let confirmData = await comment.findAll({attributes: ['writer_job'], where: {board_id: noticeId, status: 0}, group: ['writer_job']});
         if (confirmData) {
             for (const cdata of confirmData) {
                 let writerTitle, writerName, writerImage;
