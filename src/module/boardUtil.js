@@ -1,6 +1,6 @@
 const { user, position, board, board_image, comment, worker, manager } = require('../models');
 
-const pagesize = 20;
+const pagesize = 100;
 
 module.exports = {
     // 소통창 > 게시글
@@ -282,7 +282,8 @@ module.exports = {
                                 writer_job: reqJob,
                                 status: 0,
                                 board_id: ndata.id
-                            }
+                            },
+                            group: ['writer_job']
                         });
                         if(confirmCount > 0)
                             ndata.dataValues.confirm = 1;
