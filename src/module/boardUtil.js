@@ -1,6 +1,6 @@
 const { user, position, board, board_image, comment, worker, manager } = require('../models');
 
-const pagesize = 20;
+const pagesize = 100;
 
 module.exports = {
     // 소통창 > 게시글
