@@ -57,9 +57,9 @@ module.exports = {
                             positionId: pdata.id,
                             status: workerData == null ? 0 : workerData.status,
                             rank: pdata.rank,
-                            image_path: workerData == null ? null : workerData.image_path,
+                            image_path: workerData == null ? "https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/n1.png" : workerData.image_path,
                             title: pdata.title,
-                            first_name: workerData == null ? "" : workerData.user_first_name
+                            first_name: workerData == null ? "등록하기" : workerData.user_first_name
                         }
                         positionInfo.push(data);
                     }
