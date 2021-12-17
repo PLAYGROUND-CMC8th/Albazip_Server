@@ -353,4 +353,48 @@ router.get('/qrcode', userUtil.LoggedIn, async (req,res)=>{
 
 });
 
+// 근무자: 홈 잔여시간
+router.get('/worker/remainTime', userUtil.LoggedIn, async (req,res)=> {
+
+    // 현재시간
+    const now = new Date();
+    const yearNow = now.getFullYear();
+    const monthNow = now.getMonth()+1;
+    const dateNow = now.getDate();
+    const hourNow = String(now.getHours()).padStart(2, '0');
+    const minNow = String(now.getMinutes()).padStart(2, '0');
+
+    // 퇴근시간
+
+    // 근무자 스케줄 정보
+    let scheduledData;
+    try {
+        scheduledData = await schedule.findOne({
+            attributes: ['start_time', 'end_time'],
+            where: {
+                worker_id: req.job.substring(1), year: yearNow, month: monthNow, day: dateNow
+            }
+        });
+        console.log("success to get worker schedule time");
+    }
+    catch (err) {
+        console.log("no today worker schedule", err);
+        res.json({
+            code: "400",
+            message: "근무자 남은 시간 조회에 오류가 발생했습니다."
+        });
+        return;
+
+    }
+
+    console.log("success to get worker remain time");
+    res.json({
+        code: "200",
+        message: "근무자 남은 시간 조회를 성공했습니다.",
+        data: timeUtil.subtract(hourNow + minNow, scheduledData.end_time)
+    });
+    return;
+
+})
+
 module.exports = router;
