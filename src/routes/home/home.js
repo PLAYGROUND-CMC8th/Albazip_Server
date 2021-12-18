@@ -194,8 +194,8 @@ router.get('/worker', userUtil.LoggedIn, async (req,res)=> {
 
             totalData.shopInfo.status = 0;
 
-            if(scheduledData.real_start_time || ((parseInt(hourNow) > parseInt(scheduledData.start_time.substring(0,2)))
-                || (hourNow == scheduledData.start_time.substring(0,2) && parseInt(minNow) > parseInt(scheduledData.start_time.substring(2,4))))) {
+            if(scheduledData.real_start_time)// || ((parseInt(hourNow) > parseInt(scheduledData.start_time.substring(0,2))) || (hourNow == scheduledData.start_time.substring(0,2) && parseInt(minNow) > parseInt(scheduledData.start_time.substring(2,4)))))
+            {
                 // 출근시간을 찍지 않았으면 근무전으로 표시
                 totalData.shopInfo.status = 1;
             }
