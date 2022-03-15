@@ -1,3 +1,5 @@
+const businessVerifyApiKey = require('../config/businessVerifyApiKey.json');
+
 const requestPromise = require("request-promise");
 const cheerio = require("cheerio");
 const voca = require('voca');
@@ -9,6 +11,7 @@ const headers = {
     "Content-Type": "text/html;charset=utf-8"
 };
 
+// K-repot 사업자인증번호 검색 크롤링 API
 let options = {
     url: "http://www.kreport.co.kr/ctcssr_a30s.do",
     method: "POST",
@@ -18,6 +21,15 @@ let options = {
     },
     json: true
 };
+
+let option = {
+    url: `http://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=${businessVerifyApiKey.encoding}`,
+    method: "POST",
+    body: {
+        b_no: ""
+    },
+    json: true
+}
 
 module.exports = {
     // 매장 생성 전 유효성 검사
@@ -70,11 +82,12 @@ module.exports = {
         }
     },
 
-    // 사업자 등록번호 존재여부
+    // 사업자 등록번호 존재여부 : 
     checkRegisterNumber: async (request, response, next) => {
         const registerNum = request.params.registerNumber;
         let registerNumber = voca.replaceAll(registerNum, '-', '');
 
+        // 사업자번호 유효성체크
         if(registerNumber.length != 10){
             console.log("not enough register number: ", registerNumber);
             return response.json({
@@ -83,18 +96,36 @@ module.exports = {
             });
         }
 
+        // 중복체크
+        try{
+        await shop.count({where: { register_number : registerNumber }})
+        .then(count => {
+            console.log("shop register number count:" + count);
+            if(count > 0 ) {
+                console.log("register number is already exist");
+                throw err;
+            }
+        });
+        }catch (err) {
+            if(err){
+                console.error("error shop server : ",err);
+                return response.json({
+                    code: "202",
+                    message:"이미 존재하는 매장입니다."
+                });
+            }
+        }
+
+        // 
         try {
-            options.form.cmQuery = registerNumber;
-            await requestPromise(options, async (err, res, body) => {
+            option.body.b_no = [registerNumber];
+            console.log(option);
+            await requestPromise(option, async (err, res, body) => {
 
                 if (res.statusCode === 200) {
                     console.log("request shop register number server success");
 
-                    const $ = cheerio.load(body);
-                    const bizlist = $(".bizlist");
-                    const bizinfo = bizlist.children().eq(0);
-
-                    if (!bizinfo){
+                    if (!body["match_cnt"] || body["match_cnt"] < 0){
                         console.log("no such register number: ", registerNumber);
                         return response.json({
                             code: "202",
@@ -115,6 +146,7 @@ module.exports = {
 
     },
 
+    // K-report 사업자등록번호 크롤링 모듈
     // 사업자 등록번호와 대표자 인증여부
     checkOwnerName : async (request, response, next) => {
         const registerNum = request.params.registerNumber;

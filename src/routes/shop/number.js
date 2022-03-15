@@ -13,6 +13,7 @@ router.get('/exist/:registerNumber', shopUtil.checkRegisterNumber, async functio
     return;
 });
 
+// K-report 사업자인증조회 크롤링 API
 router.get('/match/:registerNumber/:ownerName', shopUtil.checkOwnerName, async function(req, res, next) {
 
     console.log("register number matched");
