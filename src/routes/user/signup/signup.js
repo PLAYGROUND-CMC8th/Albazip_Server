@@ -56,13 +56,13 @@ router.get('/limit/:phone',async (req,res)=> {
                 console.log("redis set phone limit success:", await redis.get(phone));
                 return res.json({
                     code: "200",
-                    message:"휴대폰인증이 가능합니다."
+                    message:`휴대폰인증이 가능합니다: ${countLimit}회`
                 });
             }
             catch(err){
                 console.log("redis set error", err);
                 return res.json({
-                    code: "202",
+                    code: "400",
                     message:"휴대폰인증이 횟수카운트에 오류가 발생했습니다."
                 });
             }
