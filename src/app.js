@@ -8,18 +8,22 @@ var logger = require('morgan');
 var sequelize = require('./models/index').sequelize;
 sequelize.sync();
 
+
 var indexRouter = require('./routes/index');
 var app = express();
 
 var cron = require('node-cron');
 var scheduleUtil = require('./module/scheduleUtil');
 var taskUtil = require('./module/taskUtil');
+var redis = require('./module/redis');
 
-//매일 밤 00:00, 내일 업무 생성, 100일 후 스케줄 생
+//매일 밤 00:00, 내일 업무 생성, 100일 후 스케줄 생성, 휴대폰번호 인증횟수제한 초기화
 cron.schedule('0 0 0 * * *', function () {
   scheduleUtil.makeAllSchedule();
   taskUtil.makeAllTask();
+  redis.delAll();
 });
+
 
 /*cron.schedule('*!/10 * * * * *', function () {
   console.log("cron test");

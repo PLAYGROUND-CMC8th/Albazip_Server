@@ -9,11 +9,81 @@ var shopUtil = require('../../../module/shopUtil');
 var userUtil = require('../../../module/userUtil');
 var scheduleUtil = require('../../../module/scheduleUtil');
 var taskUtil = require('../../../module/taskUtil');
+var redis = require('../../../module/redis');
+
+const limit = 5;
 
 const models = require('../../../models');
 const { user, position, shop, worker } = require('../../../models');
 
 const default_path = 'https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/';
+
+router.delete('/limit/delete',async (req,res)=> {
+    try{
+        await redis.delAll();
+        console.log("redis clear success");
+        return res.json({
+            code: "200",
+            message:"휴대폰인증횟수 초기화를 완료했습니다."
+        });
+    }
+    catch(err){
+        console.log("redis clear error", err);
+        return res.json({
+            code: "400",
+            message:"휴대폰인증횟수 초기화에 오류가 발생했습니다."
+        });
+
+    }
+});
+
+router.get('/limit/:phone',async (req,res)=> {
+
+    let { phone } = req.params;
+    phone = voca.replaceAll(phone, '-', '');
+
+    try{
+        var countLimit = await redis.get(phone);
+        if(!countLimit)
+            countLimit = 0;
+        else
+            countLimit = parseInt(countLimit);
+        
+        console.log("redis get phone limit success:", countLimit);
+        if (countLimit >= 0 && countLimit < limit){
+            try{
+                await redis.set(phone, countLimit + 1);
+                console.log("redis set phone limit success:", await redis.get(phone));
+                return res.json({
+                    code: "200",
+                    message:"휴대폰인증이 가능합니다."
+                });
+            }
+            catch(err){
+                console.log("redis set error", err);
+                return res.json({
+                    code: "202",
+                    message:"휴대폰인증이 횟수카운트에 오류가 발생했습니다."
+                });
+            }
+            
+        }
+        else if (countLimit >= limit){
+            console.log("phone over the limit");
+            return res.json({
+                code: "202",
+                message:`휴대폰인증 제한횟수 ${limit}회를 모두 초과했습니다`
+            });
+        }
+    }
+    catch(err) {
+        console.log("redis server error", err);
+        return res.json({
+            code: "400",
+            message:"휴대폰인증 횟수서버에 오류가 발생했습니다."
+        });
+    }
+});
 
 // 기본가입 휴대폰 중복체크
 router.get('/:phone',async (req,res)=> {

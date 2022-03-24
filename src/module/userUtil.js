@@ -15,6 +15,11 @@ module.exports = {
             });
     },
 
+    countPhoneExistance: async (phone) => {
+
+        
+    },
+
     // 로그인 유효성 검사
     LoggedIn: (req, res, next) => {
         const token = req.headers.token;
