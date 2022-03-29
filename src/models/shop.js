@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => (
         },
         owner_name: {
             type: DataTypes.STRING(30),
-            allowNull: false
+            allowNull: true
         },
         register_number: {
             type: DataTypes.STRING(10),

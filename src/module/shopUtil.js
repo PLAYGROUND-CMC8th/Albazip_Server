@@ -42,7 +42,7 @@ module.exports = {
         registerNumber = voca.replaceAll(registerNumber, "-", "");
 
         //1. 파라미터체크
-        if(!name || !type || !address || !ownerName || !registerNumber || !startTime || !endTime || !holiday || !payday){
+        if(!name || !type || !address || !registerNumber || !startTime || !endTime || !holiday || !payday){
             console.log("not enough parameter ");
             res.json({
                 code: "202",
