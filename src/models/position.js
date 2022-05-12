@@ -33,19 +33,19 @@ module.exports = (sequelize, DataTypes) => (
         },
         work_day: {
             type: DataTypes.STRING(20),
-            allowNull: false
+            allowNull: true
         },
         start_time: {
             type: DataTypes.STRING(5),
-            allowNull: false
+            allowNull: true
         },
         end_time: {
             type: DataTypes.STRING(5),
-            allowNull: false
+            allowNull: true
         },
         work_time: {
             type: DataTypes.STRING(5),
-            allowNull: false
+            allowNull: true
         },
         break_time: {
             type: DataTypes.STRING(5),

@@ -29,11 +29,11 @@ module.exports = (sequelize, DataTypes) => (
         },
         start_time: {
             type: DataTypes.STRING(5),
-            allowNull: false
+            allowNull: true
         },
         end_time: {
             type: DataTypes.STRING(5),
-            allowNull: false
+            allowNull: true
         },
         holiday: {
             type: DataTypes.STRING(30),
