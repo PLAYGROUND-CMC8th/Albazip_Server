@@ -18,6 +18,7 @@ const { user, position, shop, worker } = require('../../../models');
 
 const default_path = 'https://albazip-bucket.s3.ap-northeast-2.amazonaws.com/default/';
 
+// 휴대폰 인증횟수 초기화
 router.delete('/limit/delete',async (req,res)=> {
     try{
         await redis.delAll();
@@ -37,6 +38,7 @@ router.delete('/limit/delete',async (req,res)=> {
     }
 });
 
+// 휴대폰 인증횟수
 router.get('/limit/:phone',async (req,res)=> {
 
     let { phone } = req.params;
@@ -226,12 +228,10 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
     const userId  = req.id;
     const userData = await user.findOne({attributes: ['first_name', 'last_name'], where: {id: userId}});
 
-    let { name, ownerName, registerNumber, holiday } = req.body;
+    let { name, ownerName, registerNumber, holiday, openSchedule } = req.body;
     const { type, address, startTime, endTime, payday } = req.body;
-    let weekday = ['월', '화', '수', '목', '금', '토', '일'];
+    //let weekday = ['월', '화', '수', '목', '금', '토', '일'];
 
-    //name = voca.replaceAll(name, " ", "");
-    ownerName = voca.replaceAll(ownerName, " ", "");
     registerNumber = voca.replaceAll(registerNumber, "-", "");
     let shopHoliday = holiday.join(",");
 
@@ -239,10 +239,7 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
         name: name,
         type: type,
         address: address,
-        owner_name: ownerName,
         register_number: registerNumber,
-        start_time: startTime,
-        end_time: endTime,
         holiday: shopHoliday,
         payday: payday
     };
@@ -253,76 +250,87 @@ router.post('/manager',  userUtil.LoggedIn ,shopUtil.beforeRegister, async (req,
             .then(async(newShop) => {
                 console.log("success create shop");
 
-               let workday = weekday.filter((day) => !holiday.includes(day));
-               for (const day of workday){
-                   let timeData = {
-                       status: 0,
-                       target_id: newShop.id,
-                       day: day,
-                       start_time: startTime,
-                       end_time: endTime
-                   };
+                //기존 영업시간
+                // let workday = weekday.filter((day) => !holiday.includes(day));
+                // for (const day of workday){
+                //     let timeData = {
+                //         status: 0,
+                //         target_id: newShop.id,
+                //         day: day,
+                //         start_time: startTime,
+                //         end_time: endTime
+                //     };
 
+                //신규 영업시간
+                for(const openTime of openSchedule){
+                    let timeData = {
+                        status: 0,
+                        target_id: newShop.id,
+                        day: openTime.day,
+                        start_time: openTime.startTime,
+                        end_time: openTime.endTime
+                    };
+                
                    // 매장 엽업일 생성
-                   await models.time.create(timeData, {transaction: t})
-                       .catch((err) => {
-                           console.log("time server error: ", err);
-                               res.json({
-                                   code: "400",
-                                   message:"매장 요일별 영업시간 등록에 오류가 발생했습니다."
-                               });
-                               return;
-                       });
-               }
+                    await models.time.create(timeData, {transaction: t})
+                        .catch((err) => {
+                            console.log("time server error: ", err);
+                                res.json({
+                                    code: "400",
+                                    message:"매장 요일별 영업시간 등록에 오류가 발생했습니다."
+                                });
+                                return;
+                        });
+                }
                 console.log("success create times");
 
                 let randomImage = Math.floor(Math.random() * 5) + 1;
 
-               let managerData = {
-                   user_id: userId,
-                   shop_id: newShop.id,
-                   shop_name: shopData.name,
-                   user_first_name: userData.first_name,
-                   user_last_name: userData.last_name,
-                   image_path: default_path+"m"+randomImage+".png"
-               };
+                let managerData = {
+                    user_id: userId,
+                    shop_id: newShop.id,
+                    shop_name: shopData.name,
+                    user_first_name: userData.first_name,
+                    user_last_name: userData.last_name,
+                    image_path: default_path+"m"+randomImage+".png"
+                };
 
-               // 매장 관리자 생성
-               return await models.manager.create(managerData, {transaction: t})
-                   .then(async (newManager) => {
-                       console.log("success create manager: ", newManager.id);
+                // 매장 관리자 생성
+                return await models.manager.create(managerData, {transaction: t})
+                    .then(async (newManager) => {
+                        console.log("success create manager: ", newManager.id);
 
-                       // 유저의 마지막 업무 저장
-                       return await models.user.update({last_job: "M"+newManager.id}, {where: {id: userId}, transaction: t})
-                           .then(async (updateUser) => {
-                               console.log("success update last position");
+                        // 유저의 마지막 업무 저장
+                        return await models.user.update({last_job: "M"+newManager.id}, {where: {id: userId}, transaction: t})
+                            .then(async (updateUser) => {
+                                console.log("success update last position");
 
-                               const token = jwt.sign({id: userId, last_job: "M"+newManager.id});
+                                const token = jwt.sign({id: userId, last_job: "M"+newManager.id});
 
-                               console.log("success manager signup");
-                               return res.json({
-                                   code: "200",
-                                   message: "성공적으로 관리자 가입이 완료되었습니다.",
-                                   data: token
-                               });
-                           })
-                           .catch((err) => {
-                               console.log("user last position update error: ", err);
-                               res.json({
-                                   code: "400",
-                                   message:"사용자 마지막 포지션 정보 업데이트에 오류가 발생했습니다."
-                               });
-                               return;
-                           });
-                   })
-                   .catch((err) => {
-                   console.log("manager server error: ", err);
-                   res.json({
-                       code: "400",
-                       message:"관리자 가입에 오류가 발생했습니다."
-                   });
-                   return;
-               });
+                                console.log("success manager signup");
+                                return res.json({
+                                    code: "200",
+                                    message: "성공적으로 관리자 가입이 완료되었습니다.",
+                                    data: token
+                                });
+                            })
+                            .catch((err) => {
+                                console.log("user last position update error: ", err);
+                                res.json({
+                                    code: "400",
+                                    message:"사용자 마지막 포지션 정보 업데이트에 오류가 발생했습니다."
+                                });
+                                return;
+                            });
+                    })
+                    .catch((err) => {
+                    console.log("manager server error: ", err);
+                    res.json({
+                        code: "400",
+                        message:"관리자 가입에 오류가 발생했습니다."
+                    });
+                    return;
+                });
             })
             .catch((err) => {
                     console.log("shop server error: ", err);

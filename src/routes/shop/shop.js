@@ -10,35 +10,56 @@ router.get('/:managerId', userUtil.LoggedIn, async (req,res)=>{
 
     const managerId = req.params.managerId;
     const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: managerId}});
-    await shop.findOne({
-        attributes: ['name', 'type', 'address', 'holiday', 'start_time', 'end_time','payday'],
-        where: {id: managerData.shop_id}})
-        .then( async(shopData) => {
-            console.log("success to get shop data");
-            let data = {
-                name: shopData.name,
-                type: shopData.type,
-                address: shopData.address,
-                holiday: shopData.dataValues.holiday.split(','),
-                startTime: shopData.start_time,
-                endTime: shopData.end_time,
-                payday: shopData.payday
-            }
-            res.json({
-                code: "200",
-                message: "매장 편집 전 정보조회에 성공했습니다.",
-                data: data
-            })
-            return;
+
+    let shopTime;
+    try{
+        shopTime = await time.findAll({
+            attributes:[['start_time', 'startTime'], ['end_time', 'endTime'], 'day' ],
+            where: {status:0, target_id: managerData.shop_id}});
+        console.log("success to get shop time data");
+    }
+    catch(err){
+        console.log("get shop time data error", err);
+        res.json({
+            code: "400",
+            message: "매장 편집 전 매장 엽업시간 조회에 오류가 발생했습니다."
         })
-        .catch((err) => {
-            console.log("get shop data error", err);
-            res.json({
-                code: "400",
-                message: "매장 편집 전 정보조회에 오류가 발생했습니다."
-            })
-            return;
-        });
+        return;
+    }
+
+    let shopData;
+    try{
+        shopData = await shop.findOne({
+            attributes: ['name', 'type', 'address', 'holiday','payday'],
+            where: {id: managerData.shop_id}});
+        console.log("success to get shop data");
+    
+    }catch(err){
+        console.log("get shop data error", err);
+        res.json({
+            code: "400",
+            message: "매장 편집 전 정보조회에 오류가 발생했습니다."
+        })
+        return;
+    }
+
+    let data = {
+        name: shopData.name,
+        type: shopData.type,
+        address: shopData.address,
+        holiday: shopData.dataValues.holiday.split(','),
+        startTime: "",
+        endTime: "",
+        payday: shopData.payday,
+        openSchedule: shopTime
+    }
+    res.json({
+            code: "200",
+            message: "매장 편집 전 정보조회에 성공했습니다.",
+            data: data
+    })
+    return;
+    
 });
 
 // 매장 변경하기
@@ -47,11 +68,12 @@ router.post('/:managerId', userUtil.LoggedIn, async (req,res)=>{
     try {
         const managerId = req.params.managerId;
         const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: managerId}});
-        const {name, type, address, holiday, startTime, endTime, payday} = req.body;
+        const {name, type, address, holiday, payday} = req.body;
+        let {openSchedule} = req.body;
         const weekday = ['월', '화', '수', '목', '금', '토', '일'];
 
         // 1. 파라미터 체크하기
-        if (!name || !type || !address || !startTime || !endTime || !payday) {
+        if (!name || !type || !address || !payday || !openSchedule) {
             console.log("not enough parameter")
             res.json({
                 code: "202",
@@ -63,10 +85,12 @@ router.post('/:managerId', userUtil.LoggedIn, async (req,res)=>{
         // 2. 매장 휴무날 변경여부 확인하기
         const before = await shop.findOne({where: {id: managerData.shop_id}});
 
-        let timeChange = false;
-        if (before.holiday.length != holiday.join(',').length || before.holiday.split(',').sort().toString() != [...holiday].sort().toString()
-            || before.start_time != startTime || before.end_time != endTime)
-            timeChange = true;
+
+        // 매장 영업시간 변경 여부 
+        let timeChange = true;
+        // if (before.holiday.length != holiday.join(',').length || before.holiday.split(',').sort().toString() != [...holiday].sort().toString()
+        //     || before.start_time != startTime || before.end_time != endTime)
+        //     timeChange = true;
 
         // 3. 매장정보 업데이트
         let shopData = {
@@ -74,8 +98,6 @@ router.post('/:managerId', userUtil.LoggedIn, async (req,res)=>{
             type: type,
             address: address,
             holiday: holiday.join(","),
-            start_time: startTime,
-            end_time: endTime,
             payday: payday
         };
 
@@ -97,14 +119,25 @@ router.post('/:managerId', userUtil.LoggedIn, async (req,res)=>{
                 await time.destroy({where: {status: 0, target_id: managerData.shop_id}});
                 console.log("success to delete times");
 
-                let workday = weekday.filter((day) => !holiday.includes(day));
-                for (const day of workday) {
+                // 기존 매장 엽업시간 변경
+                // let workday = weekday.filter((day) => !holiday.includes(day));
+                // for (const day of workday) {
+                //     let timeData = {
+                //         status: 0,
+                //         target_id: managerData.shop_id,
+                //         day: day,
+                //         start_time: startTime,
+                //         end_time: endTime
+                //     };
+
+                // 신규 매장 엽업시간 변경
+                for (const openTime of openSchedule) {
                     let timeData = {
                         status: 0,
                         target_id: managerData.shop_id,
-                        day: day,
-                        start_time: startTime,
-                        end_time: endTime
+                        day: openTime.day,
+                        start_time: openTime.startTime,
+                        end_time: openTime.endTime
                     };
                     // 매장 엽업일 생성
                     await time.create(timeData);
@@ -130,13 +163,13 @@ router.post('/:managerId', userUtil.LoggedIn, async (req,res)=>{
                 console.log("success to update manager data");
 
                 const query = `update worker
-                               set shop_name = "${name}" 
-                               where id in 
-                               (select * from (select w.id 
-			                                   from position p 
-			                                   inner join worker w
-			                                   on p.id = w.position_id
-			                                   where p.shop_id = ${managerData.shop_id})tmp)`;
+                                set shop_name = "${name}" 
+                                where id in 
+                                (select * from (select w.id 
+			                                    from position p 
+			                                    inner join worker w
+			                                    on p.id = w.position_id
+			                                    where p.shop_id = ${managerData.shop_id})tmp)`;
 
                 // worker shop_name
                 await worker.sequelize.query( query, { type: sequelize.QueryTypes.UPDATE });

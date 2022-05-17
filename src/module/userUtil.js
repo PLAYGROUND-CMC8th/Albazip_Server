@@ -182,6 +182,37 @@ module.exports = {
                 };
             }
 
+            // 5. shop의 position의 time 삭제, position의 worker last job
+            try {
+                let positionData = await position.findAll({where: {shop_id: shopId}});
+                for (let pdata of positionData) {
+                    console.log(pdata);
+                    await time.destroy({where: {status: 1, target_id: pdata.id}});
+
+                    let workerData = await worker.findOne({attributes: ['user_id'], where: {position_id: pdata.id}});
+                    if(workerData) {
+                        let userId = workerData.user_id;
+
+                        let anotherWorkerData = await worker.findAll({attributes: ['id'], where: {user_id: userId}});
+                        let anotherManagerData = await manager.findAll({attributes: ['id'], where: {user_id: userId}});
+
+                        if (anotherWorkerData.length > 0)
+                            await user.update({last_job: "W"+anotherWorkerData[0].id}, {where: {id: userId}});
+                        else if (anotherManagerData.length > 0)
+                            await user.update({last_job: "M"+anotherManagerData[0].id}, {where: {id: userId}});
+                        else
+                            await user.update({last_job: null}, {where: {id: userId}});
+                    }
+                }
+                console.log("success to delete shop postion's time data ");
+            } catch (err) {
+                console.log("delete shop postion's time data error", err);
+                return {
+                    code: "400",
+                    message: "매장 포지션 근무시간 삭제에 오류가 발생했습니다."
+                };
+            }
+
             // 3. shop 삭제
             try {
                 await shop.destroy({where: {id: shopId}});
@@ -213,36 +244,6 @@ module.exports = {
                 console.log("update shop's manager user last job error", err);
             }
 
-
-            // 5. shop의 position의 time 삭제, position의 worker last job
-            try {
-                const positionData = await position.findAll({where: {shop_id: shopId}});
-                for (const pdata of positionData) {
-                    await time.destroy({where: {status: 1, target_id: pdata.id}});
-
-                    let workerData = await worker.findOne({attributes: ['user_id'], where: {position_id: pdata.id}});
-                    if(workerData) {
-                        let userId = workerData.user_id;
-
-                        let anotherWorkerData = await worker.findAll({attributes: ['id'], where: {user_id: userId}});
-                        let anotherManagerData = await manager.findAll({attributes: ['id'], where: {user_id: userId}});
-
-                        if (anotherWorkerData.length > 0)
-                            await user.update({last_job: "W"+anotherWorkerData[0].id}, {where: {id: userId}});
-                        else if (anotherManagerData.length > 0)
-                            await user.update({last_job: "M"+anotherManagerData[0].id}, {where: {id: userId}});
-                        else
-                            await user.update({last_job: null}, {where: {id: userId}});
-                    }
-                }
-                console.log("success to delete shop postion's time data ");
-            } catch (err) {
-                console.log("delete shop postion's time data error", err);
-                return {
-                    code: "400",
-                    message: "매장 포지션 근무시간 삭제에 오류가 발생했습니다."
-                };
-            }
 
             console.log("success to delete manager data");
             return {

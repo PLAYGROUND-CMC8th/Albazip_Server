@@ -4,7 +4,7 @@ const requestPromise = require("request-promise");
 const cheerio = require("cheerio");
 const voca = require('voca');
 
-const { shop } = require('../models');
+const { shop, time } = require('../models');
 
 const headers = {
     "User-Agent": "Super Agent/0.0.1",
@@ -34,15 +34,13 @@ let option = {
 module.exports = {
     // 매장 생성 전 유효성 검사
     beforeRegister: async (req, res, next) => {
-        let {name, ownerName, registerNumber, holiday} = req.body;
-        const {type, address, startTime, endTime, payday } = req.body;
+        let {name, ownerName, registerNumber, holiday, openSchedule} = req.body;
+        const {type, address, payday } = req.body;
 
-        name = voca.replaceAll(name, " ", "");
-        ownerName = voca.replaceAll(ownerName, " ", "");
         registerNumber = voca.replaceAll(registerNumber, "-", "");
 
         //1. 파라미터체크
-        if(!name || !type || !address || !registerNumber || !startTime || !endTime || !holiday || !payday){
+        if(!name || !type || !address || !registerNumber || !holiday || !payday || !openSchedule){
             console.log("not enough parameter ");
             res.json({
                 code: "202",
@@ -55,10 +53,10 @@ module.exports = {
             await shop.count({where: { name: name }})
                 .then(count => {
                     console.log("shop name count:" + count);
-                   if(count > 0 ){
-                       console.log(name + "is already exist");
+                    if(count > 0 ){
+                        console.log(name + "is already exist");
                         throw err;
-                   }
+                    }
                 });
 
             await shop.count({where: { register_number : registerNumber }})
@@ -116,7 +114,8 @@ module.exports = {
             }
         }
 
-        // 
+        // 신) 사업자 인증번호 인증 로직
+        // 사업자 등록번호 존재여부
         try {
             option.body.b_no = [registerNumber];
             console.log(option);
@@ -146,6 +145,7 @@ module.exports = {
 
     },
 
+    // 구) 사업자 인증번호 인증 로직
     // K-report 사업자등록번호 크롤링 모듈
     // 사업자 등록번호와 대표자 인증여부
     checkOwnerName : async (request, response, next) => {
@@ -203,6 +203,31 @@ module.exports = {
             });
         }
     },
+
+    // 매장 영업시간 리스트 
+    getShopTime: async (shopId) => {
+
+        try {
+            const timeData = await time.findAll({
+                attributes:[['start_time', 'startTime'], ['end_time', 'endTime'], 'day' ],
+                where: {status:0, target_id: shopId}});
+
+            console.log("success to get shop time data");
+
+            return {
+                code: "200",
+                message: "매장 영업시간 조회를 성공했습니다.",
+                data: timeData
+            };
+        }
+        catch(err) {
+            console.log("get shop time data error", err);
+            return {
+                code: "400",
+                message: "매장 영업시간 조회에 오류가 발생했습니다."
+            };
+        }
+    }
 
     // 매장 삭제
 };
