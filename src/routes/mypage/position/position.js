@@ -20,7 +20,7 @@ router.get('/',userUtil.LoggedIn, async (req,res)=> {
         workerData = null;
     }
 
-    const positionResult = await positionUtil.getPositionInfo(workerData.position_id);
+    const positionResult = await positionUtil.getPositionInfo(workerData.position_id); 
     return res.json(positionResult);
 });
 

@@ -4,7 +4,7 @@ var voca = require('voca');
 
 var workerUtil = require('../module/workerUtil');
 
-const { position, task, user, manager, worker, schedule } = require('../models');
+const { position, task, user, manager, worker, schedule, time } = require('../models');
 
 module.exports = {
 
@@ -212,8 +212,25 @@ module.exports = {
     // 근무자: 마이페이지 > 하단 > 포지션 정보
     getPositionInfo: async (positionId) => {
 
+        let positionTime;
         try {
-            const positionData = await position.findOne({
+            positionTime = await time.findAll({
+                attributes:[['start_time', 'startTime'], ['end_time', 'endTime'], 'day' ],
+                where: {status:1, target_id: positionId}});
+
+            console.log("success to get position time data",positionTime);
+        }
+        catch(err) {
+            console.log("get position time data error", err);
+            return {
+                code: "400",
+                message: "근무자 포지션 근무시간 조회에 오류가 발생했습니다."
+            };
+        }
+
+        let positionData;
+        try {
+            positionData = await position.findOne({
                 attributes:[['start_time', 'startTime'], ['end_time', 'endTime'],
                             ['work_time', 'workTime'], ['break_time', 'breakTime'],
                             ['work_day', 'workDay'],
@@ -221,12 +238,12 @@ module.exports = {
                 where: {id: positionId}});
 
             console.log("success to get position data");
-            positionData.dataValues.workDay = voca.replaceAll(positionData.dataValues.workDay, ',', ' ');
+            positionData.dataValues.workSchedule = positionTime;
 
             return {
                 code: "200",
                 message: "근무자 포지션 조회를 성공했습니다.",
-                data: positionData
+                data: positionData.dataValues
             };
         }
         catch(err) {
@@ -234,6 +251,31 @@ module.exports = {
             return {
                 code: "400",
                 message: "근무자 포지션 조회에 오류가 발생했습니다."
+            };
+        }
+    },
+
+    // 포지션 근무시간 리스트 
+    getPositionTime: async (positionId) => {
+
+        try {
+            const timeData = await time.findAll({
+                attributes:[['start_time', 'startTime'], ['end_time', 'endTime'], 'day' ],
+                where: {status:1, target_id: positionId}});
+
+            console.log("success to get position time data");
+
+            return {
+                code: "200",
+                message: "근무자 포지션 근무시간 조회를 성공했습니다.",
+                data: timeData
+            };
+        }
+        catch(err) {
+            console.log("get position time data error", err);
+            return {
+                code: "400",
+                message: "근무자 포지션 근무시간 조회에 오류가 발생했습니다."
             };
         }
     }

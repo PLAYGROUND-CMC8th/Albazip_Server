@@ -14,11 +14,6 @@ var taskUtil = require('../../module/taskUtil');
 const { user, position, task, time, schedule, worker, manager } = require('../../models');
 const models = require('../../models');
 
-/*const now = new Date();
-const yearNow = now.getFullYear();
-const monthNow = now.getMonth()+1;
-const dateNow = now.getDate();*/
-
 //포지션 추가하기
 router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
@@ -36,16 +31,15 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
             return;
         }
         const managerData = await manager.findOne({where: {id: req.job.substring(1)}});
-        const {rank, title, startTime, endTime, breakTime} = req.body;
-        let {salary, salaryType, workDays, taskLists} = req.body;
-
+        const {rank, title, breakTime} = req.body;
+        let {salary, salaryType, taskLists, workSchedule} = req.body;
 
         let salary_type = {"시급": 0, "주급": 1, "월급": 2};
         salary = voca.replaceAll(salary, ',', '');
         salary = voca.replaceAll(salary, ' ', '');
 
         //1. 파라미터체크
-        if (!userId || !rank || !title || !startTime || !endTime || !breakTime || !workDays || !salary || !salaryType) {
+        if (!userId || !rank || !title || !breakTime || !salary || !salaryType || !workSchedule) {
             console.log("not enough parameter");
             res.json({
                 code: "202",
@@ -56,8 +50,8 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
 
         let code = await positionUtil.makeRandomCode();
         salaryType = salary_type[salaryType];
-        let workDay = workDays.join(',');
-        let breakTimes = breakTime == "없음" ? "0000" : (breakTime == "30분"? "0030" : "0100");
+
+        //let breakTimes = breakTime == "없음" ? "0000" : (breakTime == "30분"? "0030" : "0100");
 
         let positionData = {
             shop_id: managerData.shop_id,
@@ -66,10 +60,6 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
             rank: rank,
             salary: salary,
             salary_type: salaryType,
-            work_day: workDay,
-            start_time: startTime,
-            end_time: endTime,
-            work_time: timeUtil.subtract(breakTimes, timeUtil.subtract(startTime, endTime)),
             break_time: breakTime
         };
 
@@ -78,17 +68,29 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
             return models.position.create(positionData, {transaction: t})
                 .then(async (newPosition) => {
 
+                    //기존 근무자 근무시간
                     //3. 포지션 요일별 시간 생성
-                    for (const day of workDays) {
-                        if (day.length > 1)
-                            continue;
+                    // for (const day of workDays) {
+                    //     if (day.length > 1)
+                    //         continue;
+
+                    //     let timeData = {
+                    //         status: 1,
+                    //         target_id: newPosition.id,
+                    //         day: day,
+                    //         start_time: startTime,
+                    //         end_time: endTime
+                    //     };
+
+                    //신규 근무자 근무시간
+                    for (const workTime of workSchedule) {
 
                         let timeData = {
                             status: 1,
                             target_id: newPosition.id,
-                            day: day,
-                            start_time: startTime,
-                            end_time: endTime
+                            day: workTime.day,
+                            start_time: workTime.startTime,
+                            end_time: workTime.endTime
                         };
 
                         await models.time.create(timeData, {transaction: t})
@@ -137,7 +139,6 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
                         }
                         ;
                     }
-
                 })
                 .then(() => {
                     console.log("success create position");
@@ -166,7 +167,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
     }
 });
 
-// 포지션 변경 전 조회하기
+// 포지션 변경 전 조회하기 
 router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
 
 
@@ -196,15 +197,18 @@ router.get('/:positionId',userUtil.LoggedIn, async (req,res)=> {
         taskResult.push(task);
     }
 
+    const positionTimeResult = await positionUtil.getPositionTime(req.params.positionId);
+
     let positionResult = {
         rank: positionProfileResult.data.rank,
         title: positionProfileResult.data.title,
-        workDay: positionInfoResult.data.dataValues.workDay.split(' '),
-        startTime: positionInfoResult.data.dataValues.startTime,
-        endTime: positionInfoResult.data.dataValues.endTime,
-        breakTime: positionInfoResult.data.dataValues.breakTime,
-        salaryType: positionInfoResult.data.dataValues.salaryType,
-        salary: positionInfoResult.data.dataValues.salary,
+        workDay: "",
+        startTime: "",
+        endTime: "",
+        workSchedule: positionInfoResult.data.workSchedule,
+        breakTime: positionInfoResult.data.breakTime,
+        salaryType: positionInfoResult.data.salaryType,
+        salary: positionInfoResult.data.salary,
         taskList: taskResult
     };
 
@@ -244,20 +248,18 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
         const before = {
             rank: positionProfileResult.data.rank,
             title: positionProfileResult.data.title,
-            workDay: positionInfoResult.data.dataValues.workDay.split(' '),
-            startTime: positionInfoResult.data.dataValues.startTime,
-            endTime: positionInfoResult.data.dataValues.endTime,
-            breakTime: positionInfoResult.data.dataValues.breakTime,
-            salaryType: positionInfoResult.data.dataValues.salaryType,
-            salary: positionInfoResult.data.dataValues.salary,
+            breakTime: positionInfoResult.data.breakTime,
+            salaryType: positionInfoResult.data.salaryType,
+            salary: positionInfoResult.data.salary,
             taskList: taskResult
         };
 
         // 2. 변경 후 데이터
-        const {rank, title, workDay, startTime, endTime, breakTime, salaryType, salary, taskList} = req.body;
+        const {rank, title, breakTime, salaryType, salary, taskList} = req.body;
+        let {workSchedule} = req.body;
 
         // 3. 파라미터 값 확인
-        if (!rank || !title || !workDay || !startTime || !endTime || !breakTime || (salaryType < 0 || salaryType > 2) || !salary) {
+        if (!rank || !title || !breakTime || (salaryType < 0 || salaryType > 2) || !salary || !workSchedule) {
             res.json({
                 code: "202",
                 message: "필수 정보가 부족합니다."
@@ -266,21 +268,17 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
         }
 
         // 4. 근무요일, 근무시간 변경여부 확인하기
-        let timeChange = false;
-        if (before.workDay.length != workDay.length || before.workDay.sort().toString() != [...workDay].sort().toString() || before.startTime != startTime || before.endTime != endTime)
-            timeChange = true;
+        let timeChange = true;
+        // if (before.workDay.length != workDay.length || before.workDay.sort().toString() != [...workDay].sort().toString() || before.startTime != startTime || before.endTime != endTime)
+        //     timeChange = true;
 
         // 5. 포지션 업데이트 시작
-        let breakTimes = breakTime == "없음" ? "0000" : (breakTime == "30분" ? "0030" : "0100");
+        //let breakTimes = breakTime == "없음" ? "0000" : (breakTime == "30분" ? "0030" : "0100");
         let positionData = {
             title: title,
             rank: rank,
             salary: salary,
             salary_type: salaryType,
-            work_day: workDay.join(','),
-            start_time: startTime,
-            end_time: endTime,
-            work_time: timeUtil.subtract(breakTimes, timeUtil.subtract(startTime, endTime)),
             break_time: breakTime
         };
 
@@ -310,16 +308,28 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
                 return;
             }
 
-            for (const day of workDay) {
-                if (day.length > 1)
-                    continue;
+            // 기존 포지션 근무시간 변경
+            // for (const day of workDay) {
+            //     if (day.length > 1)
+            //         continue;
+
+            //     let timeData = {
+            //         status: 1,
+            //         target_id: positionId,
+            //         day: day,
+            //         start_time: startTime,
+            //         end_time: endTime
+            //     };
+
+            // 신규 포지션 근무시간 변경
+            for (const workTime of workSchedule) {
 
                 let timeData = {
                     status: 1,
                     target_id: positionId,
-                    day: day,
-                    start_time: startTime,
-                    end_time: endTime
+                    day: workTime.day,
+                    start_time: workTime.startTime,
+                    end_time: workTime.endTime
                 };
 
                 try {
