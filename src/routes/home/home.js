@@ -12,7 +12,7 @@ var pushAlarm = require('../../module/pushAlarm');
 var scheduleUtil = require('../../module/scheduleUtil');
 var taskUtil = require('../../module/taskUtil');
 
-const { manager, worker, shop, position, board, schedule, comment } = require('../../models');
+const { manager, worker, shop, position, board, schedule, comment, time } = require('../../models');
 
 // 오늘의 날짜
 /*const now = new Date();
@@ -28,10 +28,6 @@ const weekdays = [ '일', '월', '화', '수', '목', '금', '토'];
 router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
 
     try {
-        let totalData = {};
-
-        const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
-        const shopData = await shop.findOne({where: {id: managerData.shop_id}});
 
         // 오늘의 날짜
         const now = new Date();
@@ -41,6 +37,12 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         const dayNow = now.getDay();
         const hourNow = String(now.getHours()).padStart(2, '0');
         const minNow = String(now.getMinutes()).padStart(2, '0');
+
+        let totalData = {};
+
+        const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
+        const shopData = await shop.findOne({where: {id: managerData.shop_id}});
+        const timeData = await time.findOne({attributes: ['start_time', 'end_time'], where: {status: 0, target_id: managerData.shop_id, day: weekdays[dayNow]}});
 
         const todayInfo = {
             month: monthNow,
@@ -53,8 +55,8 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         const shopInfo = {
             status: 0, // 0 : 영업 전, 1: 영업 중, 2: 영업 후, 3: 휴무
             name: shopData.name,
-            startTime: shopData.start_time,
-            endTime: shopData.end_time
+            startTime: timeData.start_time,
+            endTime: timeData.end_time
         };
         totalData.shopInfo = shopInfo;
 
@@ -74,12 +76,12 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         if(publicHolidays.includes(monthNow+"/"+dateNow) || shopData.holiday.includes(weekdays[dayNow]))
             shopInfo.status = 3;
 
-        if((parseInt(hourNow) > parseInt(shopData.start_time.substring(0,2)))
-            || (hourNow == shopData.start_time.substring(0,2) && parseInt(minNow) >= parseInt(shopData.start_time.substring(2,4))))
+        if((parseInt(hourNow) > parseInt(timeData.start_time.substring(0,2)))
+            || (hourNow == timeData.start_time.substring(0,2) && parseInt(minNow) >= parseInt(timeData.start_time.substring(2,4))))
             shopInfo.status = 1;
 
-        if((parseInt(hourNow) > parseInt(shopData.end_time.substring(0,2)))
-            || (hourNow == shopData.end_time.substring(0,2) && parseInt(minNow) > parseInt(shopData.end_time.substring(2,4))))
+        if((parseInt(hourNow) > parseInt(timeData.end_time.substring(0,2)))
+            || (hourNow == timeData.end_time.substring(0,2) && parseInt(minNow) > parseInt(timeData.end_time.substring(2,4))))
             shopInfo.status = 2;
 
 
