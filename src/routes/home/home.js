@@ -354,7 +354,7 @@ router.put('/clock/:shopId', userUtil.LoggedIn, async (req,res)=>{
         console.log("clock update error", err);
         res.json({
             code: "400",
-            message: "출근 및 퇴근하기에 오류가 발생했습니다."
+            message: "출근하기 및 퇴근하기에 오류가 발생했습니다."
         })
         return;
     }

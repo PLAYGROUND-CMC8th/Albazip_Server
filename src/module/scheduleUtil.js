@@ -217,8 +217,13 @@ module.exports ={
                     year: yearNow, month: monthNow, day: dateNow
                 }
             });
-
-            console.log(scheduleData.real_start_time);
+            if(!scheduleData){
+                console.log("no schedule data");
+                return {
+                code: "202",
+                message: "근무일이 아닙니다."
+                }
+            }
 
             if (!scheduleData.real_start_time) {
                 await schedule.update({real_start_time: hourNow + minNow}, {where: {id: scheduleData.id}});
