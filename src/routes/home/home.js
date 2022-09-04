@@ -319,12 +319,45 @@ router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
 });
 
 // 근무자: 출근하기
-router.put('/clock', userUtil.LoggedIn, async (req,res)=>{
+router.put('/clock/:shopId', userUtil.LoggedIn, async (req,res)=>{
 
     const workerId = req.job.substring(1);
-    const updateClockResult = await scheduleUtil.updateClock(workerId);
-    return res.json(updateClockResult);
 
+    try{
+        if(!req.params.shopId){
+            console.log("no shop id");
+            res.json({
+                code: "202",
+                message: "큐알코드에 정보가 누락되었습니다."
+            })
+            return;
+        }
+        
+        let positionId = await worker.findOne({attributes: ['id'], where: {id: workerId}});
+        let positionIds = await position.findAll({attributes: ['id'], where: {shop_id: req.params.shopId}, raw: true});
+        positionId = positionId['id'];
+        positionIds = positionIds.map(e => e['id']);
+
+        if(!(positionId in positionIds)){
+            console.log("no worker match with shop position");
+            res.json({
+                code: "202",
+                message: "큐알코드 정보가 올바르지 않습니다."
+            })
+            return;
+        }
+
+        const updateClockResult = await scheduleUtil.updateClock(workerId);
+        return res.json(updateClockResult);
+    }
+    catch(err){
+        console.log("clock update error", err);
+        res.json({
+            code: "400",
+            message: "출근 및 퇴근하기에 오류가 발생했습니다."
+        })
+        return;
+    }
 });
 
 // 관리자: QR코드
@@ -332,7 +365,7 @@ router.get('/qrcode', userUtil.LoggedIn, async (req,res)=>{
 
     try {
         const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
-        const data = "success";//managerData.shop_id.toString();
+        const data = managerData.shop_id.toString();
         const url = await qrcode.toDataURL(data, function (err, url) {
             //res.send(url);
             const qrdata = url.replace(/.*,/, '');
