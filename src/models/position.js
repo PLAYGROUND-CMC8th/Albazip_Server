@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => (
         },
         rank: {
             type: DataTypes.STRING(10),
-            allowNull: false
+            allowNull: true
         },
         salary: {
             type: DataTypes.STRING(10),
