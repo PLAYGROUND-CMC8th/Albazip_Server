@@ -39,7 +39,7 @@ router.post('/',userUtil.LoggedIn, async (req,res)=> {
         salary = voca.replaceAll(salary, ' ', '');
 
         //1. 파라미터체크
-        if (!userId || !rank || !title || !breakTime || !salary || !salaryType || !workSchedule) {
+        if (!userId || !title || !breakTime || !salary || !salaryType || !workSchedule) {
             console.log("not enough parameter");
             res.json({
                 code: "202",
@@ -259,7 +259,7 @@ router.post('/:positionId',userUtil.LoggedIn, async (req,res)=> {
         let {workSchedule} = req.body;
 
         // 3. 파라미터 값 확인
-        if (!rank || !title || !breakTime || (salaryType < 0 || salaryType > 2) || !salary || !workSchedule) {
+        if ( !title || !breakTime || (salaryType < 0 || salaryType > 2) || !salary || !workSchedule) {
             res.json({
                 code: "202",
                 message: "필수 정보가 부족합니다."
