@@ -622,10 +622,9 @@ module.exports ={
                                       where status = 1
                                       and shop_id = ${shopId}
                                       and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
-
         try {
             const todayCoTask = await task.sequelize.query(todayCoTaskQuery, {type: sequelize.QueryTypes.SELECT});
-
+            //console.log(todayCoTask)
             let completCoTask = [];
             let nonCompleteCoTask = [];
 
@@ -684,7 +683,8 @@ module.exports ={
                             taskContent: tct.content,
                             writerTitle: writerTitle,
                             writerName: writerName,
-                            registerDate: tct.register_date
+                            registerDate: tct.register_date,
+                            isUpdated: tct.register_date == tct.update_date ? 0 : 1
                         }
                         nonCompleteCoTask.push(nct);
                     }

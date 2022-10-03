@@ -237,6 +237,67 @@ router.post('/coTask', userUtil.LoggedIn, async (req,res)=> {
 
 });
 
+// 공동업무 수정하기
+router.put('/coTask/:taskId', userUtil.LoggedIn, async (req,res)=> {
+
+    try {
+        const taskId = req.params.taskId;
+        const { taskTitle, taskContent } = req.body;
+        
+        let taskData = await task.findOne({where: {id: taskId}});
+        
+        // 완료여부 확인
+        if(taskData.completer_job) {
+            res.json({
+                code: "202",
+                message: "완료되지 않은 업무만 수정할 수 있습니다."
+            });
+            return;
+        }
+
+        // 작성자 확인
+        if(req.job != taskData.writer_job) {
+            res.json({
+                code: "202",
+                message: "업무의 작성자만 업무를 수정할 수 있습니다."
+            });
+            return;
+        }
+
+        // 필수값 확인
+        if (!taskTitle) {
+            console.lot("not enough parameter");
+            res.json({
+                code: "202",
+                message: "업무명을 입력해주세요."
+            });
+            return;
+        }
+
+        let taskNewData = {
+            title: taskTitle,
+            content: taskContent
+        };
+        await task.update(taskNewData, {where: {id: taskId}});
+
+        console.log("success to modify cooperate task");
+        res.json({
+            code: "200",
+            message: "공동업무 수정에 성공했습니다."
+        });
+        return;
+    }
+    catch(err) {
+        console.log("modify cooperate task error", err);
+        res.json({
+            code: "400",
+            message: "공동업무 수정에 오류가 발생했습니다."
+        });
+        return;
+    }
+
+});
+
 // 개인업무 추가하기
 
 
