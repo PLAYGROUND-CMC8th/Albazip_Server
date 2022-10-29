@@ -684,6 +684,7 @@ module.exports ={
                             writerTitle: writerTitle,
                             writerName: writerName,
                             registerDate: tct.register_date,
+                            updateDate: tct.update_date,
                             isUpdated: tct.register_date == tct.update_date ? 0 : 1
                         }
                         nonCompleteCoTask.push(nct);
