@@ -84,6 +84,8 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
             || (hourNow == timeData.end_time.substring(0,2) && parseInt(minNow) > parseInt(timeData.end_time.substring(2,4))))
             shopInfo.status = 2;
 
+        if(timeData.start_time && timeData.end_time && timeData.start_time == timeData.end_time)
+            shopInfo.status = 1;
 
         if(shopInfo.status != 3) {
 
