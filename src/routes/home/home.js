@@ -42,7 +42,8 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
 
         const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
         const shopData = await shop.findOne({where: {id: managerData.shop_id}});
-        const timeData = await time.findOne({attributes: ['start_time', 'end_time'], where: {status: 0, target_id: managerData.shop_id, day: weekdays[dayNow]}});
+        
+        let timeData = await time.findOne({attributes: ['start_time', 'end_time'], where: {status: 0, target_id: managerData.shop_id, day: weekdays[dayNow]}});
        
         // 쉬는 요일일 경우
         if(!timeData){
