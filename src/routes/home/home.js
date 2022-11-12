@@ -55,8 +55,8 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         const shopInfo = {
             status: 0, // 0 : 영업 전, 1: 영업 중, 2: 영업 후, 3: 휴무
             name: shopData.name,
-            startTime: timeData.start_time,
-            endTime: timeData.end_time
+            startTime: timeData ? timeData.start_time : null,
+            endTime: timeData ? timeData.end_time : null
         };
         totalData.shopInfo = shopInfo;
 
