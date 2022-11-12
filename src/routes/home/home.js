@@ -43,6 +43,12 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
         const shopData = await shop.findOne({where: {id: managerData.shop_id}});
         const timeData = await time.findOne({attributes: ['start_time', 'end_time'], where: {status: 0, target_id: managerData.shop_id, day: weekdays[dayNow]}});
+       
+        // 쉬는 요일일 경우
+        if(!timeData){
+            timeData.start_time = "0000"
+            timeData.end_time = "0000"
+        }
 
         const todayInfo = {
             month: monthNow,
@@ -55,8 +61,8 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         const shopInfo = {
             status: 0, // 0 : 영업 전, 1: 영업 중, 2: 영업 후, 3: 휴무
             name: shopData.name,
-            startTime: timeData ? timeData.start_time : null,
-            endTime: timeData ? timeData.end_time : null
+            startTime: timeData.start_time,
+            endTime: timeData.end_time
         };
         totalData.shopInfo = shopInfo;
 
