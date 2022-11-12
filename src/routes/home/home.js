@@ -69,6 +69,17 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
         };
         totalData.shopInfo = shopInfo;
 
+        if((parseInt(hourNow) > parseInt(timeData.start_time.substring(0,2)))
+            || (hourNow == timeData.start_time.substring(0,2) && parseInt(minNow) >= parseInt(timeData.start_time.substring(2,4))))
+            shopInfo.status = 1;
+
+        if((parseInt(hourNow) > parseInt(timeData.end_time.substring(0,2)))
+            || (hourNow == timeData.end_time.substring(0,2) && parseInt(minNow) > parseInt(timeData.end_time.substring(2,4))))
+            shopInfo.status = 2;
+
+        if(timeData.start_time && timeData.end_time && timeData.start_time == timeData.end_time)
+            shopInfo.status = 1;
+
         // 공휴일 유무에 따라 shopInfo의 status 결정
         holidays.serviceKey = publicHolidayApiKey.encoding;
         holidays.serviceKey = publicHolidayApiKey.encoding;
@@ -84,17 +95,6 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
 
         if(publicHolidays.includes(monthNow+"/"+dateNow) || shopData.holiday.includes(weekdays[dayNow]))
             shopInfo.status = 3;
-
-        if((parseInt(hourNow) > parseInt(timeData.start_time.substring(0,2)))
-            || (hourNow == timeData.start_time.substring(0,2) && parseInt(minNow) >= parseInt(timeData.start_time.substring(2,4))))
-            shopInfo.status = 1;
-
-        if((parseInt(hourNow) > parseInt(timeData.end_time.substring(0,2)))
-            || (hourNow == timeData.end_time.substring(0,2) && parseInt(minNow) > parseInt(timeData.end_time.substring(2,4))))
-            shopInfo.status = 2;
-
-        if(timeData.start_time && timeData.end_time && timeData.start_time == timeData.end_time)
-            shopInfo.status = 1;
 
         if(shopInfo.status != 3) {
 
