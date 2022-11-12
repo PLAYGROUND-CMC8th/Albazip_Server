@@ -47,8 +47,10 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
        
         // 쉬는 요일일 경우
         if(!timeData){
-            timeData.start_time = "0000"
-            timeData.end_time = "0000"
+            timeData = {
+                start_time: "0000",
+                end_time: "0000"
+            }
         }
 
         const todayInfo = {
