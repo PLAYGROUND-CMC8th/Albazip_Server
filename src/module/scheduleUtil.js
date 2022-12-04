@@ -1,6 +1,9 @@
 const publicHolidayApiKey = require('../config/publicHolidayApiKey');
 const holidays = require('holidays-kr');
 
+const sequelize = require('sequelize');
+const Op = sequelize.Op;
+
 const { schedule, time, position, task, shop, worker } = require("../models");
 
 const duration = 100;
@@ -201,8 +204,9 @@ module.exports ={
 
     },
 
-    updateClock: async (workerId) => {
-
+    updateClock: async (workerId, shopId) => {
+       
+        // 오늘의 날짜
         const now = new Date();
         const yearNow = now.getFullYear();
         const monthNow = now.getMonth()+1;
@@ -210,36 +214,77 @@ module.exports ={
         const hourNow = String(now.getHours()).padStart(2, '0');
         const minNow = String(now.getMinutes()).padStart(2, '0');
 
-        try {
-            const scheduleData = await schedule.findOne({
-                where: {
-                    worker_id: workerId,
-                    year: yearNow, month: monthNow, day: dateNow
+        // 전날 날짜
+        const yesterday = new Date(now.getTime() - (24*60*60*1000));
+        const yearYesterday = yesterday.getFullYear();
+        const monthYesterday = yesterday.getMonth()+1;
+        const dateYesterday = yesterday.getDate();
+
+        const scheduleDataYesterday = await schedule.findOne({
+            attributes: ['id', 'start_time', 'end_time', 'real_start_time', 'real_end_time'],
+            where: {shop_id: shopId, worker_id: workerId, year: yearYesterday, month: monthYesterday, day: dateYesterday,
+                    end_time: { [Op.lte] : sequelize.col('start_time') } 
                 }
             });
-            if(!scheduleData){
-                console.log("no schedule data");
+        const scheduleDataToday = await schedule.findOne({
+            attributes: ['id', 'start_time', 'end_time', 'real_start_time', 'real_end_time'],
+            where: {shop_id: shopId, worker_id: workerId, year: yearNow, month: monthNow, day: dateNow}   
+            });
+        
+        
+        let whichSchedule = -1;
+        if(scheduleDataYesterday && !scheduleDataYesterday.real_end_time){
+            //(30분 고려)
+            let thirtyMinLaterYesterdaySchedule = new Date(yearYesterday, monthYesterday-1, dateYesterday, scheduleDataYesterday.end_time.substring(0,2), scheduleDataYesterday.end_time.substring(2,4));  
+            // 00시 이후 근무의 경우
+            if(parseInt(scheduleDataYesterday.start_time) > parseInt(scheduleDataYesterday.end_time))
+                thirtyMinLaterYesterdaySchedule.setTime(thirtyMinLaterYesterdaySchedule.getTime() + (24*60*60*1000))
+            // 30분 이후 적용
+            thirtyMinLaterYesterdaySchedule.setTime(thirtyMinLaterYesterdaySchedule.getTime() + (30*60*1000))
+
+            if(now < thirtyMinLaterYesterdaySchedule)
+                whichSchedule = 0;
+        }
+        
+        if(scheduleDataToday && whichSchedule == -1)
+            whichSchedule = 1;
+
+        if(whichSchedule == -1){
+            console.log("no schedule data");
                 return {
                 code: "202",
                 message: "근무일이 아닙니다."
                 }
-            }
+        }
 
-            if (!scheduleData.real_start_time) {
-                await schedule.update({real_start_time: hourNow + minNow}, {where: {id: scheduleData.id}});
-                console.log("success to clock in");
-                return {
-                    code: "200",
-                    message: "근무자 출근하기를 성공했습니다."
-                }
-            } else {
-                await schedule.update({real_end_time: hourNow + minNow}, {where: {id: scheduleData.id}});
+        try {
+
+            if(whichSchedule == 0){
+                await schedule.update({real_end_time: hourNow + minNow}, {where: {id: scheduleDataYesterday.id}});
                 console.log("success to clock out");
                 return {
                     code: "200",
                     message: "근무자 퇴근하기를 성공했습니다."
                 }
             }
+            else if(whichSchedule == 1 ){
+            
+                if (!scheduleDataToday.real_start_time) {
+                    await schedule.update({real_start_time: hourNow + minNow}, {where: {id: scheduleDataToday.id}});
+                    console.log("success to clock in");
+                    return {
+                        code: "200",
+                        message: "근무자 출근하기를 성공했습니다."
+                    }
+                } else {
+                    await schedule.update({real_end_time: hourNow + minNow}, {where: {id: scheduleDataToday.id}});
+                    console.log("success to clock out");
+                    return {
+                        code: "200",
+                        message: "근무자 퇴근하기를 성공했습니다."
+                    }
+                }
+            }   
         }
         catch(err){
             console.log("clock update error", err);
