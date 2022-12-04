@@ -16,7 +16,7 @@ module.exports ={
         const dateNow = now.getDate();
 
         await schedule.findAll({
-            attributes: ['worker_id'],
+            attributes: ['worker_id', 'start_time', 'end_time'],
             where: {
                 year: yearNow,
                 month: monthNow,
@@ -29,10 +29,15 @@ module.exports ={
                     let workerData = await worker.findOne({where: {id: sdata.worker_id}});
                     let taskData = await task.findAll({where: {status: 0, target_id: workerData.position_id}});
 
+                    let dueDate = new Date(yearNow, monthNow-1, dateNow, sdata.end_time.substring(0,2), sdata.end_time.substring(2,4));
+                    if(parseInt(sdata.start_time) > parseInt(sdata.end_time))
+                        dueDate.setTime(dueDate.getTime() + (24*60*60*1000));
+
                     for (let tdata of taskData) {
                         tdata.dataValues.id = null;
                         tdata.dataValues.status = 2;
                         tdata.dataValues.target_id = workerData.id;
+                        tdata.dataValues.due_date = dueDate;
                         tdata.dataValues.register_date = null;
                         task.create(tdata.dataValues);
                     }
@@ -64,10 +69,15 @@ module.exports ={
                 let workerData = await worker.findOne({where: {id: workerId}});
                 let taskData = await task.findAll({where: {status: 0, target_id: workerData.position_id}});
 
+                let dueDate = new Date(yearNow, monthNow-1, dateNow, sdata.end_time.substring(0,2), sdata.end_time.substring(2,4));
+                if(parseInt(sdata.start_time) > parseInt(sdata.end_time))
+                    dueDate.setTime(dueDate.getTime() + (24*60*60*1000));
+
                 for (let tdata of taskData) {
                     tdata.dataValues.id = null;
                     tdata.dataValues.status = 2;
                     tdata.dataValues.target_id = workerData.id;
+                    tdata.dataValues.due_date = dueDate;
                     tdata.dataValues.register_date = null;
                     task.create(tdata.dataValues);
                 }
@@ -440,7 +450,7 @@ module.exports ={
                                      where (1 = 1)
                                      and status = 2
                                      and shop_id = ${shopId}
-                                     and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+                                     and date_format(due_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
                 const taskTotalCount = await task.sequelize.query(taskTotalCountQuery, {type: sequelize.QueryTypes.SELECT});
 
                 const taskCompleteCountQuery = `select *
@@ -449,7 +459,7 @@ module.exports ={
                                         and status = 2
                                         and shop_id = ${shopId}
                                         and completer_job is not null
-                                        and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+                                        and date_format(due_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
 
                 const taskCompleteCount = await task.sequelize.query(taskCompleteCountQuery, {type: sequelize.QueryTypes.SELECT});
 
@@ -463,7 +473,7 @@ module.exports ={
                                             and target_id = ${workerId}
                                             and status = 2
                                             and shop_id = ${shopId}
-                                            and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+                                            and date_format(due_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
                 const perTaskTotalCount = await task.sequelize.query(perTaskTotalCountQeury, {type: sequelize.QueryTypes.SELECT});
 
                 const perTaskCompleteQeury = `select *
@@ -473,7 +483,7 @@ module.exports ={
                                             and status = 2
                                             and shop_id = ${shopId}
                                             and completer_job is not null
-                                            and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+                                            and date_format(due_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
                 const perTaskCompleteCount = await task.sequelize.query(perTaskCompleteQeury, {type: sequelize.QueryTypes.SELECT});
 
                 console.log("success to get today personal task");
@@ -508,7 +518,7 @@ module.exports ={
                             count(t.completer_job) as completeCount, count(t.id) as totalCount
                             from schedule s
                             inner join worker w on s.worker_id = w.id
-                            inner join task t on w.id = t.target_id and date_format(t.register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')
+                            inner join task t on w.id = t.target_id and date_format(t.due_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')
                             where s.shop_id = ${shopId}
                             and s.year+0 = year(now()) and s.month+0 = month(now()) and s.day+0 = day(now())
                             and t.status = 2
@@ -542,7 +552,7 @@ module.exports ={
                                    from task
                                    where status = 2
                                    and target_id = ${workerId}
-                                   and date_format(register_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
+                                   and date_format(due_date,'%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')`;
 
         try {
             const todayPerTask = await task.sequelize.query(todayPerTaskQuery, {type: sequelize.QueryTypes.SELECT});
