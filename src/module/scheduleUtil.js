@@ -110,14 +110,14 @@ module.exports ={
                     .then(async (timeData) => {
                         for (const data of timeData) {
 
-                            let workerData = await worker.findOne({
-                                attributes: ['position_id'],
-                                where: {id: data.target_id}
-                            });
+                            // let workerData = await worker.findOne({
+                            //     attributes: ['position_id'],
+                            //     where: {id: data.target_id}
+                            // });
 
                             let positionData = await position.findOne({
                                 attributes: ['shop_id'],
-                                where: {id: workerData.position_id}
+                                where: {id: data.position_id}
                             });
 
 
