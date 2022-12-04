@@ -73,21 +73,27 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
              month: monthYesterday, // 수집 시작 월
              monthCount: 1            // 수집 월 갯수
          });
+        //let holidayResult = [];
 
         let publicHolidays = [];
          for(const holiday of holidayResult)
              publicHolidays.push(holiday.month + "/" +holiday.day)
+        
+        let shopHolidays = shopData.holiday.split(',');
 
         let openingDays = [0,0]; 
         let todayStart, todayEnd, yesterdayEnd;
 
         // 영업 데이터 존재하는지, 공휴일인지, 휴무일인지
-        if (timeDataYesterday && !publicHolidays.includes(monthYesterday+"/"+dateYesterday) && !shopData.holiday.includes(weekdays[dayYesterday])){
+        if (timeDataYesterday && !shopHolidays.includes(weekdays[dayYesterday])){
+            if(!shopHolidays.includes('공휴일') || !publicHolidays.includes(monthYesterday+"/"+dateYesterday)){
                 openingDays[0] = 1;  
 
                 yesterdayEnd = new Date(yearNow,monthNow-1,dateNow,timeDataYesterday.end_time.substring(0,2),timeDataYesterday.end_time.substring(2,4));
+            }
         } 
-        if(timeDataToday && !publicHolidays.includes(monthNow+"/"+dateNow) && !shopData.holiday.includes(weekdays[dayNow])){
+        if(timeDataToday && !shopHolidays.includes(weekdays[dayNow])){
+            if(!shopHolidays.includes('공휴일') || !publicHolidays.includes(monthYesterday+"/"+dateYesterday)){
                 openingDays[1] = 1;
                 
                 todayStart = new Date(yearNow,monthNow-1,dateNow,timeDataToday.start_time.substring(0,2),timeDataToday.start_time.substring(2,4));
@@ -95,7 +101,8 @@ router.get('/manager', userUtil.LoggedIn, async (req,res)=>{
                 if(parseInt(timeDataToday.start_time) < parseInt(timeDataToday.end_time))
                     todayEnd = new Date(yearNow,monthNow-1,dateNow,timeDataToday.end_time.substring(0,2),timeDataToday.end_time.substring(2,4));
                 else
-                todayEnd = new Date(yearTomorrow,monthTomorrow-1,dateTomorrow,timeDataToday.end_time.substring(0,2),timeDataToday.end_time.substring(2,4));
+                    todayEnd = new Date(yearTomorrow,monthTomorrow-1,dateTomorrow,timeDataToday.end_time.substring(0,2),timeDataToday.end_time.substring(2,4));
+            }
         } 
 
         // shopStatus 0 : 영업 전, 1: 영업 중, 2: 영업 후, 3: 휴무
