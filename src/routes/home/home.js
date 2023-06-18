@@ -516,6 +516,32 @@ router.get('/todayWorkers', userUtil.LoggedIn, async (req,res)=> {
     }
 });
 
+// 관리자: 포지션 수 카운트 하기 
+router.get('/positionCount', userUtil.LoggedIn, async (req,res)=>{
+
+    try{
+        const managerData = await manager.findOne({attributes: ['shop_id'], where: {id: req.job.substring(1)}});
+        const positionData = await position.count({where: {shop_id :managerData.shop_id}});
+        
+        res.json({
+            code: "200",
+            message: "매장 포지션 수 조회를 성공했습니다.",
+            data: positionData
+        })
+        return;
+    }
+    catch (err){
+        console.log("get position count error", err);
+        res.json({
+            code: "400",
+            message: "매장 포지션 수 조회에 오류가 발생했습니다."
+        })
+        return;
+    }
+   
+
+});
+
 // 근무자: 출근하기
 router.put('/clock/:shopId', userUtil.LoggedIn, async (req,res)=>{
 
